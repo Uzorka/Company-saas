@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes checkPop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 06 · Payroll, recruitment, documents</span>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-right:2px">Role</span>
+      <sc-for list="{{ roles }}" as="rl" hint-placeholder-count="3">
+        <button onClick="{{ rl.pick }}" style="height:26px;padding:0 11px;border:1px solid {{ rl.border }};border-radius:999px;background:{{ rl.bg }};color:{{ rl.fg }};font:500 11px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ rl.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;min-height:900px">
+    <div style="width:214px;flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:16px">
+        <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+        <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CHF Heron Nigeria</span><span style="display:block;font-size:10px;color:#7A8798">{{ roleSub }}</span></span>
+      </div>
+      <sc-for list="{{ sections }}" as="nav" hint-placeholder-count="5">
+        <div onClick="{{ nav.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ nav.bg }};color:{{ nav.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+          <span data-icon="{{ nav.icon }}" style="font-size:18px;flex:none"></span>
+          <span style="flex:1;font-size:13px;font-weight:500;white-space:nowrap">{{ nav.label }}</span>
+          <sc-if value="{{ nav.locked }}" hint-placeholder-val="{{ false }}">
+            <span data-icon="lock" style="font-size:13px;flex:none;color:#CDD5E0"></span>
+          </sc-if>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:11px;line-height:17px;color:#4A5666">{{ sidebarNote }}</div>
+    </div>
+
+    <div style="flex:1;min-width:0">
+
+      <!-- RESTRICTED -->
+      <sc-if value="{{ isRestricted }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:72px 24px;text-align:center">
+            <span data-icon="lock" style="font-size:32px;color:#7A8798;display:inline-flex;margin-bottom:14px"></span>
+            <div style="font-size:19px;font-weight:600;margin-bottom:9px">{{ restrictTitle }}</div>
+            <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:48ch;margin:0 auto 20px">{{ restrictBody }}</div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+              <button onClick="{{ goMine }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">{{ restrictCta }}</button>
+              <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Request access from HR</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PAYROLL PERIODS -->
+      <sc-if value="{{ isPayroll }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Payroll</h1>
+              <div style="font-size:14px;color:#4A5666">March 2026 is in review · due to the bank 26 March, 15:00</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ toastExport }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#F8F9FB"><span data-icon="download" style="font-size:15px"></span>Export CSV</button>
+              <button onClick="{{ openCreatePeriod }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F"><span data-icon="plus" style="font-size:15px"></span>New period</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px">
+            <sc-for list="{{ payStats }}" as="pst" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:18px 20px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;color:#4A5666">{{ pst.label }}</span><span data-icon="{{ pst.icon }}" style="font-size:16px;color:{{ pst.fg }}"></span></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;margin-top:9px;font-variant-numeric:tabular-nums">{{ pst.value }}</div>
+                <div style="font-size:12px;color:{{ pst.footFg }};margin-top:7px">{{ pst.foot }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px;margin-bottom:16px">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px">
+              <span style="font-size:15px;font-weight:600">March 2026 · run status</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:{{ runPill.bg }};color:{{ runPill.fg }};font-size:11px;font-weight:600">{{ runPill.glyph }} {{ runStatus }}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+              <sc-for list="{{ runSteps }}" as="rs" hint-placeholder-count="6">
+                <div style="flex:1 1 92px;min-width:86px">
+                  <div style="height:5px;border-radius:3px;background:{{ rs.bar }};transition:background 200ms"></div>
+                  <div style="font-size:11px;font-weight:600;color:{{ rs.fg }};margin-top:8px">{{ rs.label }}</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:2px">{{ rs.meta }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button onClick="{{ advanceRun }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F">{{ runCta }}</button>
+              <button onClick="{{ openPeriod }}" style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Open the run</button>
+              <sc-if value="{{ canRollback }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ resetRun }}" style="height:40px;padding:0 14px;border:none;background:transparent;color:#7A8798;font:500 13px 'IBM Plex Sans';cursor:pointer">Reset demo</button>
+              </sc-if>
+              <span style="font-size:12px;line-height:19px;color:#4A5666;flex:1 1 200px;min-width:180px">{{ runHint }}</span>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">Periods</div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:800px">
+                <thead>
+                  <tr style="background:#F8F9FB">
+                    <th style="padding:11px 20px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Period</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Status</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Employees</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Gross</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Deductions</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Net</th>
+                    <th style="padding:11px 20px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ periods }}" as="prd" hint-placeholder-count="6">
+                    <tr onClick="{{ prd.open }}" style="border-top:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                      <td style="padding:12px 20px"><span style="display:block;font-size:13px;font-weight:500">{{ prd.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ prd.range }}</span></td>
+                      <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ prd.bg }};color:{{ prd.fg }};font-size:11px;font-weight:600">{{ prd.glyph }} {{ prd.status }}</span></td>
+                      <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ prd.count }}</td>
+                      <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ prd.gross }}</td>
+                      <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ prd.deduct }}</td>
+                      <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500">{{ prd.net }}</td>
+                      <td style="padding:12px 20px;text-align:right"><span style="font-size:12px;font-weight:500;color:#1B4F8C">Open</span></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PERIOD DETAIL -->
+      <sc-if value="{{ isPeriod }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <button onClick="{{ goPayroll }}" style="display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;padding:0;border:none;background:transparent;color:#1B4F8C;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="arrow-left" style="font-size:15px"></span>All periods</button>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:8px">
+                <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em">March 2026</h1>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:{{ runPill.bg }};color:{{ runPill.fg }};font-size:11px;font-weight:600">{{ runPill.glyph }} {{ runStatus }}</span>
+              </div>
+              <div style="font-size:14px;color:#4A5666">142 employees · 01–31 March · bank cut-off 26 March 15:00</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ openAdjust }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="plus-circle" style="font-size:15px"></span>Add adjustment</button>
+              <button onClick="{{ advanceRun }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">{{ runCta }}</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;margin-bottom:16px">
+            <sc-for list="{{ totals }}" as="tot" hint-placeholder-count="5">
+              <div style="background:#fff;padding:18px 20px">
+                <div style="font-size:12px;color:#7A8798">{{ tot.label }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;margin-top:6px;font-variant-numeric:tabular-nums;color:{{ tot.fg }}">{{ tot.value }}</div>
+                <div style="font-size:11px;color:#7A8798;margin-top:5px">{{ tot.note }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ hasAdjustments }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:14px 20px;border-bottom:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+                <span style="font-size:14px;font-weight:600">Adjustments this period · {{ adjCount }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">net effect {{ adjNet }}</span>
+              </div>
+              <sc-for list="{{ adjustments }}" as="adj" hint-placeholder-count="4">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid #F1F4F8">
+                  <span style="width:28px;height:28px;flex:none;border-radius:8px;background:{{ adj.bg }};color:{{ adj.fg }};display:grid;place-items:center"><span data-icon="{{ adj.icon }}" style="font-size:15px"></span></span>
+                  <span style="flex:1 1 200px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ adj.who }} · {{ adj.kind }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ adj.note }}</span></span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:{{ adj.fg }};white-space:nowrap">{{ adj.amount }}</span>
+                  <span style="font-size:11px;color:#7A8798;min-width:104px">added by {{ adj.by }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E3E8EF">
+              <div style="flex:1 1 200px;min-width:180px;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff">
+                <span data-icon="search" style="font-size:16px;color:#7A8798"></span>
+                <input value="{{ payQuery }}" onInput="{{ onPayQuery }}" placeholder="Search employee or ID…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 14px 'IBM Plex Sans'" />
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ payFilters }}" as="pf" hint-placeholder-count="4">
+                  <button onClick="{{ pf.pick }}" style="height:36px;padding:0 12px;border:1px solid {{ pf.border }};border-radius:999px;background:{{ pf.bg }};color:{{ pf.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer">{{ pf.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:900px">
+                <thead>
+                  <tr style="background:#F8F9FB">
+                    <th style="padding:11px 20px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Employee</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Basic</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Allowances</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Gross</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">PAYE</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Pension</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Other</th>
+                    <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Net</th>
+                    <th style="padding:11px 20px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ payRows }}" as="prow" hint-placeholder-count="7">
+                    <tr onClick="{{ prow.open }}" style="border-top:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                      <td style="padding:11px 20px">
+                        <div style="display:flex;align-items:center;gap:11px">
+                          <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ prow.initials }}</span>
+                          <span><span style="display:block;font-size:13px;font-weight:500">{{ prow.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ prow.id }} · {{ prow.dept }}</span></span>
+                        </div>
+                      </td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ prow.basic }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ prow.allow }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500">{{ prow.gross }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ prow.paye }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ prow.pension }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ prow.otherFg }}">{{ prow.other }}</td>
+                      <td style="padding:11px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">{{ prow.net }}</td>
+                      <td style="padding:11px 20px;text-align:right"><span style="font-size:12px;font-weight:500;color:#1B4F8C">Payslip</span></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+              <span style="font-size:12px;color:#7A8798">Showing {{ payShown }} of 142 rows</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">page total net ₦{{ pageNet }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PAYSLIPS -->
+      <sc-if value="{{ isPayslips }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">{{ payslipTitle }}</h1>
+              <div style="font-size:14px;color:#4A5666">{{ payslipSub }}</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:1 1 260px;min-width:250px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:14px 20px;border-bottom:1px solid #E3E8EF;font-size:14px;font-weight:600">Published payslips</div>
+              <sc-for list="{{ payslips }}" as="slip" hint-placeholder-count="6">
+                <div onClick="{{ slip.pick }}" style="display:flex;gap:12px;align-items:center;padding:13px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;background:{{ slip.rowBg }};transition:background 80ms" style-hover="background:#F8FAFD">
+                  <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#EEF4FB;color:#16406F;display:grid;place-items:center"><span data-icon="receipt" style="font-size:16px"></span></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ slip.period }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">published {{ slip.published }}</span></span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap">{{ slip.net }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 420px;min-width:330px">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+                <button onClick="{{ toastDownload }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="download" style="font-size:15px"></span>Download PDF</button>
+                <button onClick="{{ toastPrint }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="printer" style="font-size:15px"></span>Print</button>
+              </div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:6px;padding:34px;box-shadow:0 8px 24px -6px rgba(16,24,40,.1)">
+                <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-content:space-between;padding-bottom:20px;border-bottom:2px solid #131A22">
+                  <div style="display:flex;gap:12px;align-items:center">
+                    <span style="width:38px;height:38px;flex:none;border-radius:9px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 16px 'IBM Plex Sans'">H</span>
+                    <span><span style="display:block;font-size:15px;font-weight:600">CHF Heron Nigeria Ltd.</span><span style="display:block;font-size:11px;color:#4A5666;margin-top:2px">Plot 1C Akin Ogunlewe Street, Victoria Island, Lagos</span></span>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7A8798">Payslip</div>
+                    <div style="font-size:15px;font-weight:600;margin-top:3px">{{ ps.period }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ ps.ref }}</div>
+                  </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;padding:20px 0;border-bottom:1px solid #E3E8EF">
+                  <div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:5px">Employee</div><div style="font-size:14px;font-weight:600">{{ ps.name }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;margin-top:2px">{{ ps.id }}</div></div>
+                  <div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:5px">Position</div><div style="font-size:13px">{{ ps.position }}</div><div style="font-size:11px;color:#4A5666;margin-top:2px">{{ ps.dept }}</div></div>
+                  <div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:5px">Pay date</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px">{{ ps.payDate }}</div><div style="font-size:11px;color:#4A5666;margin-top:2px">{{ ps.bank }}</div></div>
+                  <div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:5px">Tax ID</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px">{{ ps.tin }}</div><div style="font-size:11px;color:#4A5666;margin-top:2px">PFA {{ ps.pfa }}</div></div>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:28px;padding:20px 0">
+                  <div style="flex:1 1 240px;min-width:220px">
+                    <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#0F7A54;margin-bottom:10px">Earnings</div>
+                    <sc-for list="{{ ps.earnings }}" as="ern" hint-placeholder-count="5">
+                      <div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #F1F4F8"><span style="font-size:13px;color:#4A5666">{{ ern.k }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums">{{ ern.v }}</span></div>
+                    </sc-for>
+                    <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0 0;font-weight:600"><span style="font-size:13px">Gross pay</span><span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-variant-numeric:tabular-nums">{{ ps.gross }}</span></div>
+                  </div>
+                  <div style="flex:1 1 240px;min-width:220px">
+                    <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.07em;text-transform:uppercase;color:#B42318;margin-bottom:10px">Deductions</div>
+                    <sc-for list="{{ ps.deductions }}" as="ded" hint-placeholder-count="4">
+                      <div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #F1F4F8"><span style="font-size:13px;color:#4A5666">{{ ded.k }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums">{{ ded.v }}</span></div>
+                    </sc-for>
+                    <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0 0;font-weight:600"><span style="font-size:13px">Total deductions</span><span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-variant-numeric:tabular-nums">{{ ps.totalDeduct }}</span></div>
+                  </div>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:18px 20px;border-radius:8px;background:#131A22;color:#fff">
+                  <span style="font-size:13px;color:#9AA7B6">Net pay · credited {{ ps.payDate }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;font-variant-numeric:tabular-nums">{{ ps.net }}</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">
+                  <span>Computer-generated payslip · no signature required</span>
+                  <span>{{ ps.ref }} · year to date net ₦{{ ps.ytd }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- RECRUITMENT -->
+      <sc-if value="{{ isRecruit }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Recruitment</h1>
+              <div style="font-size:14px;color:#4A5666">5 open roles · 64 applicants · 4 offers out</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;padding:3px;border-radius:9px;background:#E9EDF3">
+                <sc-for list="{{ recViews }}" as="rv" hint-placeholder-count="2">
+                  <button onClick="{{ rv.pick }}" style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border:none;border-radius:7px;background:{{ rv.bg }};color:{{ rv.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms"><span data-icon="{{ rv.icon }}" style="font-size:15px"></span>{{ rv.label }}</button>
+                </sc-for>
+              </div>
+              <button onClick="{{ openJob }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="plus" style="font-size:15px"></span>New job</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ recJobs }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;animation:fadeIn 200ms">
+              <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;min-width:840px">
+                  <thead>
+                    <tr style="background:#F8F9FB">
+                      <th style="padding:11px 20px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Role</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Status</th>
+                      <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">Applied</th>
+                      <th style="padding:11px 12px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666">In pipeline</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Closes</th>
+                      <th style="padding:11px 20px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ jobs }}" as="job" hint-placeholder-count="5">
+                      <tr style="border-top:1px solid #F1F4F8;transition:background 80ms" style-hover="background:#F8FAFD">
+                        <td style="padding:12px 20px"><span style="display:block;font-size:13px;font-weight:500">{{ job.title }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:3px">{{ job.dept }} · {{ job.location }}</span></td>
+                        <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ job.bg }};color:{{ job.fg }};font-size:11px;font-weight:600">{{ job.glyph }} {{ job.status }}</span></td>
+                        <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ job.applied }}</td>
+                        <td style="padding:12px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ job.pipeline }}</td>
+                        <td style="padding:12px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ job.closeFg }}">{{ job.closes }}</td>
+                        <td style="padding:12px 20px;text-align:right"><span onClick="{{ job.toggle }}" style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">{{ job.action }}</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ recPipeline }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px">
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ jobFilterChips }}" as="jf" hint-placeholder-count="4">
+                    <button onClick="{{ jf.pick }}" style="height:34px;padding:0 12px;border:1px solid {{ jf.border }};border-radius:999px;background:{{ jf.bg }};color:{{ jf.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer">{{ jf.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+                <sc-for list="{{ pipeline }}" as="stage" hint-placeholder-count="7">
+                  <div style="flex:0 0 240px;background:#E9EDF3;border-radius:14px;padding:11px;min-height:400px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 5px 11px">
+                      <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:{{ stage.dot }}"></span>{{ stage.label }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;background:#fff;border-radius:999px;padding:2px 8px">{{ stage.count }}</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:9px">
+                      <sc-for list="{{ stage.cards }}" as="appc" hint-placeholder-count="2">
+                        <div onClick="{{ appc.open }}" style="background:#fff;border:1px solid #E3E8EF;border-radius:11px;padding:13px;cursor:grab;transition:box-shadow 140ms,transform 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.14);transform:translateY(-2px) rotate(-.35deg)">
+                          <div style="display:flex;gap:10px;align-items:center;margin-bottom:9px">
+                            <span style="width:28px;height:28px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ appc.initials }}</span>
+                            <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ appc.name }}</span><span style="display:block;font-size:10px;color:#7A8798">{{ appc.exp }}</span></span>
+                          </div>
+                          <div style="font-size:11px;line-height:17px;color:#4A5666;margin-bottom:9px">{{ appc.role }}</div>
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ appc.applied }}</span>
+                            <sc-if value="{{ appc.flagged }}" hint-placeholder-val="{{ false }}">
+                              <span style="padding:2px 7px;border-radius:999px;background:{{ appc.flagBg }};color:{{ appc.flagFg }};font-size:10px;font-weight:600">{{ appc.flag }}</span>
+                            </sc-if>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin-top:14px;padding:14px 18px;background:#fff;border:1px solid #E3E8EF;border-radius:12px;font-size:13px;line-height:21px;color:#4A5666;max-width:80ch">Rejected and Withdrawn sit at the end of the board, not hidden — a recruiter needs to see who was turned down and why before contacting them again next cycle. Dragging into <b>Hired</b> opens the Convert to Employee flow rather than silently moving the card.</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- DOCUMENTS -->
+      <sc-if value="{{ isDocs }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Documents</h1>
+              <div style="font-size:14px;color:#4A5666">{{ docSub }}</div>
+            </div>
+            <button onClick="{{ toastUpload }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="upload" style="font-size:15px"></span>Upload</button>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">
+            <div style="flex:1 1 220px;min-width:190px;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff">
+              <span data-icon="search" style="font-size:16px;color:#7A8798"></span>
+              <input value="{{ docQuery }}" onInput="{{ onDocQuery }}" placeholder="Search documents…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 14px 'IBM Plex Sans'" />
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ docCats }}" as="dcat" hint-placeholder-count="5">
+                <button onClick="{{ dcat.pick }}" style="height:36px;padding:0 12px;border:1px solid {{ dcat.border }};border-radius:999px;background:{{ dcat.bg }};color:{{ dcat.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ dcat.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasDocs }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;animation:fadeIn 200ms">
+              <sc-for list="{{ docs }}" as="doc" hint-placeholder-count="8">
+                <div onClick="{{ doc.open }}" style="background:{{ doc.cardBg }};border:1px solid {{ doc.cardBorder }};border-radius:14px;padding:18px;cursor:pointer;transition:box-shadow 140ms,transform 140ms,border-color 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transform:translateY(-2px)">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px">
+                    <span style="width:36px;height:36px;flex:none;border-radius:9px;background:{{ doc.iconBg }};color:{{ doc.iconFg }};display:grid;place-items:center"><span data-icon="{{ doc.icon }}" style="font-size:18px"></span></span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ doc.badgeBg }};color:{{ doc.badgeFg }};font-size:10px;font-weight:600">{{ doc.badgeGlyph }} {{ doc.badge }}</span>
+                  </div>
+                  <div style="font-size:14px;font-weight:600;line-height:20px;margin-bottom:6px">{{ doc.name }}</div>
+                  <div style="font-size:12px;line-height:18px;color:#4A5666;margin-bottom:12px">{{ doc.desc }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">
+                    <span>{{ doc.version }}</span><span>{{ doc.size }}</span><span>{{ doc.date }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noDocs }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px dashed #CDD5E0;border-radius:14px;padding:60px 24px;text-align:center;animation:fadeIn 200ms">
+              <span data-icon="folder-open" style="font-size:30px;color:#7FA6D3;display:inline-flex;margin-bottom:13px"></span>
+              <div style="font-size:17px;font-weight:600;margin-bottom:8px">{{ emptyDocTitle }}</div>
+              <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:44ch;margin:0 auto 18px">{{ emptyDocBody }}</div>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button onClick="{{ clearDocFilters }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Clear filters</button>
+                <button onClick="{{ toastUpload }}" style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Upload a document</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:14px">
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">How sensitivity is shown</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF">
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:10px;font-weight:600;flex:none">◇ Company-wide</span>
+                  <span style="font-size:12px;line-height:18px;color:#4A5666">Plain white card. Anyone signed in can open it — handbooks, policies, forms.</span>
+                </div>
+                <div style="display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:10px;background:#FFFDF7;border:1px solid #F6E3BF">
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:10px;font-weight:600;flex:none">▲ Restricted</span>
+                  <span style="font-size:12px;line-height:18px;color:#4A5666">Warm tint and an amber badge. Department-level — visible to HR, the HOD and the person it concerns.</span>
+                </div>
+                <div style="display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:10px;background:#FFFBFA;border:1px solid #FADCD9">
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#FDECEA;color:#B42318;font-size:10px;font-weight:600;flex:none">✕ Confidential</span>
+                  <span style="font-size:12px;line-height:18px;color:#4A5666">Red tint. Contracts, medical notes, disciplinary files. Every open is written to the audit log with your name.</span>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1 1 260px;min-width:250px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Why tint, not just a badge</div>
+              <div style="font-size:13px;line-height:21px;color:#4A5666">A badge is read only when someone is looking for it. A whole-card tint is read peripherally, so an HR officer sharing their screen in an open-plan office notices the red card <i>before</i> they click it. Colour never carries the meaning alone — every level has a glyph and a word too.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- APPLICANT DETAIL -->
+  <sc-if value="{{ appOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(580px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="padding:20px 22px 0;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+            <div style="display:flex;gap:13px;align-items:center;min-width:0">
+              <span style="width:48px;height:48px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 17px 'IBM Plex Sans'">{{ ap.initials }}</span>
+              <span style="min-width:0">
+                <span style="display:block;font-size:18px;font-weight:600;letter-spacing:-.015em">{{ ap.name }}</span>
+                <span style="display:block;font-size:13px;color:#4A5666;margin-top:2px">{{ ap.role }}</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 9px;border-radius:999px;background:{{ ap.stageBg }};color:{{ ap.stageFg }};font-size:11px;font-weight:600">{{ ap.stage }}</span>
+              </span>
+            </div>
+            <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+          </div>
+          <div style="display:flex;gap:2px;overflow-x:auto">
+            <sc-for list="{{ appTabs }}" as="atab" hint-placeholder-count="3">
+              <button onClick="{{ atab.pick }}" style="position:relative;padding:11px 12px;border:none;background:transparent;font:500 13px 'IBM Plex Sans';color:{{ atab.fg }};cursor:pointer;white-space:nowrap">{{ atab.label }}<span style="position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px;background:{{ atab.underline }};transition:background 200ms"></span></button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <sc-if value="{{ apProfile }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:18px">
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Applied</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px">{{ ap.applied }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Experience</div><div style="font-size:13px;font-weight:500;margin-top:4px">{{ ap.exp }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Location</div><div style="font-size:13px;font-weight:500;margin-top:4px">{{ ap.location }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Days in stage</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px;color:{{ ap.ageFg }}">{{ ap.age }}</div></div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Contact</div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span data-icon="mail" style="font-size:16px;color:#7A8798"></span>{{ ap.email }}</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span data-icon="phone" style="font-size:16px;color:#7A8798"></span>{{ ap.phone }}</div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Cover letter</div>
+              <div style="padding:15px;border-radius:12px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666;margin-bottom:18px">{{ ap.cover }}</div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Documents</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;align-items:center;gap:11px;padding:13px 14px;border:1px solid #FADCD9;border-radius:10px;background:#FFFBFA">
+                  <span data-icon="file-text" style="font-size:19px;color:#B42318"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ ap.cv }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">1.4 MB · uploaded {{ ap.applied }}</span></span>
+                  <span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:#FDECEA;color:#B42318;font-size:10px;font-weight:600;flex:none">✕ Confidential</span>
+                </div>
+                <div style="height:250px;border-radius:12px;background:repeating-linear-gradient(135deg,#F1F4F8 0 10px,#E7ECF3 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;text-align:center;padding:10px">CV preview · page 1 of 2</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ apNotes }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <sc-for list="{{ ap.notes }}" as="note" hint-placeholder-count="3">
+                <div style="display:flex;gap:11px;margin-bottom:18px">
+                  <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ note.i }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline"><span style="font-size:13px;font-weight:600">{{ note.who }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ note.when }}</span></span>
+                    <span style="display:block;font-size:13px;line-height:21px;color:#4A5666;margin-top:5px">{{ note.text }}</span>
+                  </span>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px">
+                <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#D9E6F5;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">AD</span>
+                <div style="flex:1;min-width:0">
+                  <textarea value="{{ noteDraft }}" onInput="{{ onNoteDraft }}" rows="3" placeholder="Interview notes… only the hiring panel can read these" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:10px;font:400 13px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+                  <div style="display:flex;justify-content:flex-end;margin-top:8px"><button onClick="{{ postNote }}" style="height:36px;padding:0 15px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Add note</button></div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ apTimeline }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;display:flex;flex-direction:column">
+              <sc-for list="{{ ap.timeline }}" as="tl" hint-placeholder-count="5">
+                <div style="display:flex;gap:12px">
+                  <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:{{ tl.dot }};margin-top:5px"></span><span style="flex:1;width:2px;background:#F1F4F8;margin-top:4px"></span></span>
+                  <span style="padding-bottom:16px;min-width:0"><span style="display:block;font-size:13px;line-height:20px">{{ tl.text }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:3px">{{ tl.when }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:9px">Move to stage</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+            <sc-for list="{{ stageOptions }}" as="sopt" hint-placeholder-count="6">
+              <button onClick="{{ sopt.pick }}" style="height:32px;padding:0 12px;border:1px solid {{ sopt.border }};border-radius:999px;background:{{ sopt.bg }};color:{{ sopt.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ sopt.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <sc-if value="{{ ap.canHire }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ openConvert }}" style="flex:1 1 150px;height:42px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Convert to employee</button>
+            </sc-if>
+            <button onClick="{{ toastEmail }}" style="flex:1 1 130px;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Email applicant</button>
+            <button onClick="{{ toastReject }}" style="flex:0 1 110px;height:42px;border:1px solid #B42318;border-radius:8px;background:#fff;color:#B42318;font:500 14px 'IBM Plex Sans';cursor:pointer">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CONVERT TO EMPLOYEE -->
+  <sc-if value="{{ convertOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:grid;place-items:center;padding:20px">
+      <div onClick="{{ closeConvert }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(520px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);padding:26px;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <sc-if value="{{ convertDone }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:16px 0;animation:fadeIn 200ms">
+            <div style="width:66px;height:66px;margin:0 auto 15px;border-radius:50%;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:30px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">✓</div>
+            <div style="font-size:19px;font-weight:600;letter-spacing:-.015em;margin-bottom:9px">{{ ap.name }} is now an employee</div>
+            <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:40ch;margin:0 auto 18px">Employee record <b>EMP-0231</b> created, an invite email is on its way, and their CV plus offer letter moved into their employee file.</div>
+            <button onClick="{{ closeConvert }}" style="height:42px;padding:0 20px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Done</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ convertForm }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="font-size:19px;font-weight:600;letter-spacing:-.015em;margin-bottom:7px">Convert to employee</div>
+            <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:20px">Everything the applicant already gave us is carried over. Fill in what only HR knows.</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;background:#F4FBF8;border:1px solid #BFE3D3">
+                <span data-icon="check-circle-2" style="font-size:17px;color:#0F7A54"></span>
+                <span style="font-size:13px;line-height:19px;color:#4A5666">Name, email, phone, location and CV carried over from the application</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px;margin-bottom:16px">
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Employee ID</label><input value="EMP-0231" style="width:100%;height:42px;padding:0 13px;border:1px solid #E3E8EF;border-radius:8px;background:#F1F4F8;color:#4A5666;font:400 13px 'IBM Plex Mono';outline:none" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Start date <span style="color:#B42318">*</span></label><input value="01 / 04 / 2026" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Department</label><input value="Sales" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reports to</label><input value="Tunde Bello" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Gross monthly <span style="color:#B42318">*</span></label><input placeholder="₦ 000,000" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">System role</label><input value="Employee" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            </div>
+            <div style="padding:13px 14px;border-radius:10px;background:#F7FAFD;border:1px solid #D9E6F5;font-size:12px;line-height:19px;color:#4A5666;margin-bottom:20px">The applicant record is kept and linked, not deleted — so next year's audit can trace how this hire was made.</div>
+            <div style="display:flex;justify-content:flex-end;gap:10px">
+              <button onClick="{{ closeConvert }}" style="height:42px;padding:0 17px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+              <button onClick="{{ doConvert }}" style="height:42px;padding:0 20px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Create employee</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ADJUSTMENT -->
+  <sc-if value="{{ adjustOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:grid;place-items:center;padding:20px">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.4);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(480px,100%);background:#fff;border-radius:14px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);padding:24px;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <div style="font-size:18px;font-weight:600;letter-spacing:-.015em;margin-bottom:6px">Add a payroll adjustment</div>
+        <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:18px">Applies to March 2026 only. The employee sees it as a line on their payslip.</div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Employee</label>
+        <input value="Chidi Uzo · EMP-0142" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Type</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <sc-for list="{{ adjTypes }}" as="atype" hint-placeholder-count="4">
+            <button onClick="{{ atype.pick }}" style="height:36px;padding:0 14px;border:1px solid {{ atype.border }};border-radius:999px;background:{{ atype.bg }};color:{{ atype.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ atype.label }}</button>
+          </sc-for>
+        </div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Amount</label>
+        <input placeholder="₦ 0.00" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none;margin-bottom:6px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+        <div style="font-size:12px;color:#7A8798;margin-bottom:14px">{{ adjHint }}</div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reason (shown on the payslip)</label>
+        <textarea rows="2" placeholder="February field allowance arrears" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+          <button onClick="{{ closeAll }}" style="height:40px;padding:0 16px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ saveAdjust }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Add adjustment</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PUBLISH CONFIRM -->
+  <sc-if value="{{ publishOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:grid;place-items:center;padding:20px">
+      <div onClick="{{ closePublish }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(470px,100%);background:#fff;border-radius:14px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);padding:24px;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <div style="display:flex;gap:13px;margin-bottom:16px">
+          <span style="width:40px;height:40px;flex:none;border-radius:10px;background:#EEF4FB;color:#1B4F8C;display:grid;place-items:center"><span data-icon="send" style="font-size:19px"></span></span>
+          <div>
+            <div style="font-size:17px;font-weight:600;letter-spacing:-.01em">Publish 142 payslips?</div>
+            <div style="font-size:13px;line-height:20px;color:#4A5666;margin-top:5px">Every employee gets a notification and can see their March payslip immediately. Published payslips can't be edited — only corrected with a new adjustment next period.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:10px;overflow:hidden;margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 14px;background:#fff"><span style="font-size:13px;color:#4A5666">Employees</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">142</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 14px;background:#fff"><span style="font-size:13px;color:#4A5666">Total net</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">₦48,204,150.00</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 14px;background:#fff"><span style="font-size:13px;color:#4A5666">Approved by</span><span style="font-size:13px;font-weight:500">Ngozi Aliu · 26 Mar 09:40</span></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button onClick="{{ closePublish }}" style="height:42px;padding:0 17px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Not yet</button>
+          <button onClick="{{ doPublish }}" style="height:42px;padding:0 20px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Publish payslips</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- DOC PREVIEW -->
+  <sc-if value="{{ docOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(520px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:20px 22px;border-bottom:1px solid #E3E8EF;background:{{ dv.cardBg }}">
+          <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
+            <span style="width:38px;height:38px;flex:none;border-radius:9px;background:{{ dv.iconBg }};color:{{ dv.iconFg }};display:grid;place-items:center"><span data-icon="{{ dv.icon }}" style="font-size:18px"></span></span>
+            <span style="min-width:0">
+              <span style="display:block;font-size:16px;font-weight:600;line-height:22px">{{ dv.name }}</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 9px;border-radius:999px;background:{{ dv.badgeBg }};color:{{ dv.badgeFg }};font-size:10px;font-weight:600">{{ dv.badgeGlyph }} {{ dv.badge }}</span>
+            </span>
+          </div>
+          <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+        </div>
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <sc-if value="{{ dv.sensitive }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:11px;padding:14px;border-radius:12px;background:#FFFBFA;border:1px solid #FADCD9;margin-bottom:18px">
+              <span data-icon="shield-alert" style="font-size:18px;color:#B42318"></span>
+              <span style="font-size:12px;line-height:19px;color:#4A5666"><b style="color:#B42318">This view is logged.</b> Opening a confidential document records your name, the document and the timestamp in the audit log. Don't share the screen.</span>
+            </div>
+          </sc-if>
+          <div style="height:340px;border-radius:12px;background:repeating-linear-gradient(135deg,#F1F4F8 0 10px,#E7ECF3 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;text-align:center;padding:10px;margin-bottom:18px">document preview · {{ dv.pages }}</div>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Details</div>
+          <div style="display:flex;flex-direction:column;gap:1px;background:#F1F4F8;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:18px">
+            <sc-for list="{{ dv.meta }}" as="dm" hint-placeholder-count="5">
+              <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:12px 15px;background:#fff"><span style="font-size:13px;color:#4A5666">{{ dm.k }}</span><span style="font-size:13px;font-weight:500">{{ dm.v }}</span></div>
+            </sc-for>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Who can open this</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            <sc-for list="{{ dv.access }}" as="acc" hint-placeholder-count="3">
+              <span style="padding:5px 11px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:12px;font-weight:500">{{ acc.r }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ toastDownload }}" style="flex:1;height:42px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Download</button>
+          <button onClick="{{ toast }}" style="flex:1;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Replace version</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CREATE JOB / PERIOD (shared sheet) -->
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:flex;justify-content:center;align-items:flex-start;overflow:auto">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(620px,100%);min-height:100%;background:#fff;animation:rise 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#fff;padding:20px 26px 14px;border-bottom:1px solid #E3E8EF;display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+          <div><div style="font-size:19px;font-weight:600;letter-spacing:-.015em">{{ sheetTitle }}</div><div style="font-size:13px;color:#7A8798;margin-top:3px">{{ sheetSub }}</div></div>
+          <button onClick="{{ closeAll }}" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:17px"></span></button>
+        </div>
+        <div style="flex:1;padding:24px 26px;display:flex;flex-direction:column;gap:16px">
+          <sc-for list="{{ sheetFields }}" as="fld" hint-placeholder-count="6">
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">{{ fld.label }}</label>
+              <sc-if value="{{ fld.isArea }}" hint-placeholder-val="{{ false }}">
+                <textarea rows="4" placeholder="{{ fld.ph }}" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+              </sc-if>
+              <sc-if value="{{ fld.isInput }}" hint-placeholder-val="{{ true }}">
+                <input placeholder="{{ fld.ph }}" value="{{ fld.val }}" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+              </sc-if>
+              <sc-if value="{{ fld.hasHint }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px;color:#7A8798;margin-top:6px">{{ fld.hint }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position:sticky;bottom:0;display:flex;gap:10px;justify-content:flex-end;padding:16px 26px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ closeAll }}" style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ saveSheet }}" style="height:44px;padding:0 22px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">{{ sheetCta }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:270px;max-width:350px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ tst.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ tst.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const N="#4A5666",B="#1B4F8C",G="#0F7A54",W="#8A5600",R="#B42318";
+const PILL={ok:["#E7F4EE","#0F7A54","●"],warn:["#FDF2DF","#8A5600","▲"],bad:["#FDECEA","#B42318","✕"],info:["#EEF4FB","#16406F","◇"],mute:["#F1F4F8","#4A5666","—"]};
+const RUN=["draft","processing","review","approved","published","closed"];
+const RUN_META={draft:["Draft","mute","Generated from contracts and attendance. Nothing is locked yet."],
+  processing:["Processing","info","Calculating PAYE, pension and loan deductions across 142 employees."],
+  review:["In review","warn","Accounts checks the figures. Adjustments can still be added at this stage."],
+  approved:["Approved","info","Signed off by Management. The next step notifies every employee — it can't be undone."],
+  published:["Published","ok","All 142 employees can see their payslip. Corrections need a new adjustment next period."],
+  closed:["Closed","mute","Period locked for audit. Read-only from here."]};
+const RUN_CTA={draft:"Start processing",processing:"Send for review",review:"Send for approval",approved:"Publish payslips",published:"Close period",closed:"Period closed"};
+const PERIODS=[
+  ["March 2026","01–31 Mar",142,"₦61,412,000","₦13,207,850","₦48,204,150",null],
+  ["February 2026","01–29 Feb",141,"₦60,180,400","₦12,944,120","₦47,236,280","published"],
+  ["January 2026","01–31 Jan",139,"₦59,020,900","₦12,610,300","₦46,410,600","closed"],
+  ["December 2025","01–31 Dec",139,"₦74,860,200","₦15,912,440","₦58,947,760","closed"],
+  ["November 2025","01–30 Nov",137,"₦58,300,100","₦12,470,880","₦45,829,220","closed"],
+  ["October 2025","01–31 Oct",137,"₦57,940,600","₦12,388,200","₦45,552,400","closed"]
+];
+const PAY=[
+  ["Adaeze Okonkwo","AO","EMP-0118","Sales","₦380,000","₦92,000","₦472,000","₦56,640","₦37,760","—","₦377,600",0],
+  ["Chidi Uzo","CU","EMP-0142","Sales","₦310,000","₦118,000","₦428,000","₦51,360","₦34,240","+₦24,000","₦366,400",1],
+  ["Tunde Bello","TB","EMP-0031","Sales","₦720,000","₦164,000","₦884,000","₦106,080","₦70,720","—","₦707,200",0],
+  ["Ifeoma Eze","IE","EMP-0044","Finance","₦840,000","₦192,000","₦1,032,000","₦123,840","₦82,560","—","₦825,600",0],
+  ["Musa Yakubu","MY","EMP-0207","Warehouse","₦145,000","₦38,000","₦183,000","₦21,960","₦14,640","−₦18,000","₦128,400",2],
+  ["Sade Kalu","SK","EMP-0129","Finance","₦295,000","₦74,000","₦369,000","₦44,280","₦29,520","—","₦295,200",0],
+  ["Joy Edet","JE","EMP-0188","Sales","₦268,000","₦81,000","₦349,000","₦41,880","₦27,920","+₦12,500","₦291,700",1]
+];
+const ADJ=[
+  ["Chidi Uzo","Allowance","+₦24,000","February field allowance arrears","Ifeoma Eze","ok","plus-circle"],
+  ["Musa Yakubu","Loan repayment","−₦18,000","Staff loan · instalment 4 of 12","Ifeoma Eze","bad","minus-circle"],
+  ["Joy Edet","Overtime","+₦12,500","14 hours, Port Harcourt depot stock-take","Sade Kalu","ok","plus-circle"],
+  ["Bola Ogun","Unpaid leave","−₦31,200","6 unpaid days, approved by HR","Amaka Duru","bad","minus-circle"]
+];
+const SLIPS=[
+  ["February 2026","01 Mar 2026","₦377,600"],["January 2026","01 Feb 2026","₦371,200"],
+  ["December 2025","20 Dec 2025","₦512,800"],["November 2025","01 Dec 2025","₦368,400"],
+  ["October 2025","01 Nov 2025","₦368,400"],["September 2025","01 Oct 2025","₦362,100"]
+];
+const JOBS=[
+  ["Field Sales Representative","Sales","Lagos","Published","ok",24,9,"30 Sep 2026",true],
+  ["Warehouse Supervisor","Logistics","Ikeja","Published","ok",18,6,"12 Oct 2026",false],
+  ["Accounts Officer","Finance","Victoria Island","Published","ok",14,4,"05 Oct 2026",false],
+  ["Trade Marketing Executive","Marketing","Lagos","Draft","mute",0,0,"not set",false],
+  ["Delivery Driver","Logistics","Port Harcourt","Closed","mute",8,0,"28 Sep 2026",false]
+];
+const STAGES=[["Applied","#7A8798"],["Screening","#1B4F8C"],["Shortlisted","#1B4F8C"],["Interview","#8A5600"],["Offered","#0F7A54"],["Hired","#0F7A54"],["Rejected","#B42318"],["Withdrawn","#7A8798"]];
+const APPS=[
+  {n:"Blessing Nwachukwu",i:"BN",st:"Interview",role:"Field Sales Representative",exp:"4 years FMCG",loc:"Lagos",applied:"02 Sep",age:"5 days",
+   email:"b.nwachukwu@email.com",phone:"+234 803 442 1180",cv:"cv-blessing-nwachukwu.pdf",flag:"Strong",fk:"ok",
+   cover:"Four years covering Lekki and Ajah for a beverage distributor. I know most of the modern-trade buyers in that corridor personally and I'm comfortable working entirely from a phone — my current employer uses a similar visit-logging app.",
+   notes:[["AD","Amaka Duru","03 Sep · 10:20","Screening call done. Strong territory knowledge, already used to verified visit logging."],["TB","Tunde Bello","05 Sep · 15:40","Panel interview Monday. Want to test how she handles a difficult store manager."]],
+   tl:[["Applied via careers site","02 Sep · 19:12",B],["CV screened by Amaka Duru","03 Sep · 09:40",B],["Moved to Screening","03 Sep · 09:41",B],["Phone screen completed","03 Sep · 10:20",G],["Moved to Interview","05 Sep · 15:38",W]]},
+  {n:"Ahmed Bello",i:"AB",st:"Offered",role:"Warehouse Supervisor",exp:"6 years warehousing",loc:"Ikeja",applied:"22 Aug",age:"3 days",
+   email:"ahmed.bello@email.com",phone:"+234 706 118 2204",cv:"cv-ahmed-bello.pdf",flag:"Offer out",fk:"ok",
+   cover:"Six years supervising a 14-person floor across two shifts, most recently for a pharmaceutical distributor in Ikeja. Comfortable with WMS reconciliation and cycle-count discipline.",
+   notes:[["AD","Amaka Duru","28 Aug · 11:00","Panel unanimous. Offer at SL-4, start 1 October."],["EN","Emeka Nwosu","06 Sep · 09:15","Verbal acceptance by phone. Waiting on the signed letter."]],
+   tl:[["Applied via careers site","22 Aug · 08:44",B],["Shortlisted","24 Aug · 14:10",B],["Panel interview","27 Aug · 11:00",G],["Offer sent","28 Aug · 16:30",G],["Verbally accepted","06 Sep · 09:15",G]]},
+  {n:"Grace Okoro",i:"GO",st:"Screening",role:"Accounts Officer",exp:"2 years, part-ICAN",loc:"Lagos",applied:"05 Sep",age:"2 days",
+   email:"grace.okoro@email.com",phone:"+234 815 330 7712",cv:"cv-grace-okoro.pdf",flag:"",fk:"mute",
+   cover:"Two years in receivables at a Lagos trading company, currently sitting my ICAN skills papers. Strong on reconciliation and comfortable owning month-end schedules.",
+   notes:[["AD","Amaka Duru","06 Sep · 16:05","CV is solid for the grade. Ifeoma to sit in on the screening call."]],
+   tl:[["Applied via careers site","05 Sep · 21:30",B],["CV screened","06 Sep · 15:50",B],["Moved to Screening","06 Sep · 16:04",B]]},
+  {n:"Emeka Obi",i:"EO",st:"Applied",role:"Field Sales Representative",exp:"1 year",loc:"Ibadan",applied:"07 Sep",age:"1 day",
+   email:"emeka.obi@email.com",phone:"+234 909 221 4415",cv:"cv-emeka-obi.pdf",flag:"Outside area",fk:"warn",
+   cover:"Keen to move into FMCG field sales. Currently in retail sales in Ibadan and willing to relocate to Lagos.",
+   notes:[["AD","Amaka Duru","08 Sep · 09:10","Under-experienced for the grade and based in Ibadan — worth a call only if the shortlist thins."]],
+   tl:[["Applied via careers site","07 Sep · 12:04",B]]},
+  {n:"Funmi Adeyemi",i:"FA",st:"Rejected",role:"Accounts Officer",exp:"5 years",loc:"Abuja",applied:"18 Aug",age:"12 days",
+   email:"funmi.adeyemi@email.com",phone:"+234 802 771 9930",cv:"cv-funmi-adeyemi.pdf",flag:"Salary gap",fk:"bad",
+   cover:"Five years in financial reporting, looking for a Lagos-based role.",
+   notes:[["AD","Amaka Duru","24 Aug · 10:30","Strong candidate but expectations are ₦180k above the grade ceiling. Declined with a note to keep her on file for the Finance Manager role next year."]],
+   tl:[["Applied via careers site","18 Aug · 07:50",B],["Shortlisted","20 Aug · 11:15",B],["Interview","23 Aug · 14:00",W],["Rejected · salary expectation","24 Aug · 10:32",R]]},
+  {n:"Chinedu Eze",i:"CE",st:"Shortlisted",role:"Field Sales Representative",exp:"3 years FMCG",loc:"Lagos",applied:"31 Aug",age:"4 days",
+   email:"chinedu.eze@email.com",phone:"+234 807 554 2018",cv:"cv-chinedu-eze.pdf",flag:"",fk:"mute",
+   cover:"Three years covering Surulere and Yaba for a personal-care distributor. Consistently over target on volume.",
+   notes:[["TB","Tunde Bello","03 Sep · 08:20","Good numbers. Second choice behind Blessing but worth interviewing."]],
+   tl:[["Applied via careers site","31 Aug · 16:22",B],["CV screened","02 Sep · 10:00",B],["Shortlisted","03 Sep · 08:18",B]]},
+  {n:"Yemi Salako",i:"YS",st:"Withdrawn",role:"Warehouse Supervisor",exp:"4 years",loc:"Lagos",applied:"20 Aug",age:"9 days",
+   email:"yemi.salako@email.com",phone:"+234 811 003 6621",cv:"cv-yemi-salako.pdf",flag:"Withdrew",fk:"mute",
+   cover:"Four years in warehousing, currently a shift lead.",
+   notes:[["AD","Amaka Duru","29 Aug · 14:00","Withdrew — accepted another offer closer to home. Left on good terms."]],
+   tl:[["Applied via careers site","20 Aug · 09:15",B],["Shortlisted","23 Aug · 10:40",B],["Withdrew","29 Aug · 13:55",N]]}
+];
+const DOCS=[
+  ["Employee handbook 2026","Company","Policies, conduct, leave entitlements and the field-visit privacy notice.","company","book-open","v4.2","3.8 MB","updated 12 Jan 2026",["Everyone"],"6 pages"],
+  ["Leave policy","Company","How annual, sick, compassionate and unpaid leave are accrued and approved.","company","file-text","v2.1","640 KB","updated 04 Feb 2026",["Everyone"],"4 pages"],
+  ["Expense claim form","Company","Blank form for field expenses. Submit to your HOD.","company","file-spreadsheet","v1.8","210 KB","updated 20 Nov 2025",["Everyone"],"1 page"],
+  ["Attendance and location notice","Company","Plain-language explanation of what we capture, when, and for how long we keep it.","company","shield-check","v1.3","480 KB","updated 02 Mar 2026",["Everyone"],"3 pages"],
+  ["Q1 2026 board pack","Restricted","Headcount, payroll and trading summary for the March board meeting.","restricted","presentation","v0.9","12.4 MB","updated 08 Sep 2026",["Management","Accounts"],"24 pages"],
+  ["Warehouse safety audit — Ikeja","Restricted","External auditor findings and the remediation plan.","restricted","clipboard-check","v1.0","2.2 MB","updated 28 Aug 2026",["Management","HOD · Logistics","Compliance"],"9 pages"],
+  ["Employment contract — Chidi Uzo","Confidential","Signed contract, salary schedule and pay grade.","confidential","file-lock","v1.0","1.1 MB","signed 03 Mar 2023",["HR leads","Accounts","Chidi Uzo"],"7 pages"],
+  ["Medical certificate — Musa Yakubu","Confidential","Supporting document for the 09–12 March sick leave request.","confidential","file-lock","v1.0","760 KB","uploaded 09 Sep 2026",["HR leads","Musa Yakubu"],"1 page"],
+  ["Disciplinary note — file 2026-04","Confidential","Written warning and the employee's response.","confidential","file-lock","v1.0","320 KB","filed 22 Aug 2026",["HR leads","Management"],"2 pages"]
+];
+const SENS={company:{cardBg:"#fff",cardBorder:"#E3E8EF",iconBg:"#EEF4FB",iconFg:"#16406F",badge:"Company-wide",badgeBg:"#F1F4F8",badgeFg:"#4A5666",badgeGlyph:"◇",sensitive:false},
+  restricted:{cardBg:"#FFFDF7",cardBorder:"#F6E3BF",iconBg:"#FDF2DF",iconFg:"#8A5600",badge:"Restricted",badgeBg:"#FDF2DF",badgeFg:"#8A5600",badgeGlyph:"▲",sensitive:false},
+  confidential:{cardBg:"#FFFBFA",cardBorder:"#FADCD9",iconBg:"#FDECEA",iconFg:"#B42318",badge:"Confidential",badgeBg:"#FDECEA",badgeFg:"#B42318",badgeGlyph:"✕",sensitive:true}};
+
+const CLOSED={appOpen:false,convertOpen:false,convertDone:false,adjustOpen:false,publishOpen:false,docOpen:false,sheet:null};
+
+class Component extends DCLogic {
+  state={role:"Accounts",section:"payroll",run:"review",payQuery:"",payFilter:"All",periodIdx:0,
+    slipIdx:0,recView:"jobs",jobFilter:"All roles",appOpen:false,appIdx:0,appTab:"Profile",noteDraft:"",
+    convertOpen:false,convertDone:false,adjustOpen:false,adjType:"Allowance",publishOpen:false,
+    docQuery:"",docCat:"All",docOpen:false,docIdx:0,sheet:null,toasts:[]};
+  componentDidMount(){this._icons();}
+  componentDidUpdate(){this._icons();}
+  _icons(){
+    const L=window.lucide; if(!L) return;
+    let need=false;
+    document.querySelectorAll("[data-icon]").forEach(el=>{
+      const n=el.getAttribute("data-icon"); if(!n) return;
+      const svg=el.querySelector("svg");
+      if(svg&&svg.classList.contains("lucide-"+n)) return;
+      el.innerHTML='<i data-lucide="'+n+'"></i>'; need=true;
+    });
+    if(need){try{L.createIcons();}catch(e){}}
+  }
+  toast(title,body){
+    const id=Date.now()+Math.random();
+    this.setState(s=>({toasts:[...s.toasts,{id,title,body}]}));
+    setTimeout(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})),3800);
+  }
+
+  renderVals(){
+    const s=this.state,role=s.role;
+    const chip=on=>({bg:on?"#1B4F8C":"#fff",fg:on?"#fff":"#4A5666",border:on?"#1B4F8C":"#CDD5E0"});
+    const dchip=on=>({bg:on?"#fff":"transparent",fg:on?"#131A22":"#9AA7B6",border:on?"#fff":"#2A3540"});
+    const seg=on=>({bg:on?"#fff":"transparent",fg:on?"#131A22":"#4A5666"});
+
+    const isEmp=role==="Employee";
+    const secs=isEmp
+      ? [["payslips","My payslips","receipt",false],["docs","Documents","folder",false],["payroll","Payroll run","wallet",true],["recruit","Recruitment","user-plus",true]]
+      : role==="HR"
+      ? [["recruit","Recruitment","user-plus",false],["docs","Documents","folder",false],["payslips","Payslips","receipt",false],["payroll","Payroll run","wallet",true]]
+      : [["payroll","Payroll","wallet",false],["payslips","Payslips","receipt",false],["recruit","Recruitment","user-plus",false],["docs","Documents","folder",false]];
+    const allowed=secs.filter(x=>!x[3]).map(x=>x[0]);
+    const cur=allowed.includes(s.section)?s.section:null;
+
+    const rm=RUN_META[s.run],rp=PILL[rm[1]];
+    const runIdx=RUN.indexOf(s.run);
+
+    let prows=PAY.filter(p=>{
+      const q=s.payQuery.trim().toLowerCase();
+      if(q&&!(p[0]+p[2]+p[3]).toLowerCase().includes(q))return false;
+      if(s.payFilter==="Has adjustment"&&p[11]===0)return false;
+      if(s.payFilter==="Sales"&&p[3]!=="Sales")return false;
+      if(s.payFilter==="Finance"&&p[3]!=="Finance")return false;
+      return true;
+    });
+
+    const slip=SLIPS[s.slipIdx];
+    const ap=APPS[s.appIdx],apk=PILL[ap.fk];
+    const stagePill=x=>x==="Hired"||x==="Offered"?PILL.ok:x==="Rejected"?PILL.bad:x==="Interview"?PILL.warn:x==="Withdrawn"?PILL.mute:PILL.info;
+    const apStage=stagePill(ap.st);
+
+    const dq=s.docQuery.trim().toLowerCase();
+    let dlist=DOCS.filter(d=>{
+      if(isEmp&&d[3]==="restricted")return false;
+      if(isEmp&&d[3]==="confidential"&&d[0].indexOf("Chidi Uzo")<0)return false;
+      if(s.docCat!=="All"&&d[1]!==s.docCat)return false;
+      if(dq&&!(d[0]+d[2]).toLowerCase().includes(dq))return false;
+      return true;
+    });
+    const dvRaw=DOCS[s.docIdx],dvS=SENS[dvRaw[3]];
+
+    const sheetSpecs={
+      period:{title:"New payroll period",sub:"Generates draft rows from contracts and attendance",cta:"Create period",
+        fields:[["Period name","","April 2026",0,"Shown to employees on their payslip."],["Start date","","01 / 04 / 2026",0,""],["End date","","30 / 04 / 2026",0,""],["Pay date","","28 / 04 / 2026",0,"Bank instructions must be sent 2 working days earlier."],["Include","","All active employees · 142",0,"Staff on unpaid leave are included at zero."]]},
+      job:{title:"New job opening",sub:"Saves as a draft — publishing puts it on the careers site",cta:"Save as draft",
+        fields:[["Role title","e.g. Field Sales Representative","",0,""],["Department","","Sales",0,""],["Location","","Lagos",0,""],["Employment type","","Full-time",0,""],["Application deadline","","30 / 10 / 2026",0,"Applications close automatically at 23:59."],["Role description","What the person will do, and what you need from them…","",1,"This is the text applicants read on the careers site."]]}
+    };
+    const sp=s.sheet?sheetSpecs[s.sheet]:null;
+
+    return {
+      roles:["Accounts","HR","Employee"].map(r=>({label:r,pick:()=>this.setState({...CLOSED,role:r,section:r==="Employee"?"payslips":r==="HR"?"recruit":"payroll"}),...dchip(role===r)})),
+      roleSub:isEmp?"Chidi Uzo · Employee":role==="HR"?"Amaka Duru · Head of People":"Ifeoma Eze · Head of Finance",
+      sidebarNote:isEmp?"You can only see your own payslips and the documents that concern you.":role==="HR"?"Payroll figures are limited to Accounts and Management. You manage hiring and documents.":"You can see every payroll figure. Every view of a confidential document is logged.",
+      sections:secs.map(x=>({label:x[1],icon:x[2],locked:x[3],pick:()=>this.setState({...CLOSED,section:x[0]}),
+        bg:s.section===x[0]?"#EEF4FB":"transparent",fg:x[3]?"#A6B0BE":s.section===x[0]?"#16406F":"#4A5666"})),
+      isRestricted:cur===null,
+      restrictTitle:s.section==="payroll"?"Payroll is restricted":"Recruitment is restricted",
+      restrictBody:s.section==="payroll"
+        ? "Your role — "+role+" — can't open payroll figures. The item stays in the sidebar so you know it exists, marked with a lock rather than hidden."
+        : "Only HR and Management manage the hiring pipeline. Your own application history isn't affected.",
+      restrictCta:isEmp?"Back to my payslips":"Back to my work",
+      goMine:()=>this.setState({...CLOSED,section:allowed[0]}),
+
+      isPayroll:cur==="payroll",isPeriod:cur==="period",isPayslips:cur==="payslips",isRecruit:cur==="recruit",isDocs:cur==="docs",
+      goPayroll:()=>this.setState({...CLOSED,section:"payroll"}),
+      openPeriod:()=>this.setState({...CLOSED,section:"period"}),
+
+      payStats:[["Gross · March","₦61.41m","trending-up",B,"142 employees",N],
+        ["Deductions","₦13.21m","minus-circle",W,"PAYE, pension, loans",N],
+        ["Net payable","₦48.20m","wallet",G,"+2.1% vs. February",N],
+        ["Payslips published",s.run==="published"||s.run==="closed"?"142":"0","receipt",N,s.run==="published"||s.run==="closed"?"visible to all staff":"publishes on approval",s.run==="published"?G:N]]
+        .map(x=>({label:x[0],value:x[1],icon:x[2],fg:x[3],foot:x[4],footFg:x[5]})),
+      runStatus:rm[0],runPill:{bg:rp[0],fg:rp[1],glyph:rp[2]},runHint:rm[2],
+      runSteps:RUN.map((r,i)=>({label:RUN_META[r][0],meta:["02 Mar","18 Mar","22 Mar","26 Mar","28 Mar","31 Mar"][i],
+        bar:i<=runIdx?"#1B4F8C":"#E3E8EF",fg:i<=runIdx?"#1B4F8C":"#7A8798"})),
+      runCta:RUN_CTA[s.run],
+      canRollback:s.run!=="review",
+      resetRun:()=>this.setState({run:"review"}),
+      advanceRun:()=>{
+        if(s.run==="approved")return this.setState({publishOpen:true});
+        if(s.run==="closed")return this.toast("Period is closed","Reopen needs Management approval");
+        const next=RUN[Math.min(runIdx+1,5)];
+        this.setState({run:next});
+        this.toast("March 2026 · "+RUN_META[next][0],next==="processing"?"Calculating 142 employees":"Status updated in the audit log");
+      },
+      publishOpen:s.publishOpen,
+      closePublish:()=>this.setState({publishOpen:false}),
+      doPublish:()=>{this.setState({publishOpen:false,run:"published"});this.toast("142 payslips published","Every employee notified");},
+
+      periods:PERIODS.map((p,i)=>{const st=p[6]||s.run,m=RUN_META[st],pl=PILL[m[1]];
+        return {name:p[0],range:p[1],count:p[2],gross:p[3],deduct:p[4],net:p[5],status:m[0],bg:pl[0],fg:pl[1],glyph:pl[2],
+          open:()=>this.setState({...CLOSED,section:"period",periodIdx:i})};}),
+
+      totals:[["Gross pay","₦61,412,000",N,"basic + allowances"],["PAYE","₦5,899,400",N,"remitted to LIRS"],
+        ["Pension (8%)","₦4,912,960",N,"employee contribution"],["Other deductions","₦2,395,490",N,"loans, unpaid leave"],
+        ["Net payable","₦48,204,150",G,"142 bank transfers"]].map(x=>({label:x[0],value:x[1],fg:x[2],note:x[3]})),
+      hasAdjustments:true,adjCount:ADJ.length,adjNet:"−₦12,700",
+      adjustments:ADJ.map(a=>{const c=PILL[a[5]];
+        return {who:a[0],kind:a[1],amount:a[2],note:a[3],by:a[4],bg:c[0],fg:c[1],icon:a[6]};}),
+      payQuery:s.payQuery,onPayQuery:ev=>this.setState({payQuery:ev.target.value}),
+      payFilters:["All","Has adjustment","Sales","Finance"].map(f=>({label:f,pick:()=>this.setState({payFilter:f}),...chip(s.payFilter===f)})),
+      payRows:prows.map(p=>({name:p[0],initials:p[1],id:p[2],dept:p[3],basic:p[4],allow:p[5],gross:p[6],
+        paye:p[7],pension:p[8],other:p[9],otherFg:p[11]===1?G:p[11]===2?R:N,net:p[10],
+        open:()=>this.setState({...CLOSED,section:"payslips",slipIdx:0})})),
+      payShown:prows.length,pageNet:"2,992,100",
+
+      openAdjust:()=>this.setState({adjustOpen:true}),adjustOpen:s.adjustOpen,
+      adjTypes:["Allowance","Overtime","Loan repayment","Unpaid leave"].map(t=>({label:t,pick:()=>this.setState({adjType:t}),...chip(s.adjType===t)})),
+      adjHint:s.adjType==="Allowance"||s.adjType==="Overtime"?"Added to gross pay and taxed with it.":"Deducted after tax. Shown as a negative line on the payslip.",
+      saveAdjust:()=>{this.setState({adjustOpen:false});this.toast("Adjustment added","Chidi Uzo · "+s.adjType+" · March 2026");},
+
+      payslipTitle:isEmp?"My payslips":"Payslips",
+      payslipSub:isEmp?"Only you and Accounts can see these":"142 employees · March publishes on approval",
+      payslips:SLIPS.map((x,i)=>({period:x[0],published:x[1],net:x[2],rowBg:i===s.slipIdx?"#F7FAFD":"transparent",
+        pick:()=>this.setState({slipIdx:i})})),
+      ps:{period:slip[0],ref:"PSL-2026-"+String(118+s.slipIdx),name:"Chidi Uzo",id:"EMP-0142",
+        position:"Field Sales Representative",dept:"Sales · Lagos",payDate:slip[1],bank:"GTBank ····4471",
+        tin:"1094-2287-06",pfa:"Stanbic IBTC",
+        earnings:[{k:"Basic salary",v:"310,000.00"},{k:"Housing allowance",v:"62,000.00"},{k:"Transport allowance",v:"31,000.00"},{k:"Field allowance",v:"25,000.00"},{k:"Arrears · February",v:"24,000.00"}],
+        gross:"452,000.00",
+        deductions:[{k:"PAYE",v:"51,360.00"},{k:"Pension (8%)",v:"34,240.00"},{k:"NHF (2.5%)",v:"7,750.00"},{k:"Staff loan",v:"—"}],
+        totalDeduct:"93,350.00",net:"₦358,650.00",ytd:"2,514,300"},
+      toastDownload:()=>this.toast("Payslip downloaded",slip[0]+" · PDF"),
+      toastPrint:()=>this.toast("Sent to print","Single-page A4, no colour needed"),
+      toastExport:()=>this.toast("CSV exported","March 2026 · 142 rows · bank format"),
+
+      recViews:[["jobs","Jobs","list"],["pipeline","Pipeline","columns-3"]].map(v=>({label:v[1],icon:v[2],pick:()=>this.setState({recView:v[0]}),...seg(s.recView===v[0])})),
+      recJobs:s.recView==="jobs",recPipeline:s.recView==="pipeline",
+      jobs:JOBS.map(j=>{const c=PILL[j[4]];
+        return {title:j[0],dept:j[1],location:j[2],status:j[3],bg:c[0],fg:c[1],glyph:c[2],applied:j[5],pipeline:j[6],
+          closes:j[7],closeFg:j[8]?W:N,action:j[3]==="Published"?"Unpublish":j[3]==="Draft"?"Publish":"Reopen",
+          toggle:()=>this.toast(j[3]==="Published"?"Job unpublished":"Job published",j[0]+" · careers site updated")};}),
+      jobFilterChips:["All roles","Field Sales Representative","Warehouse Supervisor","Accounts Officer"]
+        .map(f=>({label:f,pick:()=>this.setState({jobFilter:f}),...chip(s.jobFilter===f)})),
+      pipeline:STAGES.map(st=>{
+        const cards=APPS.filter(a=>a.st===st[0]&&(s.jobFilter==="All roles"||a.role===s.jobFilter));
+        return {label:st[0],dot:st[1],count:cards.length,
+          cards:cards.map(a=>{const f=PILL[a.fk];
+            return {name:a.n,initials:a.i,exp:a.exp,role:a.role,applied:a.applied,flagged:!!a.flag,flag:a.flag,
+              flagBg:f[0],flagFg:f[1],open:()=>this.setState({appOpen:true,appIdx:APPS.indexOf(a),appTab:"Profile"})};})};}),
+      openJob:()=>this.setState({sheet:"job"}),
+      openCreatePeriod:()=>this.setState({sheet:"period"}),
+      sheetOpen:!!s.sheet,
+      sheetTitle:sp?sp.title:"",sheetSub:sp?sp.sub:"",sheetCta:sp?sp.cta:"Save",
+      sheetFields:sp?sp.fields.map(f=>({label:f[0],ph:f[1],val:f[2],isArea:f[3]===1,isInput:f[3]!==1,hasHint:!!f[4],hint:f[4]})):[],
+      saveSheet:()=>{const k=s.sheet;this.setState({sheet:null});
+        this.toast(k==="period"?"Period created":"Job saved as draft",k==="period"?"April 2026 · 142 draft rows generated":"Publish it when the description is final");},
+
+      appOpen:s.appOpen,
+      closeAll:()=>this.setState({appOpen:false,adjustOpen:false,docOpen:false,sheet:null}),
+      appTabs:["Profile","Notes","Timeline"].map(t=>({label:t,pick:()=>this.setState({appTab:t}),
+        fg:s.appTab===t?"#1B4F8C":"#7A8798",underline:s.appTab===t?"#1B4F8C":"transparent"})),
+      apProfile:s.appTab==="Profile",apNotes:s.appTab==="Notes",apTimeline:s.appTab==="Timeline",
+      ap:{name:ap.n,initials:ap.i,role:ap.role,stage:ap.st,stageBg:apStage[0],stageFg:apStage[1],
+        applied:ap.applied,exp:ap.exp,location:ap.loc,age:ap.age,ageFg:parseInt(ap.age,10)>7?W:N,
+        email:ap.email,phone:ap.phone,cover:ap.cover,cv:ap.cv,canHire:ap.st==="Offered",
+        notes:ap.notes.map(x=>({i:x[0],who:x[1],when:x[2],text:x[3]})),
+        timeline:ap.tl.map(x=>({text:x[0],when:x[1],dot:x[2]}))},
+      stageOptions:["Screening","Shortlisted","Interview","Offered","Rejected","Withdrawn"]
+        .map(x=>({label:x,pick:()=>this.toast("Moved to "+x,ap.n+" notified by email"),...chip(ap.st===x)})),
+      noteDraft:s.noteDraft,onNoteDraft:ev=>this.setState({noteDraft:ev.target.value}),
+      postNote:()=>{this.setState({noteDraft:""});this.toast("Note added","Visible to the hiring panel only");},
+      toastEmail:()=>this.toast("Email drafted",ap.n+" · from the interview template"),
+      toastReject:()=>this.toast("Applicant rejected",ap.n+" · told within 24h, with a reason"),
+      openConvert:()=>this.setState({convertOpen:true,convertDone:false}),
+      convertOpen:s.convertOpen,convertForm:!s.convertDone,convertDone:s.convertDone,
+      closeConvert:()=>this.setState({convertOpen:false,convertDone:false}),
+      doConvert:()=>this.setState({convertDone:true}),
+
+      docSub:isEmp?"Company documents and your own file":dlist.length+" documents · 3 sensitivity levels",
+      docQuery:s.docQuery,onDocQuery:ev=>this.setState({docQuery:ev.target.value}),
+      docCats:["All","Company","Restricted","Confidential"].filter(c=>!(isEmp&&c==="Restricted"))
+        .map(c=>({label:c,pick:()=>this.setState({docCat:c}),...chip(s.docCat===c)})),
+      clearDocFilters:()=>this.setState({docCat:"All",docQuery:""}),
+      hasDocs:dlist.length>0,noDocs:dlist.length===0,
+      emptyDocTitle:dq||s.docCat!=="All"?"No documents match":"No documents yet",
+      emptyDocBody:dq||s.docCat!=="All"?"Try a different search, or widen the category filter.":"Upload the handbook, policies and forms your team needs, and they'll appear here.",
+      docs:dlist.map(d=>{const c=SENS[d[3]];
+        return {name:d[0],desc:d[2],icon:d[4],version:d[5],size:d[6],date:d[7],...c,
+          open:()=>this.setState({docOpen:true,docIdx:DOCS.indexOf(d)})};}),
+      docOpen:s.docOpen,
+      dv:{name:dvRaw[0],icon:dvRaw[4],pages:dvRaw[9],...dvS,
+        meta:[{k:"Category",v:dvRaw[1]},{k:"Version",v:dvRaw[5]},{k:"Size",v:dvRaw[6]},{k:"Last change",v:dvRaw[7]},{k:"Retention",v:dvRaw[3]==="confidential"?"24 months after exit":"Indefinite"}],
+        access:(dvRaw[8]||[]).map(r=>({r}))},
+      toastUpload:()=>this.toast("Upload ready","Pick a sensitivity level before saving"),
+
+      toast:()=>this.toast("Saved","Change written to the audit log"),
+      toasts:s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes slideRight { from { transform: translateX(110%); } to { transform: none; } }
+  @keyframes sheetUp { from { transform: translateY(110%); } to { transform: none; } }
+  @keyframes checkPop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes barFill { from { width: 0; } to { width: 100%; } }
+  @keyframes collapseW { from { width: 100%; } to { width: 34%; } }
+  @keyframes slideUnder { from { transform: translateX(0); } to { transform: translateX(100%); } }
+  @keyframes cardHop { 0% { transform: none; } 45% { transform: translate(58px,-8px) rotate(-2deg); } 100% { transform: translate(116px,0); } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(27,79,140,.4); } 70% { box-shadow: 0 0 0 15px rgba(27,79,140,0); } 100% { box-shadow: 0 0 0 0 rgba(27,79,140,0); } }
+  @keyframes strike { from { width: 0; } to { width: 100%; } }
+  @keyframes shimmer { 0% { background-position: -420px 0; } 100% { background-position: 420px 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 08 · Motion, responsive QA, prototype, final review</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">CHF Heron Nigeria · design complete</span>
+  </div>
+
+  <div style="display:flex;min-height:900px">
+    <div style="width:210px;flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:16px">
+        <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+        <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600">Phase 08</span><span style="display:block;font-size:10px;color:#7A8798">Final review</span></span>
+      </div>
+      <sc-for list="{{ sections }}" as="nav" hint-placeholder-count="4">
+        <div onClick="{{ nav.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ nav.bg }};color:{{ nav.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+          <span data-icon="{{ nav.icon }}" style="font-size:18px;flex:none"></span>
+          <span style="flex:1;font-size:13px;font-weight:500;white-space:nowrap">{{ nav.label }}</span>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:11px;line-height:17px;color:#4A5666">Every animation here is real, not a description. Every flow below is clickable end to end.</div>
+    </div>
+
+    <div style="flex:1;min-width:0">
+
+      <!-- MOTION -->
+      <sc-if value="{{ isMotion }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Motion specification</h1>
+              <div style="font-size:14px;color:#4A5666;max-width:70ch">Fourteen animations, each earning its place. Motion here answers one of three questions: where did this come from, did my action land, or what changed?</div>
+            </div>
+            <button onClick="{{ replayAll }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F"><span data-icon="rotate-ccw" style="font-size:15px"></span>Replay all</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:18px">
+            <sc-for list="{{ tokens }}" as="tok" hint-placeholder-count="5">
+              <div style="background:#fff;padding:14px 16px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#1B4F8C">{{ tok.name }}</div>
+                <div style="font-size:11px;line-height:17px;color:#4A5666;margin-top:5px">{{ tok.use }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ stageOn }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px;animation:fadeIn 140ms">
+              <sc-for list="{{ motions }}" as="mo" hint-placeholder-count="14">
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+                  <div style="padding:16px 18px 12px">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:5px">
+                      <span style="font-size:14px;font-weight:600">{{ mo.name }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;background:#EEF4FB;color:#16406F">{{ mo.dur }}</span>
+                    </div>
+                    <div style="font-size:12px;line-height:18px;color:#4A5666">{{ mo.purpose }}</div>
+                  </div>
+
+                  <div style="position:relative;height:104px;margin:0 18px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;overflow:hidden">
+                    <!-- slide-over -->
+                    <sc-if value="{{ mo.isSlide }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:rgba(19,26,34,.28);animation:fadeIn 200ms"></div>
+                      <div style="position:absolute;top:0;right:0;bottom:0;width:62%;background:#fff;border-left:1px solid #E3E8EF;padding:12px;animation:slideRight 320ms cubic-bezier(.2,.8,.2,1)">
+                        <div style="height:8px;width:56%;border-radius:4px;background:#CDD5E0"></div>
+                        <div style="height:7px;width:78%;border-radius:4px;background:#E3E8EF;margin-top:8px"></div>
+                        <div style="height:7px;width:66%;border-radius:4px;background:#E3E8EF;margin-top:6px"></div>
+                      </div>
+                    </sc-if>
+                    <!-- dialog -->
+                    <sc-if value="{{ mo.isDialog }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:rgba(19,26,34,.36);animation:fadeIn 200ms"></div>
+                      <div style="position:absolute;inset:0;display:grid;place-items:center">
+                        <div style="width:70%;background:#fff;border-radius:10px;padding:12px;box-shadow:0 8px 24px -6px rgba(16,24,40,.2);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+                          <div style="height:8px;width:62%;border-radius:4px;background:#CDD5E0"></div>
+                          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px"><span style="width:38px;height:16px;border-radius:4px;border:1px solid #CDD5E0"></span><span style="width:44px;height:16px;border-radius:4px;background:#1B4F8C"></span></div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- sheet -->
+                    <sc-if value="{{ mo.isSheet }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:rgba(19,26,34,.28);animation:fadeIn 200ms"></div>
+                      <div style="position:absolute;left:0;right:0;bottom:0;height:66%;background:#fff;border-radius:12px 12px 0 0;padding:10px 14px;animation:sheetUp 320ms cubic-bezier(.2,.8,.2,1)">
+                        <div style="width:32px;height:4px;border-radius:2px;background:#CDD5E0;margin:0 auto 10px"></div>
+                        <div style="display:flex;gap:6px"><span style="padding:4px 10px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:10px">All</span><span style="padding:4px 10px;border-radius:999px;border:1px solid #CDD5E0;font-size:10px;color:#4A5666">Late</span></div>
+                      </div>
+                    </sc-if>
+                    <!-- toast -->
+                    <sc-if value="{{ mo.isToast }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;right:12px;bottom:12px;left:12px;display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:9px;background:#131A22;animation:rise 200ms cubic-bezier(0,.6,.25,1)">
+                        <span data-icon="check-circle-2" style="font-size:16px;color:#6FD8A8"></span>
+                        <span style="flex:1"><span style="display:block;height:7px;width:52%;border-radius:4px;background:#4A5666"></span><span style="display:block;height:6px;width:74%;border-radius:4px;background:#2A3540;margin-top:6px"></span></span>
+                      </div>
+                    </sc-if>
+                    <!-- sidebar collapse -->
+                    <sc-if value="{{ mo.isSidebar }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;display:flex">
+                        <div style="height:100%;background:#fff;border-right:1px solid #E3E8EF;padding:10px 8px;animation:collapseW 320ms cubic-bezier(.2,.8,.2,1) forwards;overflow:hidden">
+                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:9px"><span style="width:16px;height:16px;flex:none;border-radius:5px;background:#1B4F8C"></span><span style="height:7px;width:48px;border-radius:4px;background:#E3E8EF"></span></div>
+                          <div style="display:flex;gap:8px;align-items:center;margin-bottom:9px"><span style="width:16px;height:16px;flex:none;border-radius:5px;background:#D9E6F5"></span><span style="height:7px;width:56px;border-radius:4px;background:#E3E8EF"></span></div>
+                          <div style="display:flex;gap:8px;align-items:center"><span style="width:16px;height:16px;flex:none;border-radius:5px;background:#D9E6F5"></span><span style="height:7px;width:40px;border-radius:4px;background:#E3E8EF"></span></div>
+                        </div>
+                        <div style="flex:1;background:#F1F4F8"></div>
+                      </div>
+                    </sc-if>
+                    <!-- tabs -->
+                    <sc-if value="{{ mo.isTabs }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px">
+                        <div style="position:relative;display:flex;gap:0">
+                          <span style="flex:1;text-align:center;font-size:11px;color:#7A8798">Overview</span>
+                          <span style="flex:1;text-align:center;font-size:11px;color:#1B4F8C;font-weight:600">Exceptions</span>
+                          <div style="position:absolute;left:0;bottom:-7px;width:50%;height:2px;border-radius:2px;background:#1B4F8C;animation:slideUnder 200ms cubic-bezier(.2,.8,.2,1) forwards"></div>
+                        </div>
+                        <div style="margin-top:20px;padding:10px;border-radius:8px;background:#fff;border:1px solid #E3E8EF;animation:rise 200ms cubic-bezier(0,.6,.25,1)">
+                          <div style="height:7px;width:64%;border-radius:4px;background:#E3E8EF"></div>
+                          <div style="height:7px;width:44%;border-radius:4px;background:#E3E8EF;margin-top:7px"></div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- kanban -->
+                    <sc-if value="{{ mo.isKanban }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:12px;display:flex;gap:8px">
+                        <div style="flex:1;border-radius:8px;background:#E9EDF3"></div>
+                        <div style="flex:1;border-radius:8px;background:#E9EDF3"></div>
+                        <div style="flex:1;border-radius:8px;background:#E9EDF3;border:1px dashed #AFC9E7"></div>
+                        <div style="position:absolute;left:14px;top:20px;width:29%;padding:9px;border-radius:8px;background:#fff;border:1px solid #E3E8EF;box-shadow:0 6px 18px -6px rgba(16,24,40,.18);animation:cardHop 320ms cubic-bezier(.2,.8,.2,1) forwards">
+                          <div style="height:6px;width:70%;border-radius:3px;background:#CDD5E0"></div>
+                          <div style="height:5px;width:50%;border-radius:3px;background:#E3E8EF;margin-top:6px"></div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- task complete -->
+                    <sc-if value="{{ mo.isTask }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;align-items:center;gap:11px">
+                        <span style="width:22px;height:22px;flex:none;border-radius:6px;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:13px;animation:checkPop 200ms cubic-bezier(.2,.8,.2,1)">✓</span>
+                        <span style="position:relative;flex:1">
+                          <span style="display:block;height:8px;width:82%;border-radius:4px;background:#CDD5E0"></span>
+                          <span style="position:absolute;left:0;top:3px;height:2px;background:#7A8798;animation:strike 200ms cubic-bezier(.2,.8,.2,1) forwards;max-width:82%"></span>
+                        </span>
+                      </div>
+                    </sc-if>
+                    <!-- check-in success -->
+                    <sc-if value="{{ mo.isCheckin }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:#E7F4EE;display:grid;place-items:center;animation:fadeIn 200ms">
+                        <div style="text-align:center">
+                          <div style="width:38px;height:38px;margin:0 auto 7px;border-radius:50%;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:19px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">✓</div>
+                          <div style="font-size:12px;font-weight:600;color:#0F7A54">Checked in · 09:04</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- check-out -->
+                    <sc-if value="{{ mo.isCheckout }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;display:grid;place-items:center;padding:14px">
+                        <div style="text-align:center;width:100%">
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:#131A22;animation:fadeIn 200ms">08:22 worked</div>
+                          <div style="height:6px;border-radius:3px;background:#E3E8EF;margin-top:10px;overflow:hidden"><span style="display:block;height:100%;background:#1B4F8C;animation:barFill 320ms cubic-bezier(.2,.8,.2,1) forwards"></span></div>
+                          <div style="font-size:10px;color:#4A5666;margin-top:7px">day closed, nothing left open</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- verification -->
+                    <sc-if value="{{ mo.isVerify }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;gap:9px;align-items:center">
+                        <span style="width:34px;height:34px;flex:none;border-radius:50%;border:2px solid #1B4F8C;display:grid;place-items:center;color:#1B4F8C;animation:pulseRing 1.6s ease-out infinite"><span data-icon="map-pin" style="font-size:15px"></span></span>
+                        <span style="flex:1;min-width:0">
+                          <span style="display:block;font-size:11px;font-weight:600;color:#16406F">Matching location…</span>
+                          <span style="display:block;height:5px;border-radius:3px;background:#E3E8EF;margin-top:7px;overflow:hidden"><span style="display:block;height:100%;background:#1B4F8C;animation:barFill 420ms cubic-bezier(.2,.8,.2,1) forwards"></span></span>
+                          <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4A5666;margin-top:5px">±8m · 22m from store pin</span>
+                        </span>
+                      </div>
+                    </sc-if>
+                    <!-- leave approval -->
+                    <sc-if value="{{ mo.isLeave }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;justify-content:center;gap:9px">
+                        <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#0F7A54;animation:checkPop 200ms"></span><span style="font-size:11px;font-weight:600">HOD approved</span></div>
+                        <div style="height:2px;background:#E3E8EF;margin-left:4px;overflow:hidden"><span style="display:block;height:100%;background:#0F7A54;animation:barFill 320ms cubic-bezier(.2,.8,.2,1) forwards"></span></div>
+                        <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #8A5600;animation:pulseRing 1.6s ease-out infinite"></span><span style="font-size:11px;color:#4A5666">Awaiting HR</span></div>
+                      </div>
+                    </sc-if>
+                    <!-- payroll publish -->
+                    <sc-if value="{{ mo.isPayroll }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;justify-content:center">
+                        <div style="display:flex;gap:5px;margin-bottom:9px">
+                          <span style="flex:1;height:5px;border-radius:3px;background:#1B4F8C"></span>
+                          <span style="flex:1;height:5px;border-radius:3px;background:#1B4F8C"></span>
+                          <span style="flex:1;height:5px;border-radius:3px;background:#1B4F8C"></span>
+                          <span style="flex:1;height:5px;border-radius:3px;background:#E3E8EF;overflow:hidden"><span style="display:block;height:100%;background:#1B4F8C;animation:barFill 420ms cubic-bezier(.2,.8,.2,1) forwards"></span></span>
+                        </div>
+                        <div style="font-size:11px;font-weight:600;color:#0F7A54;animation:fadeIn 420ms">142 payslips published</div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4A5666;margin-top:4px">irreversible · confirmed first</div>
+                      </div>
+                    </sc-if>
+                    <!-- recruitment stage -->
+                    <sc-if value="{{ mo.isStage }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;align-items:center;gap:7px">
+                        <span style="padding:4px 9px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:10px;font-weight:600">Interview</span>
+                        <span style="flex:1;height:2px;background:#E3E8EF;overflow:hidden"><span style="display:block;height:100%;background:#0F7A54;animation:barFill 200ms cubic-bezier(.2,.8,.2,1) forwards"></span></span>
+                        <span style="padding:4px 9px;border-radius:999px;background:#E7F4EE;color:#0F7A54;font-size:10px;font-weight:600;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">Offered</span>
+                      </div>
+                    </sc-if>
+                    <!-- page transition -->
+                    <sc-if value="{{ mo.isPage }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;animation:rise 200ms cubic-bezier(0,.6,.25,1)">
+                        <div style="height:9px;width:44%;border-radius:4px;background:#CDD5E0"></div>
+                        <div style="display:flex;gap:7px;margin-top:11px">
+                          <span style="flex:1;height:34px;border-radius:7px;background:#fff;border:1px solid #E3E8EF"></span>
+                          <span style="flex:1;height:34px;border-radius:7px;background:#fff;border:1px solid #E3E8EF"></span>
+                          <span style="flex:1;height:34px;border-radius:7px;background:#fff;border:1px solid #E3E8EF"></span>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <!-- skeleton -->
+                    <sc-if value="{{ mo.isSkeleton }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;gap:9px">
+                        <span style="height:9px;width:72%;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                        <span style="height:9px;width:88%;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                        <span style="height:9px;width:60%;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                      </div>
+                    </sc-if>
+                  </div>
+
+                  <div style="padding:14px 18px 16px;display:flex;flex-direction:column;gap:7px">
+                    <div style="display:flex;gap:9px"><span style="flex:none;width:56px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">trigger</span><span style="flex:1;font-size:12px;line-height:18px;color:#4A5666">{{ mo.trigger }}</span></div>
+                    <div style="display:flex;gap:9px"><span style="flex:none;width:56px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">easing</span><span style="flex:1;font-size:12px;line-height:18px;color:#4A5666">{{ mo.easing }}</span></div>
+                    <div style="display:flex;gap:9px"><span style="flex:none;width:56px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">reduced</span><span style="flex:1;font-size:12px;line-height:18px;color:#4A5666">{{ mo.reduced }}</span></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="margin-top:16px;padding:20px;border-radius:14px;background:#131A22;color:#E6EBF1">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7FA6D3;margin-bottom:11px">Rules that apply to all of it</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;font-size:13px;line-height:21px">
+              <div><b style="display:block;color:#fff;margin-bottom:4px">Nothing decorative</b>If an animation doesn't explain origin, confirm an action or show a change, it isn't in the product.</div>
+              <div><b style="display:block;color:#fff;margin-bottom:4px">420ms ceiling</b>Only check-in success and location matching reach it. Everything else is 320ms or less.</div>
+              <div><b style="display:block;color:#fff;margin-bottom:4px">Reduced motion keeps feedback</b>Transforms drop, opacity and colour stay. A user who disables motion still sees that their check-in worked.</div>
+              <div><b style="display:block;color:#fff;margin-bottom:4px">Never animate on re-query</b>Bars and lists animate on first paint only — refiltering a table must not re-run the entrance.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- RESPONSIVE -->
+      <sc-if value="{{ isResponsive }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Responsive QA</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:70ch">The attendance list at five real widths. Pick a device — the frame below is that width exactly, and the table becomes cards rather than shrinking.</div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+            <sc-for list="{{ devices }}" as="dev" hint-placeholder-count="5">
+              <button onClick="{{ dev.pick }}" style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:1px solid {{ dev.border }};border-radius:999px;background:{{ dev.bg }};color:{{ dev.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms"><span data-icon="{{ dev.icon }}" style="font-size:15px"></span>{{ dev.label }}<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.75">{{ dev.w }}</span></button>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:0 1 auto;min-width:0;max-width:100%">
+              <div style="display:inline-flex;align-items:center;gap:9px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666"><span data-icon="{{ dv.icon }}" style="font-size:14px"></span>{{ dv.label }} · {{ dv.w }} · {{ dv.mode }}</div>
+              <div style="width:{{ dv.px }};max-width:100%;border:1px solid #CDD5E0;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transition:width 320ms cubic-bezier(.2,.8,.2,1)">
+
+                <sc-if value="{{ dv.narrow }}" hint-placeholder-val="{{ true }}">
+                  <div style="animation:fadeIn 200ms">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid #E3E8EF">
+                      <span style="font-size:15px;font-weight:600">Attendance</span>
+                      <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#1B4F8C"><span data-icon="sliders-horizontal" style="font-size:14px"></span>Filters</span>
+                    </div>
+                    <div style="padding:12px 15px;display:flex;flex-direction:column;gap:9px;background:#F8F9FB">
+                      <sc-for list="{{ attendance }}" as="att" hint-placeholder-count="4">
+                        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:12px">
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+                            <span style="font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ att.name }}</span>
+                            <span style="flex:none;padding:2px 8px;border-radius:999px;background:{{ att.bg }};color:{{ att.fg }};font-size:10px;font-weight:600">{{ att.glyph }} {{ att.status }}</span>
+                          </div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ att.dept }} · {{ att.time }} · {{ att.mode }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="padding:10px 15px;border-top:1px solid #E3E8EF"><button style="width:100%;height:46px;border:none;border-radius:10px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Check in</button></div>
+                    <div style="display:flex;border-top:1px solid #E3E8EF">
+                      <sc-for list="{{ bottomNav }}" as="bn" hint-placeholder-count="4">
+                        <div style="flex:1;padding:9px 0 11px;text-align:center;color:{{ bn.fg }}"><span data-icon="{{ bn.icon }}" style="font-size:19px;display:inline-flex;justify-content:center;width:100%"></span><span style="font-size:10px;font-weight:{{ bn.weight }}">{{ bn.label }}</span></div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ dv.wide }}" hint-placeholder-val="{{ false }}">
+                  <div style="animation:fadeIn 200ms;display:flex">
+                    <sc-if value="{{ dv.hasSidebar }}" hint-placeholder-val="{{ false }}">
+                      <div style="width:{{ dv.sidebarW }};flex:none;border-right:1px solid #E3E8EF;padding:12px 9px;overflow:hidden">
+                        <sc-for list="{{ miniNav }}" as="mn" hint-placeholder-count="5">
+                          <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:7px;margin-bottom:2px;background:{{ mn.bg }};color:{{ mn.fg }}">
+                            <span data-icon="{{ mn.icon }}" style="font-size:17px;flex:none"></span>
+                            <sc-if value="{{ dv.showLabels }}" hint-placeholder-val="{{ false }}">
+                              <span style="font-size:12px;font-weight:500;white-space:nowrap">{{ mn.label }}</span>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E3E8EF">
+                        <span style="font-size:15px;font-weight:600">Attendance · today</span>
+                        <div style="display:flex;gap:7px">
+                          <span style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border:1px solid #CDD5E0;border-radius:6px;font-size:12px;font-weight:500;color:#4A5666"><span data-icon="filter" style="font-size:14px"></span>Filters</span>
+                          <span style="display:inline-flex;align-items:center;height:30px;padding:0 11px;border-radius:6px;background:#1B4F8C;color:#fff;font-size:12px;font-weight:500">Export</span>
+                        </div>
+                      </div>
+                      <div style="overflow-x:auto">
+                        <table style="width:100%;border-collapse:collapse;min-width:{{ dv.tableMin }}">
+                          <thead>
+                            <tr style="background:#F8F9FB">
+                              <th style="padding:9px 16px;text-align:left;font:600 11px 'IBM Plex Sans';color:#4A5666">Employee</th>
+                              <th style="padding:9px 10px;text-align:left;font:600 11px 'IBM Plex Sans';color:#4A5666">Status</th>
+                              <th style="padding:9px 10px;text-align:left;font:600 11px 'IBM Plex Sans';color:#4A5666">Check-in</th>
+                              <sc-if value="{{ dv.allCols }}" hint-placeholder-val="{{ false }}">
+                                <th style="padding:9px 10px;text-align:left;font:600 11px 'IBM Plex Sans';color:#4A5666">Mode</th>
+                              </sc-if>
+                              <sc-if value="{{ dv.allCols }}" hint-placeholder-val="{{ false }}">
+                                <th style="padding:9px 16px;text-align:right;font:600 11px 'IBM Plex Sans';color:#4A5666">Accuracy</th>
+                              </sc-if>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <sc-for list="{{ attendance }}" as="att2" hint-placeholder-count="4">
+                              <tr style="border-top:1px solid #F1F4F8">
+                                <td style="padding:10px 16px">
+                                  <div style="display:flex;align-items:center;gap:9px">
+                                    <span style="width:26px;height:26px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">{{ att2.initials }}</span>
+                                    <span style="min-width:0"><span style="display:block;font-size:12px;font-weight:500;white-space:nowrap">{{ att2.name }}</span><span style="display:block;font-size:10px;color:#7A8798">{{ att2.dept }}</span></span>
+                                  </div>
+                                </td>
+                                <td style="padding:10px 10px"><span style="display:inline-flex;padding:2px 8px;border-radius:999px;background:{{ att2.bg }};color:{{ att2.fg }};font-size:10px;font-weight:600;white-space:nowrap">{{ att2.glyph }} {{ att2.status }}</span></td>
+                                <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px">{{ att2.time }}</td>
+                                <sc-if value="{{ dv.allCols }}" hint-placeholder-val="{{ false }}">
+                                  <td style="padding:10px 10px;font-size:11px;color:#4A5666">{{ att2.mode }}</td>
+                                </sc-if>
+                                <sc-if value="{{ dv.allCols }}" hint-placeholder-val="{{ false }}">
+                                  <td style="padding:10px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ att2.acc }}</td>
+                                </sc-if>
+                              </tr>
+                            </sc-for>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="flex:1 1 280px;min-width:260px;display:flex;flex-direction:column;gap:14px">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">What changes at {{ dv.w }}</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <sc-for list="{{ dv.changes }}" as="chg" hint-placeholder-count="4">
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                      <span data-icon="{{ chg.icon }}" style="font-size:15px;color:#1B4F8C;flex:none;margin-top:2px"></span>
+                      <span style="font-size:13px;line-height:20px;color:#4A5666">{{ chg.text }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Rules that never bend</div>
+                <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:20px;color:#4A5666">
+                  <div><b style="color:#131A22">No shrunken tables.</b> Under 640px a table becomes cards. Horizontal scrolling a payroll table on a phone is not a design.</div>
+                  <div><b style="color:#131A22">44px touch targets.</b> On phones every action is at least 44px and sits in the lower two-thirds of the screen.</div>
+                  <div><b style="color:#131A22">One primary action, pinned.</b> Check in, Submit, Apply — always visible above the bottom nav, never scrolled away.</div>
+                  <div><b style="color:#131A22">Filters move, they don't vanish.</b> Toolbar on desktop, bottom sheet on phone, same options in the same order.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PROTOTYPE -->
+      <sc-if value="{{ isProto }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Clickable flows</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:70ch">Twelve journeys, every step real. Pick a flow, then step through it — the screen, the role acting and the design note all change with you.</div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px">
+            <sc-for list="{{ flows }}" as="flw" hint-placeholder-count="12">
+              <button onClick="{{ flw.pick }}" style="display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid {{ flw.border }};border-radius:999px;background:{{ flw.bg }};color:{{ flw.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.8">{{ flw.n }}</span>{{ flw.name }}</button>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:0 0 auto;max-width:100%">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:11px;font-weight:600"><span data-icon="{{ fl.roleIcon }}" style="font-size:13px"></span>{{ fl.role }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">step {{ stepNum }} of {{ stepTotal }}</span>
+              </div>
+
+              <div style="width:{{ fl.frameW }};max-width:100%;border:1px solid #CDD5E0;border-radius:{{ fl.frameR }};background:#fff;overflow:hidden;box-shadow:0 8px 24px -6px rgba(16,24,40,.12);transition:width 320ms cubic-bezier(.2,.8,.2,1)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 15px;border-bottom:1px solid #E3E8EF;background:#F8F9FB">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ st.chrome }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ st.clock }}</span>
+                </div>
+
+                <div style="padding:18px 18px 20px;min-height:{{ fl.minH }};animation:rise 200ms cubic-bezier(0,.6,.25,1)">
+                  <div style="font-size:17px;font-weight:600;letter-spacing:-.01em;margin-bottom:5px">{{ st.t }}</div>
+                  <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:16px">{{ st.s }}</div>
+
+                  <sc-if value="{{ st.isList }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:9px">
+                      <sc-for list="{{ st.rows }}" as="row" hint-placeholder-count="3">
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:13px 14px;border:1px solid {{ row.border }};border-radius:10px;background:{{ row.rowBg }}">
+                          <span style="flex:1 1 130px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ row.label }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ row.meta }}</span></span>
+                          <sc-if value="{{ row.hasPill }}" hint-placeholder-val="{{ false }}">
+                            <span style="flex:none;padding:3px 9px;border-radius:999px;background:{{ row.bg }};color:{{ row.fg }};font-size:10px;font-weight:600">{{ row.pill }}</span>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isForm }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:13px">
+                      <sc-for list="{{ st.fields }}" as="fld" hint-placeholder-count="3">
+                        <div>
+                          <label style="display:block;font-size:12px;font-weight:500;margin-bottom:6px">{{ fld.k }}</label>
+                          <div style="height:42px;padding:0 13px;display:flex;align-items:center;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font-size:14px;color:{{ fld.fg }}">{{ fld.v }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isCapture }}" hint-placeholder-val="{{ false }}">
+                    <div>
+                      <div style="height:190px;border-radius:12px;background:repeating-linear-gradient(135deg,#F1F4F8 0 9px,#E7ECF3 9px 18px);display:grid;place-items:center;margin-bottom:12px">
+                        <div style="text-align:center;padding:0 18px">
+                          <span data-icon="{{ st.capIcon }}" style="font-size:26px;color:#4E80B9;display:inline-flex;margin-bottom:9px"></span>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ st.capLabel }}</div>
+                        </div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;background:{{ st.locBg }};border:1px solid {{ st.locBorder }}">
+                        <span data-icon="map-pin" style="font-size:17px;color:{{ st.locFg }}"></span>
+                        <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;font-weight:600;color:{{ st.locFg }}">{{ st.locTitle }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;margin-top:2px">{{ st.locSub }}</span></span>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isSuccess }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:26px 18px;border-radius:12px;background:{{ st.okBg }};text-align:center">
+                      <div style="width:62px;height:62px;margin:0 auto 13px;border-radius:50%;background:{{ st.okFg }};color:#fff;display:grid;place-items:center;font-size:28px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">✓</div>
+                      <div style="font-size:16px;font-weight:600;color:{{ st.okFg }};margin-bottom:6px">{{ st.okTitle }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ st.okSub }}</div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isMeta }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:11px;overflow:hidden">
+                      <sc-for list="{{ st.meta }}" as="mt" hint-placeholder-count="4">
+                        <div style="background:#fff;padding:13px 14px">
+                          <div style="font-size:11px;color:#7A8798">{{ mt.k }}</div>
+                          <div style="font-size:13px;font-weight:500;margin-top:4px;font-family:{{ mt.font }}">{{ mt.v }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isEvidence }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px">
+                      <sc-for list="{{ st.tiles }}" as="tl" hint-placeholder-count="3">
+                        <div>
+                          <div style="height:92px;border-radius:9px;background:repeating-linear-gradient(135deg,#F1F4F8 0 8px,#E7ECF3 8px 16px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;text-align:center;padding:7px">{{ tl.label }}</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:5px">{{ tl.meta }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isTimeline }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ st.steps }}" as="tls" hint-placeholder-count="4">
+                        <div style="display:flex;gap:12px">
+                          <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:10px;height:10px;border-radius:50%;background:{{ tls.dot }};border:{{ tls.ring }};margin-top:4px"></span><span style="flex:1;width:2px;background:#E3E8EF;margin-top:4px"></span></span>
+                          <span style="padding-bottom:16px;min-width:0"><span style="display:block;font-size:13px;font-weight:{{ tls.weight }};line-height:19px">{{ tls.label }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:3px">{{ tls.meta }}</span></span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isBoard }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:9px;overflow-x:auto;padding-bottom:6px">
+                      <sc-for list="{{ st.cols }}" as="bcol" hint-placeholder-count="4">
+                        <div style="flex:0 0 128px;border-radius:11px;background:{{ bcol.bg }};border:{{ bcol.border }};padding:9px;min-height:150px">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:9px">
+                            <span style="font-size:11px;font-weight:600;color:{{ bcol.fg }}">{{ bcol.name }}</span>
+                            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666">{{ bcol.count }}</span>
+                          </div>
+                          <sc-for list="{{ bcol.cards }}" as="bcard" hint-placeholder-count="1">
+                            <div style="background:#fff;border:1px solid {{ bcard.border }};border-radius:8px;padding:9px;margin-bottom:7px;box-shadow:{{ bcard.shadow }}">
+                              <div style="font-size:11px;font-weight:600;line-height:16px">{{ bcard.name }}</div>
+                              <div style="font-size:10px;color:#7A8798;margin-top:3px">{{ bcard.meta }}</div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.isTable }}" hint-placeholder-val="{{ false }}">
+                    <div style="border:1px solid #E3E8EF;border-radius:11px;overflow:hidden">
+                      <sc-for list="{{ st.trows }}" as="tr2" hint-placeholder-count="4">
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #F1F4F8;background:{{ tr2.rowBg }}">
+                          <span style="flex:1 1 120px;min-width:0;font-size:13px;font-weight:{{ tr2.weight }}">{{ tr2.a }}</span>
+                          <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ tr2.b }}</span>
+                          <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;min-width:90px;text-align:right">{{ tr2.c }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.hasBanner }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:10px;margin-top:14px;padding:12px 13px;border-radius:10px;background:{{ st.bannerBg }};border:1px solid {{ st.bannerBorder }}">
+                      <span data-icon="{{ st.bannerIcon }}" style="font-size:17px;color:{{ st.bannerFg }};flex:none"></span>
+                      <span style="font-size:12px;line-height:19px;color:#4A5666">{{ st.banner }}</span>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ st.hasCta }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ next }}" style="width:100%;height:46px;margin-top:16px;border:none;border-radius:10px;background:{{ st.ctaBg }};color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#16406F">{{ st.cta }}</button>
+                  </sc-if>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px">
+                <button onClick="{{ prev }}" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;color:{{ prevFg }};font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="arrow-left" style="font-size:15px"></span>Back</button>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <sc-for list="{{ dots }}" as="dot" hint-placeholder-count="4">
+                    <span onClick="{{ dot.pick }}" style="width:{{ dot.w }};height:8px;border-radius:999px;background:{{ dot.bg }};cursor:pointer;transition:background 140ms,width 200ms"></span>
+                  </sc-for>
+                </div>
+                <button onClick="{{ next }}" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F">{{ nextLabel }}<span data-icon="arrow-right" style="font-size:15px"></span></button>
+              </div>
+            </div>
+
+            <div style="flex:1 1 270px;min-width:255px;display:flex;flex-direction:column;gap:14px">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#7A8798;margin-bottom:10px">Design note · this step</div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666">{{ st.note }}</div>
+              </div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Flow map</div>
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ flowMap }}" as="fm" hint-placeholder-count="4">
+                    <div onClick="{{ fm.pick }}" style="display:flex;gap:11px;cursor:pointer">
+                      <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:10px;height:10px;border-radius:50%;background:{{ fm.dot }};border:{{ fm.ring }};margin-top:4px"></span><span style="flex:1;width:2px;background:#F1F4F8;margin-top:3px"></span></span>
+                      <span style="padding-bottom:14px;min-width:0"><span style="display:block;font-size:13px;line-height:19px;font-weight:{{ fm.weight }};color:{{ fm.fg }}">{{ fm.label }}</span></span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- FINAL REVIEW -->
+      <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Final review and handoff</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:70ch">The whole product as one system: what exists, what it's built from, and what a developer needs before writing code.</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:16px">
+            <sc-for list="{{ tallies }}" as="tal" hint-placeholder-count="5">
+              <div style="background:#fff;padding:16px 18px">
+                <div style="font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ tal.n }}</div>
+                <div style="font-size:12px;color:#4A5666;margin-top:4px">{{ tal.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-bottom:16px">
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">Screen inventory</div>
+              <sc-for list="{{ screens }}" as="scr" hint-placeholder-count="8">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid #F1F4F8">
+                  <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;min-width:26px">{{ scr.ph }}</span>
+                  <span style="flex:1 1 150px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ scr.name }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ scr.roles }}</span></span>
+                  <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ scr.count }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">Component inventory</div>
+              <sc-for list="{{ components }}" as="cmp" hint-placeholder-count="8">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:11px 20px;border-bottom:1px solid #F1F4F8">
+                  <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ cmp.name }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ cmp.variants }}</span></span>
+                  <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">{{ cmp.uses }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;margin-bottom:16px">
+            <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">Review checklist</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:#F1F4F8">
+              <sc-for list="{{ checks }}" as="chk" hint-placeholder-count="12">
+                <div style="background:#fff;padding:14px 18px;display:flex;gap:11px;align-items:flex-start">
+                  <span style="width:20px;height:20px;flex:none;border-radius:6px;background:{{ chk.bg }};color:{{ chk.fg }};display:grid;place-items:center;font-size:12px;font-weight:600;margin-top:1px">{{ chk.mark }}</span>
+                  <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ chk.name }}</span><span style="display:block;font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ chk.note }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
+            <div style="flex:1 1 320px;min-width:300px;background:#131A22;border-radius:14px;padding:24px;color:#E6EBF1">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7FA6D3;margin-bottom:12px">Developer handoff</div>
+              <div style="display:flex;flex-direction:column;gap:13px;font-size:13px;line-height:21px">
+                <sc-for list="{{ handoff }}" as="hnd" hint-placeholder-count="6">
+                  <div><b style="display:block;color:#fff;margin-bottom:3px">{{ hnd.k }}</b>{{ hnd.v }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:1 1 280px;min-width:270px;background:#fff;border:1px solid #F6E3BF;border-radius:14px;padding:22px">
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:13px"><span data-icon="alert-triangle" style="font-size:18px;color:#8A5600"></span><span style="font-size:14px;font-weight:600;color:#8A5600">Open decisions for the client</span></div>
+              <div style="display:flex;flex-direction:column;gap:11px;font-size:13px;line-height:20px;color:#4A5666">
+                <sc-for list="{{ opens }}" as="opn" hint-placeholder-count="4">
+                  <div><b style="color:#131A22">{{ opn.k }}</b> — {{ opn.v }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const B="#1B4F8C",G="#0F7A54",W="#8A5600",R="#B42318",N="#4A5666";
+const MONO="'IBM Plex Mono',monospace";
+const PILL={ok:["#E7F4EE","#0F7A54"],warn:["#FDF2DF","#8A5600"],bad:["#FDECEA","#B42318"],info:["#EEF4FB","#16406F"],mute:["#F1F4F8","#4A5666"]};
+
+const TOKENS=[["instant 80ms","hover, press, focus ring"],["fast 140ms","menus, tooltips, toggles"],
+  ["base 200ms","dialogs, tabs, toasts, kanban"],["slow 320ms","drawers, sheets, sidebar"],["confirm 420ms","check-in and verification only"]];
+
+const MOTIONS=[
+  ["Page transition","200ms","Tells you the view changed without a flash of empty layout.","Route change within the app shell.","enter · cubic-bezier(0,.6,.25,1) — 8px rise with a fade","Fade only, no translate. The change is still announced.","isPage"],
+  ["Sidebar collapse","320ms","Shows the nav shrinking to icons rather than teleporting.","Collapse toggle, or crossing the 1024px breakpoint.","standard · cubic-bezier(.2,.8,.2,1) on width","Width snaps; labels cross-fade at 1ms. No squashed text either way.","isSidebar"],
+  ["Slide-over drawer","320ms","Says the record came from the row you clicked, and the list is still behind it.","Row click, or Open record.","standard on transform; scrim fades to 32%","Appears at final position, scrim still fades.","isSlide"],
+  ["Dialog","200ms","A decision that blocks. Scales from .97 so it reads as arriving, not appearing.","Destructive or irreversible action.","enter · scale and fade together","Fade only. Focus still traps on the safe action.","isDialog"],
+  ["Bottom sheet","320ms","The phone equivalent of a drawer — filters rise from the thumb, not the top.","Filters or More on a screen under 640px.","standard on translateY","Sheet appears in place; the scrim fade remains.","isSheet"],
+  ["Toast","200ms","Confirms something already done, without stealing focus.","Any completed background action.","enter · 10px rise, auto-dismiss 5s, pauses on hover","No rise. Dismiss timer extends to 8s so it can be read.","isToast"],
+  ["Tab change","200ms","The underline slides so the eye tracks which tab won.","Tab click or arrow key.","standard on transform; content rises 8px","Underline jumps, content fades. No horizontal motion.","isTabs"],
+  ["Kanban drag","200ms","Lifts and tilts under the cursor, so the card feels held rather than teleported.","Pointer drag on a pipeline or task card.","standard · lift, −.4deg tilt, drop shadow e3","No tilt or lift. The target column highlights on hover instead.","isKanban"],
+  ["Task completion","200ms","Confirms the tick landed and the row is on its way out of the list.","Checkbox on a task row.","standard · check pops, label strikes through","Check appears filled, strike-through is instant.","isTask"],
+  ["Check-in success","420ms","The one moment worth a real flourish — proof the capture was accepted.","Successful selfie and location submission.","standard · full-panel wash, check scales from .4","Green panel and text appear at once. Success is never implied by motion alone.","isCheckin"],
+  ["Check-out success","320ms","Closes the day and shows the hours that were recorded.","Check out, or the 17:00 banner action.","standard · duration counts up, bar fills once","Final figure shown immediately, no count-up.","isCheckout"],
+  ["Field verification","420ms","Shows the app comparing position to the store pin — the wait is the honesty.","Submitting a field visit with photo and GPS.","standard · pulse ring while matching, bar fills","Ring drops, a static Matching label with a determinate bar remains.","isVerify"],
+  ["Leave approval","320ms","Moves the timeline forward so the requester can see who has it now.","HOD or HR approving a request.","standard · dot pops, connector fills to the next stage","Dot and connector are drawn in final state.","isLeave"],
+  ["Payroll publishing","420ms","Deliberately the slowest confirmation in the product, because it can't be undone.","Confirming Publish payslips.","standard · final step fills, then the count appears","Both appear at once, after the confirm dialog.","isPayroll"],
+  ["Recruitment stage move","200ms","Shows the candidate leaving one stage and landing in the next.","Stage chip, or a drag into a column.","standard · old chip mutes, new chip scales in","Chips swap instantly. The audit note still logs the move.","isStage"],
+  ["Skeleton loading","1.4s loop","Mirrors the real layout so nothing jumps when data lands.","Any request still pending after 200ms.","linear shimmer, infinite until resolved","Static grey blocks, no shimmer.","isSkeleton"]
+];
+
+const DEVICES=[
+  ["small","Small phone","375px","smartphone","cards + bottom nav",
+   [["rows-3","Table becomes stacked cards — one employee per card, status as a pill"],["hand","Check in is pinned above the bottom nav, 46px tall"],["sliders-horizontal","Filters open as a bottom sheet, same options in the same order"],["type","Nothing below 11px; names truncate rather than wrap to three lines"]]],
+  ["large","Large phone","430px","smartphone","cards + bottom nav",
+   [["rows-3","Still cards — width is not the reason to use a table, pointer precision is"],["maximize-2","Card padding grows 12→14px, metadata gets its own line"],["hand","Same pinned action, more breathing room above the nav"],["eye","Two more rows visible without scrolling"]]],
+  ["tablet","Tablet","768px","tablet","icon rail + real table",
+   [["panel-left","Sidebar collapses to a 58px icon rail, labels on hover"],["table","A real table appears — three columns: employee, status, check-in"],["columns-3","Mode and accuracy are dropped, not squeezed"],["layout","Slide-over covers 80% of the width instead of 480px"]]],
+  ["laptop","Laptop","1280px","laptop","full shell",
+   [["panel-left-open","Full 186px sidebar with labels"],["table-2","All five columns, 44px comfortable rows"],["panel-right","Slide-over is 480px, the list stays readable behind it"],["mouse-pointer-2","Row hover, bulk-select and inline row actions become available"]]],
+  ["desktop","Desktop","1560px","monitor","full shell, capped",
+   [["maximize","Content caps at 1440px — line length matters more than filling glass"],["columns-2","Detail panel can dock beside the list instead of covering it"],["table-2","Compact row density becomes an option at 36px"],["scan-line","Two KPI rows fit above the fold without scrolling"]]]
+];
+const ATT=[["Adaeze Okonkwo","AO","Sales","Present","ok","●","08:52","Office","±6m"],
+  ["Chidi Uzo","CU","Field Sales","Remote","info","◇","09:20","Remote","±22m"],
+  ["Tunde Bello","TB","Logistics","Late","warn","▲","10:07","Office","±9m"],
+  ["Musa Yakubu","MY","Warehouse","Absent","bad","✕","—","—","—"]];
+
+const FLOWS=[
+  {n:"01",name:"Check-in",role:"Employee · Chidi Uzo",icon:"user",dev:"phone",
+   map:["Sign in","Dashboard","Location","Selfie","Confirmed"],
+   steps:[
+    {t:"Sign in",s:"One field at a time on a phone. Company code is remembered after the first sign-in.",k:"form",
+     fields:[["Company code","chfheron · remembered"],["Work email","chidi.uzo@chfheron.com"],["Password","••••••••••"]],
+     cta:"Sign in",chrome:"heron.app · sign in",clock:"09:02",
+     note:"No biometric prompt on first run — asking for a fingerprint before the person trusts the app reads as intrusive. It's offered on the second sign-in instead."},
+    {t:"Good morning, Chidi",s:"The one thing that matters at 09:00 is the check-in button. Everything else waits.",k:"list",
+     rows:[["Not checked in yet","shift starts 09:00","Action needed","warn"],["Today's tasks","5 assigned · 2 field visits","",""],["Leave balance","11 days remaining","",""]],
+     cta:"Check in now",chrome:"dashboard",clock:"09:03",
+     note:"The dashboard is ranked by what's time-sensitive, not by module order. A field rep opening the app at 09:00 has exactly one job."},
+    {t:"Confirm your location",s:"Read once, now — the app never tracks in the background.",k:"capture",
+     capIcon:"map-pin",capLabel:"reading location…",
+     loc:["Head Office, Victoria Island","42 m from centre · ±8m accuracy","info"],
+     cta:"Use my current location",chrome:"check-in · step 1 of 2",clock:"09:03",
+     note:"Distance and accuracy are shown in plain numbers before anything is submitted. The employee can see exactly what will be recorded."},
+    {t:"Take a live selfie",s:"Camera only, no gallery upload — that's what makes it proof.",k:"capture",
+     capIcon:"camera",capLabel:"live camera feed",
+     loc:["Inside office geofence","will record as Worked in Office","ok"],
+     cta:"Capture selfie",chrome:"check-in · step 2 of 2",clock:"09:04",
+     note:"Gallery upload is deliberately unavailable. If proof can be chosen from a library, it isn't proof — and saying so in one line pre-empts the support ticket."},
+    {t:"You're checked in",s:"The moment is confirmed loudly, then the app gets out of the way.",k:"success",
+     ok:["Checked in · 09:04","Office · 6.4312°N, 3.4219°E · ±8m","ok"],
+     cta:"Go to my tasks",chrome:"check-in complete",clock:"09:04",
+     note:"420ms is the longest animation in the product and it lives here. This is the interaction people repeat every single morning."}]},
+
+  {n:"02",name:"Field visit proof",role:"Employee · Chidi Uzo",icon:"map-pin",dev:"phone",
+   map:["Task list","Task detail","Photo","Report","Submitted"],
+   steps:[
+    {t:"My tasks",s:"Field visits are marked, because they need proof and can't be closed from the office.",k:"list",
+     rows:[["Stock audit — Shoprite Lekki","TSK-2041 · due today","Photo + GPS","info"],["Planogram check — Ikeja City Mall","TSK-2044 · due tomorrow","Photo + GPS","info"],["Submit expense claim","TSK-2039 · overdue","Overdue","bad"]],
+     cta:"Open TSK-2041",chrome:"tasks",clock:"13:38",
+     note:"The proof requirement is on the card, not hidden in the detail view. A rep planning their route needs to know which stops need a photo before they set off."},
+    {t:"Stock audit — Shoprite Lekki",s:"What's needed, where, and by when — before the camera opens.",k:"meta",
+     meta:[["Store","Shoprite Lekki"],["Due","today 17:00"],["Distance","22 m away"],["Requires","photo + GPS"]],
+     banner:["info","map-pin","You're within range of the store pin. Capture can start."],
+     cta:"Start verification",chrome:"TSK-2041",clock:"13:39",
+     note:"Range is checked before the camera opens, so a rep never takes a photo that will be rejected for being in the wrong place."},
+    {t:"Photograph the display",s:"One shot of the shelf as it stands. Retake is allowed, gallery upload is not.",k:"capture",
+     capIcon:"camera",capLabel:"live camera feed · shelf",
+     loc:["Shoprite Lekki","22 m from store pin · ±8m","ok"],
+     cta:"Use this photo",chrome:"verification · 1 of 2",clock:"13:41",
+     note:"Retake is unlimited and unpenalised. Making the honest path frictionless is what keeps the data real."},
+    {t:"Record what you found",s:"Three fields, all optional except facings. Typing on a phone in a supermarket aisle is hard.",k:"form",
+     fields:[["Facings counted","14 of 16 planned"],["Stock status","Low — 2 SKUs out"],["Note (optional)","Backroom stock confirmed"]],
+     cta:"Submit visit",chrome:"verification · 2 of 2",clock:"13:44",
+     note:"Only one field is required. Every extra mandatory field on a mobile form is a percentage point of data quality lost to guessing."},
+    {t:"Visit submitted",s:"Sent with photo, location and accuracy attached. Your HOD reviews it.",k:"success",
+     ok:["Submitted · 13:45","TSK-2041 · photo + GPS · ±8m","ok"],
+     banner:["info","clock","Works offline too — a queued visit shows a 'will sync' chip and is never lost."],
+     cta:"Back to tasks",chrome:"submitted",clock:"13:45",
+     note:"Offline behaviour is stated at the moment of submission, because that's when a rep in a basement stockroom worries about it."}]},
+
+  {n:"03",name:"Request leave",role:"Employee · Chidi Uzo",icon:"plane",dev:"phone",
+   map:["Balance","Request","Submitted","Track status"],
+   steps:[
+    {t:"My leave",s:"Balance first — it's the question people open this screen to answer.",k:"meta",
+     meta:[["Annual remaining","11 days"],["Accrues","1.67 / month"],["Pending","none"],["Taken YTD","9 days"]],
+     cta:"Request leave",chrome:"leave",clock:"16:10",
+     note:"Balance is shown before the request form, so nobody has to submit a request to discover they can't afford it."},
+    {t:"Request leave",s:"Dates first, then the balance impact, then a reason.",k:"form",
+     fields:[["Type","Annual leave"],["Dates","23 – 27 March · 5 days"],["Balance after","6 days remaining"]],
+     banner:["warn","users","Two people in Sales are already off that week. Your HOD will see this too."],
+     cta:"Submit request",chrome:"leave · new request",clock:"16:12",
+     note:"Coverage conflict is surfaced to the employee before submission, not sprung on them as a rejection three days later."},
+    {t:"Request submitted",s:"Sent to Tunde Bello for approval.",k:"success",
+     ok:["Submitted · 16:12","LVE-0442 · 5 days · awaiting HOD","ok"],
+     cta:"Track this request",chrome:"submitted",clock:"16:12",
+     note:"The success screen names the actual person who has it now. 'Awaiting approval' with no name is where trust in a workflow dies."},
+    {t:"Where it stands",s:"Every stage, who holds it, and how long they've had it.",k:"timeline",
+     steps:[["Submitted by you","23 Mar · 16:12","done"],["Tunde Bello · HOD","approved 17:40","done"],["Amaka Duru · HR","awaiting · 1 day","active"],["Approved","payroll notified automatically","todo"]],
+     chrome:"LVE-0442",clock:"next day",
+     note:"Showing how long a stage has been waiting is quiet pressure on approvers and a real answer for the person waiting."}]},
+
+  {n:"04",name:"HOD reviews leave",role:"HOD · Tunde Bello",icon:"user-cog",dev:"desktop",
+   map:["Approvals queue","Request detail","Coverage","Approved"],
+   steps:[
+    {t:"Pending approvals",s:"Oldest first, with how long each has been waiting.",k:"table",
+     trows:[["Chidi Uzo · annual","5 days","waiting 1d"],["Joy Edet · sick","2 days","waiting 4h"],["Sade Kalu · unpaid","6 days","waiting 3d"]],
+     cta:"Open Chidi's request",chrome:"approvals · Sales",clock:"17:30",
+     note:"Sorted by wait time, not submission date. The queue's job is to surface who has been left hanging longest."},
+    {t:"Chidi Uzo · annual leave",s:"The request, the balance and the coverage picture on one screen.",k:"meta",
+     meta:[["Dates","23 – 27 Mar"],["Days","5"],["Balance after","6 days"],["Notice given","13 days"]],
+     banner:["warn","users","Sales coverage drops to 82% that week — two reps already approved off."],
+     cta:"Check coverage",chrome:"LVE-0442",clock:"17:34",
+     note:"An approver needs the consequence, not just the request. Coverage percentage is the number that actually drives the decision."},
+    {t:"Sales · that week",s:"Who's off, who's covering, and which routes are exposed.",k:"list",
+     rows:[["Adaeze Okonkwo","approved off 23–24 Mar","Off","mute"],["Joy Edet","approved off 25–27 Mar","Off","mute"],["Lekki route","uncovered 25–27 Mar","Exposed","warn"],["Remaining team","6 reps active","OK","ok"]],
+     cta:"Approve with a note",chrome:"coverage · Sales",clock:"17:37",
+     note:"The exposed route is named. 'Coverage 82%' is abstract; 'Lekki route uncovered Wednesday to Friday' is something a manager can act on."},
+    {t:"Approved and passed on",s:"Now with HR for final approval. Chidi has been told.",k:"success",
+     ok:["Approved · 17:40","LVE-0442 · note attached for HR","ok"],
+     banner:["info","message-square","Your note — 'cover Lekki with Chinedu' — travels with the request."],
+     cta:"Back to queue",chrome:"approved",clock:"17:40",
+     note:"The approval note follows the request to HR. Context gathered by the person closest to the work shouldn't be lost at the handover."}]},
+
+  {n:"05",name:"HR final approval",role:"HR · Amaka Duru",icon:"users",dev:"desktop",
+   map:["HR queue","Policy check","Final approval"],
+   steps:[
+    {t:"Leave awaiting HR",s:"Already approved by a HOD. HR checks policy, not judgement.",k:"table",
+     trows:[["Chidi Uzo · annual","5 days","HOD approved"],["Musa Yakubu · sick","4 days","doc required"],["Bola Ogun · unpaid","6 days","HOD approved"]],
+     cta:"Open Chidi's request",chrome:"HR · leave queue",clock:"09:15",
+     note:"HR sees only what a HOD has already cleared. Two people doing the same judgement is how approval queues become theatre."},
+    {t:"Policy check",s:"Balance, notice, documents and the HOD's note, in one pass.",k:"list",
+     rows:[["Balance sufficient","11 days available, 5 requested","Pass","ok"],["Notice period","13 days given, 7 required","Pass","ok"],["Documents","not required for annual","N/A","mute"],["HOD note","cover Lekki with Chinedu","Read","info"]],
+     cta:"Give final approval",chrome:"LVE-0442 · policy",clock:"09:18",
+     note:"Each check states the rule and the actual value. An approver should never have to remember what the notice period is."},
+    {t:"Leave approved",s:"Chidi is told, the calendar is updated, payroll is notified.",k:"success",
+     ok:["Approved · 09:19","LVE-0442 · 5 days · 23–27 Mar","ok"],
+     banner:["info","wallet","Payroll is notified automatically — paid leave needs no separate entry."],
+     cta:"Back to queue",chrome:"approved",clock:"09:19",
+     note:"The downstream effect is stated. HR should never have to wonder whether they also need to tell Accounts."}]},
+
+  {n:"06",name:"Run payroll",role:"Accounts · Ifeoma Eze",icon:"wallet",dev:"desktop",
+   map:["Period","Review figures","Approval","Publish confirm","Published"],
+   steps:[
+    {t:"March 2026 · in review",s:"Six statuses, one direction. Nothing skips a stage.",k:"timeline",
+     steps:[["Draft","generated 02 Mar","done"],["Processing","completed 18 Mar","done"],["In review","you are here · 22 Mar","active"],["Approved","awaiting Management","todo"],["Published","142 payslips","todo"]],
+     cta:"Review the figures",chrome:"payroll · March 2026",clock:"08:15",
+     note:"An irreversible pipeline is drawn as a pipeline. Seeing that Published comes after Approved is what stops a mis-click becoming a company-wide email."},
+    {t:"Figures",s:"Totals first, then the adjustments that make this month different.",k:"table",
+     trows:[["Gross pay","142 staff","₦61,412,000"],["PAYE","remitted to LIRS","₦5,899,400"],["Pension 8%","employee","₦4,912,960"],["Net payable","142 transfers","₦48,204,150"]],
+     banner:["warn","plus-circle","4 adjustments this period, net −₦12,700. Each one names who added it."],
+     cta:"Send for approval",chrome:"March 2026 · totals",clock:"08:20",
+     note:"Adjustments are surfaced at the review step, because they're the only part of a run that a human chose rather than calculated."},
+    {t:"Awaiting Management",s:"Accounts can't approve its own run.",k:"list",
+     rows:[["Sent to Ngozi Aliu","Managing Director · 08:22","Pending","warn"],["Figures locked","no further adjustments","Locked","mute"],["Statutory rates","locked mid-period","Locked","mute"]],
+     cta:"Approve as Management",chrome:"March 2026 · approval",clock:"08:22",
+     note:"Separation of duties is shown, not assumed. Locking the figures at this point is what makes the approval mean something."},
+    {t:"Publish 142 payslips?",s:"Everyone is notified and can see their payslip immediately. This can't be undone.",k:"table",
+     trows:[["Employees","all active","142"],["Total net","26 Mar value date","₦48,204,150"],["Approved by","26 Mar 09:40","Ngozi Aliu"]],
+     banner:["bad","alert-triangle","Published payslips can't be edited — a correction is a new adjustment next period."],
+     cta:"Publish payslips",chrome:"confirm publish",clock:"09:41",
+     note:"The confirm dialog restates the consequence in the same words as the settings page. Consistent phrasing for an irreversible action is a safety feature."},
+    {t:"Published",s:"142 payslips live, everyone notified.",k:"success",
+     ok:["142 payslips published","March 2026 · ₦48,204,150 net","ok"],
+     cta:"Close the period",chrome:"published",clock:"09:41",
+     note:"420ms — the slowest confirmation in the product, matched to the weight of what just happened."}]},
+
+  {n:"07",name:"View payslip",role:"Employee · Chidi Uzo",icon:"receipt",dev:"phone",
+   map:["Notification","Payslip list","Payslip"],
+   steps:[
+    {t:"Notifications",s:"Pay day is the one notification nobody minds.",k:"list",
+     rows:[["March payslip is ready","just now","New","ok"],["Leave approved · 23–27 Mar","yesterday","","" ],["TSK-2041 verified","2 days ago","","" ]],
+     cta:"Open March payslip",chrome:"notifications",clock:"09:42",
+     note:"Deep-links straight to the payslip. A notification that only opens the app has wasted the tap."},
+    {t:"My payslips",s:"Newest first, net pay visible without opening anything.",k:"table",
+     trows:[["March 2026","published today","₦358,650"],["February 2026","01 Mar","₦377,600"],["January 2026","01 Feb","₦371,200"]],
+     cta:"Open March 2026",chrome:"payslips",clock:"09:42",
+     note:"Net pay in the list row answers the actual question — most people open a payslip to check one number."},
+    {t:"March 2026",s:"Earnings, deductions, net. Downloadable as PDF.",k:"table",
+     trows:[["Basic salary","",'₦310,000'],["Allowances","housing, transport, field","₦118,000"],["Deductions","PAYE, pension, NHF","−₦93,350"],["Net pay","credited 26 Mar","₦358,650"]],
+     banner:["info","file-text","One-page A4 when printed, readable in greyscale — no colour needed for a bank or landlord."],
+     cta:"Download PDF",chrome:"PSL-2026-118",clock:"09:43",
+     note:"Payslips get used as proof of income by third parties, so the print layout is designed for a photocopier, not a screen."}]},
+
+  {n:"08",name:"Applicant applies",role:"Public · Blessing Nwachukwu",icon:"globe",dev:"phone",
+   map:["Careers","Role","Apply","Submitted"],
+   steps:[
+    {t:"Careers at CHF Heron",s:"Open roles, plainly listed. No carousel, no video.",k:"list",
+     rows:[["Field Sales Representative","Sales · Lagos · full-time","Open","ok"],["Warehouse Supervisor","Logistics · Ikeja · full-time","Open","ok"],["Accounts Officer","Finance · VI · full-time","Open","ok"]],
+     cta:"View Field Sales role",chrome:"chfheron.com/careers",clock:"19:08",
+     note:"Location and type sit in the list row. Most applicants filter on those two facts before reading a word of the description."},
+    {t:"Field Sales Representative",s:"What the job is, what's needed, and what happens after you apply.",k:"meta",
+     meta:[["Location","Lagos · field"],["Type","Full-time"],["Closes","30 Sep 2026"],["Reports to","Head of Sales"]],
+     banner:["info","clock","You'll hear back within 5 working days, whatever the outcome."],
+     cta:"Apply for this role",chrome:"careers · field sales",clock:"19:09",
+     note:"Stating the response time on the job page — and honouring it — costs nothing and is the single most requested thing from candidates."},
+    {t:"Apply",s:"Four fields and a CV. Nothing that's already on the CV is asked twice.",k:"form",
+     fields:[["Full name","Blessing Nwachukwu"],["Email","b.nwachukwu@email.com"],["Phone","+234 803 442 1180"],["CV","cv-blessing-nwachukwu.pdf"]],
+     cta:"Submit application",chrome:"apply · field sales",clock:"19:11",
+     note:"No account required to apply. Forcing a signup before a job application loses good candidates for the convenience of the employer."},
+    {t:"Application received",s:"Confirmed on screen and by email, with a reference.",k:"success",
+     ok:["Application received","APP-2026-0641 · Field Sales Representative","ok"],
+     banner:["info","mail","A confirmation email is on its way with your reference and what happens next."],
+     cta:"Back to careers",chrome:"submitted",clock:"19:12",
+     note:"A reference number gives the candidate something to quote. Applications that vanish into silence are the top complaint about hiring software."}]},
+
+  {n:"09",name:"Move applicant",role:"HR · Amaka Duru",icon:"users",dev:"desktop",
+   map:["Pipeline","Applicant","Notes","Stage moved"],
+   steps:[
+    {t:"Field Sales pipeline",s:"Eight stages, rejected and withdrawn kept visible at the end.",k:"board",
+     cols:[["Applied","2",[["Emeka Obi","1 year · Ibadan"]]],["Screening","1",[["Grace Okoro","2 years"]]],["Interview","1",[["Blessing Nwachukwu","4 years FMCG"]]],["Offered","1",[["Ahmed Bello","6 years"]]]],
+     cta:"Open Blessing",chrome:"recruitment · pipeline",clock:"15:30",
+     note:"Rejected candidates stay on the board rather than disappearing, so next cycle a recruiter can see who was turned down and why before calling them again."},
+    {t:"Blessing Nwachukwu",s:"Profile, CV and panel notes in one slide-over — the board stays behind it.",k:"meta",
+     meta:[["Applied","02 Sep"],["Experience","4 years FMCG"],["Location","Lagos"],["Days in stage","5 days"]],
+     banner:["ok","file-text","CV marked confidential — every view is logged with your name."],
+     cta:"Read panel notes",chrome:"APP-2026-0641",clock:"15:32",
+     note:"A CV is personal data belonging to someone who doesn't work here yet. Treating it as confidential by default is the only defensible setting."},
+    {t:"Panel notes",s:"Visible to the hiring panel only, never to the candidate.",k:"timeline",
+     steps:[["Amaka Duru · screening call","03 Sep · strong territory knowledge","done"],["Tunde Bello · panel","05 Sep · test difficult-store handling","done"],["Panel interview","08 Sep · completed","done"],["Decision","pending","active"]],
+     cta:"Move to Offered",chrome:"notes · panel only",clock:"15:34",
+     note:"Note visibility is labelled on the panel itself. Ambiguity about who can read an interview note is what makes people stop writing them honestly."},
+    {t:"Moved to Offered",s:"Candidate notified, offer letter drafted from the template.",k:"success",
+     ok:["Moved to Offered","Blessing Nwachukwu · notified by email","ok"],
+     cta:"Draft the offer",chrome:"stage moved",clock:"15:35",
+     note:"A stage move that affects the candidate sends the email in the same action. Two separate steps means one of them eventually gets forgotten."}]},
+
+  {n:"10",name:"Convert to employee",role:"HR · Amaka Duru",icon:"user-plus",dev:"desktop",
+   map:["Offer accepted","Convert form","Created"],
+   steps:[
+    {t:"Offer accepted",s:"Ahmed accepted verbally and returned the signed letter.",k:"timeline",
+     steps:[["Offer sent","28 Aug · 16:30","done"],["Verbally accepted","06 Sep · 09:15","done"],["Signed letter received","09 Sep · 11:02","done"],["Convert to employee","ready","active"]],
+     cta:"Convert to employee",chrome:"APP · Ahmed Bello",clock:"11:05",
+     note:"Conversion is offered only once a signed letter is logged. Creating the employee record on a verbal yes is how ghost employees appear in payroll."},
+    {t:"Convert to employee",s:"Everything the applicant gave is carried over. HR fills in only what HR knows.",k:"form",
+     fields:[["Carried over","name, email, phone, CV"],["Employee ID","EMP-0231 · assigned"],["Start date","01 / 10 / 2026"],["Gross monthly","₦ required"]],
+     banner:["info","link","The applicant record is kept and linked, never deleted — next year's audit can trace how this hire was made."],
+     cta:"Create employee",chrome:"convert · Ahmed Bello",clock:"11:07",
+     note:"Only two fields are genuinely new. Re-typing a name that's already in the system is how records diverge."},
+    {t:"Ahmed is an employee",s:"Record created, invite sent, documents moved into his employee file.",k:"success",
+     ok:["EMP-0231 created","Ahmed Bello · Warehouse Supervisor · starts 01 Oct","ok"],
+     banner:["ok","folder","CV and signed offer letter moved into his employee file automatically."],
+     cta:"Open his profile",chrome:"employee created",clock:"11:07",
+     note:"Documents follow the person from applicant to employee. Making HR re-upload a CV they already have is the kind of small insult that erodes trust in a system."}]},
+
+  {n:"11",name:"Management dashboard",role:"Management · Ngozi Aliu",icon:"crown",dev:"desktop",
+   map:["Dashboard","Exception","Department","Report"],
+   steps:[
+    {t:"Monday morning",s:"Four numbers, then anything that needs a decision.",k:"table",
+     trows:[["Present today","128 of 142","90.1%"],["Overdue tasks","3 field visits unproven","7"],["March payroll","awaiting your approval","₦48.2m"],["Open roles","1 offer out","5"]],
+     banner:["warn","alert-triangle","Payroll has been waiting for your approval for 2 days — bank cut-off is 26 Mar 15:00."],
+     cta:"Look at the exception",chrome:"dashboard · Management",clock:"08:40",
+     note:"The dashboard leads with the thing only this person can unblock. A Managing Director's dashboard that opens on a chart has wasted the first ten seconds."},
+    {t:"3 field visits unproven",s:"Which reps, which stores, and how long they've been outstanding.",k:"list",
+     rows:[["Sade Kalu · Ikeja City Mall","submitted 180 m from pin","Review","warn"],["Sade Kalu · Ogba depot","photo unclear","Returned","warn"],["Musa Yakubu · Apapa","no GPS captured","Review","bad"]],
+     cta:"Look at Sales",chrome:"exceptions · visits",clock:"08:42",
+     note:"Two of three belong to one rep. Grouping by person rather than by store turns a compliance list into a conversation about pin accuracy or training."},
+    {t:"Sales · this month",s:"Performance next to the exceptions, so neither is read alone.",k:"table",
+     trows:[["Visits completed","14 of 16 planned","88%"],["First-time pass rate","2 returned","86%"],["Attendance","34 of 38 today","92%"],["Open tasks","12 · 3 overdue","12"]],
+     cta:"Open the full report",chrome:"department · Sales",clock:"08:45",
+     note:"Exceptions shown beside output. A rep with a low pass rate and the highest volume is a different problem from one with low both."},
+    {t:"Management report",s:"Headcount, attendance, payroll and tasks — the four that get asked about at board level.",k:"table",
+     trows:[["Headcount","+6 this quarter","142"],["Attendance rate","+1.4pts vs Feb","90.1%"],["Net payroll","+2.1% vs Feb","₦48.2m"],["Task completion","−3pts vs Feb","86%"]],
+     banner:["info","download","Exports to CSV and PDF with the same figures and the same footnotes."],
+     cta:"Approve payroll",chrome:"reports · Management",clock:"08:48",
+     note:"The flow ends by returning to the blocked decision from step one. A dashboard that surfaces a problem should close the loop on it."}]},
+
+  {n:"12",name:"Manage permissions",role:"Management · Ngozi Aliu",icon:"shield-check",dev:"desktop",
+   map:["Roles","Matrix","Grant","Audit entry"],
+   steps:[
+    {t:"Roles and access",s:"Five roles, 142 people. High-access roles are marked as such.",k:"list",
+     rows:[["Management","4 users","High access","bad"],["HR","6 users","High access","bad"],["Accounts","5 users","High access","bad"],["Employee","118 users","Standard","mute"]],
+     cta:"Open the matrix",chrome:"settings · roles",clock:"16:40",
+     note:"Risk is on the role card, not buried in a permissions table. Someone assigning a role should see the stakes before they open anything."},
+    {t:"Permission matrix",s:"Ten modules against five roles. Rows carrying salary or personal data are flagged.",k:"table",
+     trows:[["▲ Payroll","Accounts, Management","Full"],["▲ Documents","HR full · others scoped","Mixed"],["▲ Audit","Management only","Read"],["Attendance","HR, HOD scoped","Mixed"]],
+     banner:["warn","alert-triangle","'Own only' is a different scope, not a weaker Read. 'Some areas' is scoped by subject: HR owns leave types, Accounts owns payroll rates."],
+     cta:"Grant Accounts to someone",chrome:"roles · matrix",clock:"16:43",
+     note:"The legend distinguishes scopes that look similar but aren't. A matrix that collapses them is worse than no matrix, because it looks authoritative."},
+    {t:"Grant the Accounts role?",s:"They'll see every salary and be able to export bank details.",k:"form",
+     fields:[["User","Uche Nna · EMP-0155"],["Role","Accounts"],["Reason","Covering payroll · Ifeoma on leave"]],
+     banner:["warn","users","Second approver required — a role with payroll access can't be granted by one person alone."],
+     cta:"Grant Accounts role",chrome:"confirm grant",clock:"16:44",
+     note:"The consequence is spelled out in plain words, and a reason is mandatory. Both end up in the audit entry, where they're the only useful evidence later."},
+    {t:"Granted and logged",s:"Effective immediately, with both approvers recorded.",k:"timeline",
+     steps:[["Requested by Ngozi Aliu","16:44 · reason recorded","done"],["Confirmed by Amaka Duru","16:46 · second approver","done"],["Role active","Uche Nna · Accounts","done"],["Audit entry written","immutable · kept 7 years","done"]],
+     banner:["info","file-clock","Nobody can edit or delete this entry, including Management. A revocation is a new entry."],
+     chrome:"audit · role.grant",clock:"16:46",
+     note:"The audit entry is shown as the final step of the flow, so the person granting access sees exactly what was recorded about them."}]}
+];
+
+const SCREENS=[["Public website","5","Visitors, applicants","home, about, services, careers, contact"],
+  ["Auth","4","All roles","sign in, forgot, reset, company code"],
+  ["Dashboards","5","One per role","Management, HR, Accounts, HOD, Employee"],
+  ["Employees","4","HR, Management, HOD","directory, profile, add, org chart"],
+  ["Attendance","4","All roles","today, history, check-in, exceptions"],
+  ["Tasks & visits","5","HOD, Employee","board, list, detail, capture, review"],
+  ["Leave","4","All roles","balance, request, approvals, calendar"],
+  ["Payroll","4","Accounts, Management","periods, run detail, adjustments, publish"],
+  ["Payslips","2","Accounts, Employee","list, payslip document"],
+  ["Recruitment","5","HR, Management","jobs, pipeline, applicant, convert, new job"],
+  ["Documents","2","All roles, scoped","library, preview"],
+  ["Reports","6","Management, HR, Accounts, HOD","6 report families"],
+  ["Settings","4","Management, HR, Accounts","company, structure, payroll, security"],
+  ["Roles & audit","2","Management","matrix, audit log"],
+  ["Platform admin","2","Platform owner","org list, org detail"]];
+
+const COMPONENTS=[["Button","primary, secondary, ghost, destructive, icon · 3 sizes","all screens"],
+  ["Input & field","text, textarea, select, date, search, file · error and disabled","forms, filters"],
+  ["Table","sticky header, sort, select, bulk bar, row action, pagination","11 screens"],
+  ["Card","stat, record, kanban, document, role","9 screens"],
+  ["Status pill","5 semantic states, always glyph + word","everywhere"],
+  ["Slide-over","480px desktop, full-screen mobile","records, applicants, audit"],
+  ["Dialog","confirm, destructive, irreversible","publish, grant, flag"],
+  ["Bottom sheet","filters, actions · phone only","mobile screens"],
+  ["Toast","success, info · stacks to 3","all mutations"],
+  ["Timeline","approval chains, audit trails, status","leave, tasks, audit"],
+  ["Capture panel","camera + location + accuracy","check-in, field visits"],
+  ["Evidence viewer","photo tiles + static map + accuracy","HR and HOD review"],
+  ["Empty / error / permission","one per list and panel","all lists"],
+  ["Skeleton","mirrors the real layout","all async views"],
+  ["Nav shell","sidebar, topbar, breadcrumb, bottom nav, command palette","app-wide"]];
+
+const CHECKS=[["Consistency","ok","One type scale, one spacing rhythm, one status vocabulary across all 8 phases."],
+  ["Accessibility","ok","4.5:1 body text, 2px focus rings, status never colour-only, full keyboard map."],
+  ["Empty states","ok","Every list ships one, each with a recovery action rather than a dead end."],
+  ["Loading states","ok","Skeletons mirror final layout, shown only after 200ms to avoid a flash."],
+  ["Error states","ok","Named cause, reassurance that data is safe, and a retry."],
+  ["Permissions","ok","Restricted modules stay visible with a lock, never silently hidden."],
+  ["Mobile","ok","Tables become cards under 640px, 44px targets, pinned primary action."],
+  ["Desktop","ok","Full shell, real tables, docked detail panels, content capped at 1440px."],
+  ["Light mode","ok","Primary and complete across every screen."],
+  ["Dark mode","warn","Ramp defined in Phase 1 and carried through, but not themed screen by screen — one phase of work outstanding."],
+  ["Component reuse","ok","15 components cover 58 screens. No screen introduces a one-off pattern."],
+  ["Visual hierarchy","ok","Every screen leads with the decision or number its role opens it for."]];
+
+const HANDOFF=[["Tokens","5 colour ramps, 8 type steps, 4px spacing base, 5 radii, 5 elevations, 5 motion durations, 3 easings — all named and used consistently."],
+  ["States","Every interactive component specified in default, hover, active, focus, disabled and error."],
+  ["Breakpoints","375 / 430 / 768 / 1280 / 1560, with the layout change at each stated explicitly."],
+  ["Motion","16 animations with trigger, duration, easing and reduced-motion behaviour."],
+  ["Permissions","10 modules × 5 roles matrix, with 6 distinct scope levels defined."],
+  ["Flows","12 clickable journeys covering every role and every irreversible action."],
+  ["Data shapes","Sample records for employees, attendance, tasks, visits, leave, payroll, applicants and audit entries."],
+  ["What to build first","Auth and shell, then attendance and check-in — the verification loop is the product's reason to exist."]];
+
+const OPENS=[["Biometric check-in","Offered on second sign-in, or required by policy? Affects whether a rep can share a device."],
+  ["Payroll corrections","Currently a new adjustment next period. A same-period reversal would need a second approval path."],
+  ["Retention limits","24 months for photos, 12 for coordinates. Needs legal confirmation against Nigerian data protection rules."],
+  ["Dark mode","Ramp is defined and carried through. Screen-by-screen theming is one phase of work, not yet scheduled."],
+  ["Offline depth","Check-in and visit capture queue offline. Whether tasks and leave should too is a scope decision."]];
+
+class Component extends DCLogic {
+  state={section:"motion",stageOn:true,device:"laptop",flow:0,step:0};
+  componentDidMount(){this._icons();}
+  componentDidUpdate(){this._icons();}
+  _icons(){
+    const L=window.lucide; if(!L) return;
+    let need=false;
+    document.querySelectorAll("[data-icon]").forEach(el=>{
+      const n=el.getAttribute("data-icon"); if(!n) return;
+      const svg=el.querySelector("svg");
+      if(svg&&svg.classList.contains("lucide-"+n)) return;
+      el.innerHTML='<i data-lucide="'+n+'"></i>'; need=true;
+    });
+    if(need){try{L.createIcons();}catch(e){}}
+  }
+  replay(){ this.setState({stageOn:false}); setTimeout(()=>this.setState({stageOn:true}),30); }
+
+  renderVals(){
+    const s=this.state;
+    const chip=on=>({bg:on?"#1B4F8C":"#fff",fg:on?"#fff":"#4A5666",border:on?"#1B4F8C":"#CDD5E0"});
+    const dv=DEVICES.find(d=>d[0]===s.device)||DEVICES[3];
+    const narrow=s.device==="small"||s.device==="large";
+    const fl=FLOWS[s.flow];
+    const st=fl.steps[Math.min(s.step,fl.steps.length-1)];
+    const bn=st.banner?{kind:st.banner[0],icon:st.banner[1],text:st.banner[2]}:null;
+    const bnC=bn?PILL[bn.kind]:null;
+
+    const motionFlags={};
+    MOTIONS.forEach(m=>{motionFlags[m[6]]=true;});
+
+    return {
+      sections:[["motion","Motion","zap"],["responsive","Responsive QA","monitor-smartphone"],["proto","Clickable flows","mouse-pointer-click"],["review","Final review","clipboard-check"]]
+        .map(x=>({label:x[1],icon:x[2],pick:()=>this.setState({section:x[0]}),
+          bg:s.section===x[0]?"#EEF4FB":"transparent",fg:s.section===x[0]?"#16406F":"#4A5666"})),
+      isMotion:s.section==="motion",isResponsive:s.section==="responsive",isProto:s.section==="proto",isReview:s.section==="review",
+
+      tokens:TOKENS.map(t=>({name:t[0],use:t[1]})),
+      stageOn:s.stageOn,
+      replayAll:()=>this.replay(),
+      motions:MOTIONS.map(m=>{
+        const o={name:m[0],dur:m[1],purpose:m[2],trigger:m[3],easing:m[4],reduced:m[5]};
+        ["isPage","isSidebar","isSlide","isDialog","isSheet","isToast","isTabs","isKanban","isTask","isCheckin","isCheckout","isVerify","isLeave","isPayroll","isStage","isSkeleton"]
+          .forEach(k=>{o[k]=(k===m[6]);});
+        return o;}),
+
+      devices:DEVICES.map(d=>({label:d[1],w:d[2],icon:d[3],pick:()=>this.setState({device:d[0]}),...chip(s.device===d[0])})),
+      dv:{label:dv[1],w:dv[2],icon:dv[3],mode:dv[4],px:dv[2],
+        narrow,wide:!narrow,
+        hasSidebar:!narrow,
+        sidebarW:s.device==="tablet"?"58px":"186px",
+        showLabels:s.device==="laptop"||s.device==="desktop",
+        allCols:s.device==="laptop"||s.device==="desktop",
+        tableMin:s.device==="tablet"?"420px":"640px",
+        changes:dv[5].map(c=>({icon:c[0],text:c[1]}))},
+      attendance:ATT.map(a=>{const c=PILL[a[4]];
+        return {name:a[0],initials:a[1],dept:a[2],status:a[3],bg:c[0],fg:c[1],glyph:a[5],time:a[6],mode:a[7],acc:a[8]};}),
+      bottomNav:[["home","Home",true],["calendar-check","Attend",false],["clipboard-list","Tasks",false],["more-horizontal","More",false]]
+        .map(b=>({icon:b[0],label:b[1],fg:b[2]?"#1B4F8C":"#7A8798",weight:b[2]?"600":"400"})),
+      miniNav:[["layout-dashboard","Dashboard",true],["users","Employees",false],["calendar-check","Attendance",false],["clipboard-list","Tasks",false],["wallet","Payroll",false]]
+        .map(m=>({icon:m[0],label:m[1],bg:m[2]?"#EEF4FB":"transparent",fg:m[2]?"#16406F":"#4A5666"})),
+
+      flows:FLOWS.map((f,i)=>({n:f.n,name:f.name,pick:()=>this.setState({flow:i,step:0}),...chip(s.flow===i)})),
+      fl:{role:fl.role,roleIcon:fl.icon,
+        frameW:fl.dev==="phone"?"330px":"620px",
+        frameR:fl.dev==="phone"?"20px":"14px",
+        minH:fl.dev==="phone"?"440px":"360px"},
+      stepNum:s.step+1,stepTotal:fl.steps.length,
+      st:{t:st.t,s:st.s,note:st.note,chrome:st.chrome,clock:st.clock,
+        isList:st.k==="list",isForm:st.k==="form",isCapture:st.k==="capture",isSuccess:st.k==="success",
+        isMeta:st.k==="meta",isEvidence:st.k==="evidence",isTimeline:st.k==="timeline",isBoard:st.k==="board",isTable:st.k==="table",
+        rows:(st.rows||[]).map(r=>{const c=r[3]?PILL[r[3]]:null;
+          return {label:r[0],meta:r[1],pill:r[2],hasPill:!!r[2],bg:c?c[0]:"#F1F4F8",fg:c?c[1]:"#4A5666",
+            rowBg:r[3]==="warn"?"#FFFDF7":r[3]==="bad"?"#FFFBFA":"#fff",
+            border:r[3]==="warn"?"#F6E3BF":r[3]==="bad"?"#FADCD9":"#E3E8EF"};}),
+        fields:(st.fields||[]).map(f=>({k:f[0],v:f[1],fg:f[1].indexOf("required")>-1?"#A6B0BE":"#131A22"})),
+        meta:(st.meta||[]).map(m=>({k:m[0],v:m[1],font:/[0-9]/.test(m[1])?MONO:"inherit"})),
+        tiles:(st.tiles||[]).map(t=>({label:t[0],meta:t[1]})),
+        steps:(st.steps||[]).map(x=>({label:x[0],meta:x[1],
+          dot:x[2]==="done"?"#0F7A54":x[2]==="active"?"#fff":"#E3E8EF",
+          ring:x[2]==="active"?"2px solid #8A5600":"none",
+          weight:x[2]==="active"?"600":"400"})),
+        cols:(st.cols||[]).map(c=>({name:c[0],count:c[1],
+          bg:c[0]==="Offered"?"#F4FBF8":"#E9EDF3",
+          border:c[0]==="Offered"?"1px dashed #BFE3D3":"1px solid transparent",
+          fg:"#131A22",
+          cards:(c[2]||[]).map(cd=>({name:cd[0],meta:cd[1],
+            border:c[0]==="Interview"?"#AFC9E7":"#E3E8EF",
+            shadow:c[0]==="Interview"?"0 6px 18px -6px rgba(16,24,40,.16)":"none"}))})),
+        trows:(st.trows||[]).map((t,i)=>({a:t[0],b:t[1],c:t[2],
+          weight:i===(st.trows||[]).length-1?"600":"500",
+          rowBg:i===(st.trows||[]).length-1?"#F8F9FB":"#fff"})),
+        capIcon:st.capIcon||"camera",capLabel:st.capLabel||"",
+        locTitle:st.loc?st.loc[0]:"",locSub:st.loc?st.loc[1]:"",
+        locFg:st.loc?(st.loc[2]==="ok"?"#0F7A54":"#16406F"):"#16406F",
+        locBg:st.loc?(st.loc[2]==="ok"?"#F4FBF8":"#F7FAFD"):"#F7FAFD",
+        locBorder:st.loc?(st.loc[2]==="ok"?"#BFE3D3":"#D9E6F5"):"#D9E6F5",
+        okTitle:st.ok?st.ok[0]:"",okSub:st.ok?st.ok[1]:"",
+        okFg:st.ok?(st.ok[2]==="ok"?"#0F7A54":"#16406F"):"#0F7A54",
+        okBg:st.ok?(st.ok[2]==="ok"?"#E7F4EE":"#EEF4FB"):"#E7F4EE",
+        hasBanner:!!bn,banner:bn?bn.text:"",bannerIcon:bn?bn.icon:"info",
+        bannerFg:bnC?bnC[1]:"#16406F",bannerBg:bnC?bnC[0]:"#EEF4FB",
+        bannerBorder:bn?(bn.kind==="warn"?"#F6E3BF":bn.kind==="bad"?"#FADCD9":bn.kind==="ok"?"#BFE3D3":"#D9E6F5"):"#D9E6F5",
+        hasCta:!!st.cta,cta:st.cta||"",ctaBg:s.step===fl.steps.length-1?"#0F7A54":"#1B4F8C"},
+      next:()=>this.setState(x=>({step:(x.step+1)%FLOWS[x.flow].steps.length})),
+      prev:()=>this.setState(x=>({step:x.step===0?FLOWS[x.flow].steps.length-1:x.step-1})),
+      nextLabel:s.step===fl.steps.length-1?"Restart":"Next",
+      prevFg:s.step===0?"#A6B0BE":"#131A22",
+      dots:fl.steps.map((x,i)=>({w:i===s.step?"22px":"8px",bg:i===s.step?"#1B4F8C":i<s.step?"#AFC9E7":"#E3E8EF",
+        pick:()=>this.setState({step:i})})),
+      flowMap:fl.map.map((m,i)=>({label:m,pick:()=>this.setState({step:Math.min(i,fl.steps.length-1)}),
+        dot:i<s.step?"#0F7A54":i===s.step?"#fff":"#E3E8EF",
+        ring:i===s.step?"2px solid #1B4F8C":"none",
+        weight:i===s.step?"600":"400",
+        fg:i===s.step?"#131A22":"#4A5666"})),
+
+      tallies:[["58","screens designed"],["15","components"],["12","clickable flows"],["16","animations"],["5","breakpoints"]]
+        .map(t=>({n:t[0],label:t[1]})),
+      screens:SCREENS.map(x=>({name:x[0],count:x[1],ph:x[1],roles:x[2]})),
+      components:COMPONENTS.map(x=>({name:x[0],variants:x[1],uses:x[2]})),
+      checks:CHECKS.map(c=>({name:c[0],note:c[2],
+        mark:c[1]==="ok"?"✓":"▲",
+        bg:c[1]==="ok"?"#E7F4EE":"#FDF2DF",
+        fg:c[1]==="ok"?"#0F7A54":"#8A5600"})),
+      handoff:HANDOFF.map(h=>({k:h[0],v:h[1]})),
+      opens:OPENS.map(o=>({k:o[0],v:o[1]}))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

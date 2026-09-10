@@ -1,0 +1,79 @@
+PHASE 3
+AUTHENTICATION, APP SHELL, ROLE-BASED DASHBOARDS
+
+Use approved design system.
+
+Design:
+- Login
+- Forgot password
+- Reset password
+- Session expired
+- Unauthorized
+- First login
+- Profile setup
+- Account menu
+
+Then design the secure app structure for:
+- Management
+- HR
+- Accounts
+- HOD
+- Employee
+
+Create role-specific navigation.
+
+Design dashboards for each role.
+
+Management dashboard:
+- headcount
+- attendance today
+- office vs remote
+- tasks
+- overdue tasks
+- leave
+- payroll
+- recruitment
+- activity
+
+HR dashboard:
+- headcount
+- attendance
+- attendance exceptions
+- leave
+- recruitment
+- staff documents
+- recent hires
+
+Accounts dashboard:
+- payroll status
+- gross
+- deductions
+- net
+- payslips
+- payroll periods
+
+HOD dashboard:
+- department headcount
+- team attendance
+- tasks
+- overdue tasks
+- pending leave
+- field visits
+
+Employee dashboard:
+- check-in card
+- attendance status
+- tasks
+- leave
+- payslips
+- notifications
+- announcements
+
+Design desktop and mobile versions.
+
+Include:
+- loading
+- no-data
+- permission-restricted state
+- error state
+- quick actions

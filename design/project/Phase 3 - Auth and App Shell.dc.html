@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes drawerIn { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer { 0% { background-position: -420px 0; } 100% { background-position: 420px 0; } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(15,122,84,.35); } 70% { box-shadow: 0 0 0 12px rgba(15,122,84,0); } 100% { box-shadow: 0 0 0 0 rgba(15,122,84,0); } }
+  @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 03 · Auth, shell and role dashboards</span>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+        <button onClick="{{ m.go }}" style="height:26px;padding:0 11px;border:1px solid {{ m.border }};border-radius:999px;background:{{ m.bg }};color:{{ m.fg }};font:500 11px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ m.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- AUTH -->
+  <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:14px 20px;background:#fff;border-bottom:1px solid #E3E8EF">
+        <sc-for list="{{ authScreens }}" as="a" hint-placeholder-count="7">
+          <button onClick="{{ a.pick }}" style="height:30px;padding:0 12px;border:1px solid {{ a.border }};border-radius:999px;background:{{ a.bg }};color:{{ a.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ a.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;min-height:640px;background:#fff">
+        <div style="flex:1 1 440px;min-width:300px;padding:56px 32px;display:flex;align-items:center;justify-content:center">
+          <div style="width:100%;max-width:400px;animation:rise 200ms cubic-bezier(0,.6,.25,1)">
+
+            <sc-if value="{{ scLogin }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="width:38px;height:38px;border-radius:10px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 16px 'IBM Plex Sans';margin-bottom:24px">H</div>
+                <h1 style="margin:0 0 8px;font-size:28px;font-weight:600;letter-spacing:-.026em">Sign in</h1>
+                <p style="margin:0 0 26px;font-size:15px;line-height:24px;color:#4A5666">Use the work email HR registered for you.</p>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Work email</label>
+                <input value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@chfheron.com" style="width:100%;height:46px;padding:0 13px;border:1px solid {{ emailBorder }};border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:7px;align-items:flex-start;margin-top:12px;padding:11px 13px;border-radius:8px;background:#FFFBFA;border:1px solid #FADCD9;animation:fadeIn 140ms">
+                    <span data-icon="alert-circle" style="font-size:16px;color:#B42318;margin-top:1px"></span>
+                    <span style="font-size:13px;line-height:20px;color:#B42318">That email and password don't match. 2 attempts left before a 15-minute lockout.</span>
+                  </div>
+                </sc-if>
+                <label style="display:block;font-size:13px;font-weight:500;margin:16px 0 6px">Password</label>
+                <input type="password" value="........" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:14px 0 20px">
+                  <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:#4A5666;cursor:pointer"><span style="width:18px;height:18px;border-radius:4px;border:1px solid #CDD5E0;background:#fff"></span>Keep me signed in</label>
+                  <span onClick="{{ goForgot }}" style="font-size:13px;font-weight:500;color:#1B4F8C;cursor:pointer">Forgot password?</span>
+                </div>
+                <button onClick="{{ trySignIn }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;display:grid;place-items:center;transition:background 140ms" style-hover="background:#16406F">{{ signInLabel }}</button>
+                <div style="margin-top:20px;font-size:13px;line-height:20px;color:#4A5666">Accounts are created by HR. New hire without an invite? <span onClick="{{ goFirst }}" style="color:#1B4F8C;font-weight:500;cursor:pointer">Use your invite link</span>.</div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scForgot }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <button onClick="{{ goLogin }}" style="display:inline-flex;align-items:center;gap:7px;margin-bottom:20px;padding:0;border:none;background:transparent;color:#1B4F8C;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="arrow-left" style="font-size:15px"></span>Back to sign in</button>
+                <h1 style="margin:0 0 8px;font-size:26px;font-weight:600;letter-spacing:-.024em">Reset your password</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:24px;color:#4A5666">We'll send a reset link to your work email. It expires in 30 minutes.</p>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Work email</label>
+                <input placeholder="you@chfheron.com" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:16px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <button onClick="{{ sendReset }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Send reset link</button>
+                <sc-if value="{{ resetSent }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;margin-top:16px;padding:14px;border-radius:10px;background:#F4FBF8;border:1px solid #BFE3D3;animation:fadeIn 200ms">
+                    <span data-icon="mail-check" style="font-size:18px;color:#0F7A54"></span>
+                    <span style="font-size:13px;line-height:20px;color:#4A5666"><b style="color:#131A22">Check your inbox.</b> If that address is registered, a link is on its way. Didn't arrive? Resend in 45s.</span>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scReset }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <h1 style="margin:0 0 8px;font-size:26px;font-weight:600;letter-spacing:-.024em">Choose a new password</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:24px;color:#4A5666">Resetting for <b>tunde.bello@chfheron.com</b></p>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">New password</label>
+                <input value="{{ pw }}" onInput="{{ onPw }}" type="password" placeholder="At least 10 characters" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <div style="display:flex;gap:5px;margin:12px 0 8px">
+                  <span style="flex:1;height:4px;border-radius:2px;background:{{ pw1 }};transition:background 140ms"></span>
+                  <span style="flex:1;height:4px;border-radius:2px;background:{{ pw2 }};transition:background 140ms"></span>
+                  <span style="flex:1;height:4px;border-radius:2px;background:{{ pw3 }};transition:background 140ms"></span>
+                </div>
+                <div style="font-size:12px;color:#4A5666;margin-bottom:16px">Strength: <b>{{ pwLabel }}</b> — 10+ characters, one number, one symbol.</div>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Confirm password</label>
+                <input type="password" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:16px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <button onClick="{{ goLogin }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Set password and sign in</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scExpired }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center">
+                <span data-icon="clock" style="font-size:32px;color:#8A5600;display:inline-flex;margin-bottom:16px"></span>
+                <h1 style="margin:0 0 10px;font-size:24px;font-weight:600;letter-spacing:-.02em">Your session expired</h1>
+                <p style="margin:0 0 8px;font-size:15px;line-height:24px;color:#4A5666">You were inactive for 30 minutes, so we signed you out to protect payroll and staff data.</p>
+                <p style="margin:0 0 24px;font-size:14px;line-height:22px;color:#7A8798">Anything you'd typed on the Attendance screen was saved as a draft.</p>
+                <button onClick="{{ goLogin }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Sign back in</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scUnauth }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center">
+                <span data-icon="lock" style="font-size:32px;color:#7A8798;display:inline-flex;margin-bottom:16px"></span>
+                <h1 style="margin:0 0 10px;font-size:24px;font-weight:600;letter-spacing:-.02em">You don't have access to Payroll</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:24px;color:#4A5666">Your role is <b>Head of Department</b>. Payroll is limited to Accounts and Management. Nothing has been logged against you.</p>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                  <button onClick="{{ goApp }}" style="height:44px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Back to dashboard</button>
+                  <button style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Request access</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scFirst }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:12px;font-weight:600;margin-bottom:18px">Welcome to CHF Heron</div>
+                <h1 style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:-.024em">Let's set up your account</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:24px;color:#4A5666">Three quick things and you're in. It takes about a minute.</p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+                  <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #BFE3D3;border-radius:10px;background:#F4FBF8"><span style="width:26px;height:26px;flex:none;border-radius:50%;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:13px">✓</span><span><span style="display:block;font-size:14px;font-weight:600">Password set</span><span style="display:block;font-size:12px;color:#4A5666">Done just now</span></span></div>
+                  <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #1B4F8C;border-radius:10px;background:#F7FAFD"><span style="width:26px;height:26px;flex:none;border-radius:50%;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">2</span><span><span style="display:block;font-size:14px;font-weight:600">Add your profile photo</span><span style="display:block;font-size:12px;color:#4A5666">Used to confirm your check-in selfies</span></span></div>
+                  <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #E3E8EF;border-radius:10px"><span style="width:26px;height:26px;flex:none;border-radius:50%;background:#F1F4F8;color:#7A8798;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">3</span><span><span style="display:block;font-size:14px;font-weight:600">Allow location and camera</span><span style="display:block;font-size:12px;color:#4A5666">Only used when you check in — never in the background</span></span></div>
+                </div>
+                <button onClick="{{ goProfile }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Continue</button>
+                <div style="text-align:center;margin-top:12px"><span onClick="{{ goApp }}" style="font-size:13px;color:#7A8798;cursor:pointer">Skip for now</span></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scProfile }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Step 2 of 3</div>
+                <h1 style="margin:0 0 20px;font-size:26px;font-weight:600;letter-spacing:-.024em">Your profile</h1>
+                <div style="display:flex;gap:16px;align-items:center;margin-bottom:22px">
+                  <div style="width:76px;height:76px;flex:none;border-radius:50%;background:repeating-linear-gradient(135deg,#F1F4F8 0 8px,#E7ECF3 8px 16px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4A5666;text-align:center">photo</div>
+                  <div><button style="height:38px;padding:0 15px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Upload photo</button><div style="font-size:12px;color:#7A8798;margin-top:7px">JPG or PNG, square, min 400px</div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Preferred name</label><input value="Tunde" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Phone</label><input value="0704 410 2187" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                </div>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Emergency contact</label>
+                <input placeholder="Name and phone number" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:18px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:20px;color:#4A5666;margin-bottom:18px">Your department, position and employment details are set by HR and shown read-only on your profile.</div>
+                <button onClick="{{ goApp }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Save and continue</button>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+        <div style="flex:1 1 360px;min-width:290px;background:#131A22;color:#fff;padding:56px 40px;display:flex;flex-direction:column;justify-content:center">
+          <div style="max-width:380px">
+            <div style="width:40px;height:40px;border-radius:10px;background:#1B4F8C;display:grid;place-items:center;font:600 17px 'IBM Plex Sans';margin-bottom:24px">H</div>
+            <h2 style="margin:0 0 14px;font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.22">Everything the depot needs, in one workspace</h2>
+            <p style="margin:0 0 26px;font-size:15px;line-height:25px;color:#9AA7B6">Attendance with proof, field-visit verification, leave, payroll and documents — across every location.</p>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;color:#D9E6F5">
+              <div style="display:flex;align-items:center;gap:11px"><span data-icon="shield-check" style="font-size:17px;color:#7FA6D3"></span>Sessions expire after 30 minutes idle</div>
+              <div style="display:flex;align-items:center;gap:11px"><span data-icon="users" style="font-size:17px;color:#7FA6D3"></span>What you see depends on your role</div>
+              <div style="display:flex;align-items:center;gap:11px"><span data-icon="file-clock" style="font-size:17px;color:#7FA6D3"></span>Every change is written to the audit log</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- APP SHELL -->
+  <sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+    <div style="animation:fadeIn 200ms">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:12px 20px;background:#fff;border-bottom:1px solid #E3E8EF">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;letter-spacing:.07em;text-transform:uppercase;margin-right:4px">Role</span>
+          <sc-for list="{{ roles }}" as="r" hint-placeholder-count="5">
+            <button onClick="{{ r.pick }}" style="height:30px;padding:0 12px;border:1px solid {{ r.border }};border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ r.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;letter-spacing:.07em;text-transform:uppercase;margin-right:4px">State</span>
+          <sc-for list="{{ dataStates }}" as="d" hint-placeholder-count="5">
+            <button onClick="{{ d.pick }}" style="height:30px;padding:0 12px;border:1px solid {{ d.border }};border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer">{{ d.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;min-height:820px;background:#F1F4F8">
+        <div style="width:{{ sidebarW }};flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column;transition:width 320ms cubic-bezier(.2,.8,.2,1);overflow:hidden">
+          <div onClick="{{ toggleOrg }}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;margin-bottom:16px;cursor:pointer;transition:background 140ms" style-hover="background:#F1F4F8">
+            <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+            <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}">
+              <span style="flex:1;min-width:0;animation:fadeIn 140ms"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CHF Heron Nigeria</span><span style="display:block;font-size:10px;color:#7A8798;white-space:nowrap">Lagos HQ workspace</span></span>
+            </sc-if>
+          </div>
+          <sc-if value="{{ orgOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:-10px 0 14px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;box-shadow:0 8px 24px -6px rgba(16,24,40,.14);background:#fff;animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+              <div style="padding:6px 9px;font:600 10px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#7A8798">Workspaces</div>
+              <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:6px;background:#EEF4FB;font-size:13px;font-weight:500"><span style="width:22px;height:22px;flex:none;border-radius:6px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">H</span>CHF Heron Nigeria</div>
+              <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:6px;font-size:13px;color:#7A8798"><span style="width:22px;height:22px;flex:none;border-radius:6px;background:#F1F4F8;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">+</span>Add organisation</div>
+            </div>
+          </sc-if>
+
+          <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="9">
+            <div onClick="{{ n.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ n.bg }};color:{{ n.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+              <span data-icon="{{ n.icon }}" style="font-size:18px;flex:none"></span>
+              <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}">
+                <span style="flex:1;min-width:0;font-size:13px;font-weight:500;white-space:nowrap;animation:fadeIn 140ms">{{ n.label }}</span>
+              </sc-if>
+              <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}">
+                <span style="flex:none;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#FDECEA;color:#B42318;font:600 10px 'IBM Plex Sans';display:grid;place-items:center">{{ n.badgeCount }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+
+          <div style="flex:1"></div>
+          <div style="padding-top:12px;border-top:1px solid #F1F4F8">
+            <div onClick="{{ toggleSidebar }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;cursor:pointer;color:#7A8798;transition:background 140ms" style-hover="background:#F1F4F8">
+              <span data-icon="panel-left" style="font-size:18px;flex:none"></span>
+              <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;font-weight:500;white-space:nowrap">Collapse</span></sc-if>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-bottom:1px solid #E3E8EF;position:sticky;top:0;z-index:30">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px;font-size:12px;color:#7A8798;white-space:nowrap;overflow:hidden"><span>{{ roleLabel }}</span><span>/</span><span style="color:#131A22;font-weight:500">{{ activeNav }}</span></div>
+            <div style="flex:0 1 280px;min-width:0;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid #E3E8EF;border-radius:8px;background:#F8F9FB">
+              <span data-icon="search" style="font-size:15px;color:#7A8798"></span>
+              <input placeholder="Search…" style="flex:1;min-width:0;border:none;background:transparent;outline:none;font:400 13px 'IBM Plex Sans'" />
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;border:1px solid #CDD5E0;border-radius:4px;padding:1px 5px;background:#fff">⌘K</span>
+            </div>
+            <div style="position:relative;flex:none">
+              <button onClick="{{ toggleQuick }}" style="display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer;white-space:nowrap" style-hover="background:#16406F"><span data-icon="plus" style="font-size:15px"></span>New</button>
+              <sc-if value="{{ quickOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;z-index:40;top:40px;right:0;width:230px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.16);animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+                  <div style="padding:6px 10px;font:600 10px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#7A8798">Quick actions</div>
+                  <sc-for list="{{ quickActions }}" as="qa" hint-placeholder-count="4">
+                    <div onClick="{{ closeMenus }}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer" style-hover="background:#F1F4F8"><span data-icon="{{ qa.icon }}" style="font-size:16px;color:#4A5666"></span>{{ qa.label }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <button onClick="{{ toggleNotif }}" style="position:relative;flex:none;width:34px;height:34px;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:8px;background:#fff;color:#4A5666;cursor:pointer" style-hover="background:#F8F9FB"><span data-icon="bell" style="font-size:17px"></span><span style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#B42318;color:#fff;font:600 9px 'IBM Plex Sans';display:grid;place-items:center">3</span></button>
+            <div style="position:relative;flex:none">
+              <button onClick="{{ toggleAccount }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 6px;border:1px solid #E3E8EF;border-radius:8px;background:#fff;cursor:pointer" style-hover="background:#F8F9FB">
+                <span style="width:24px;height:24px;border-radius:50%;background:#D9E6F5;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">{{ userInitials }}</span>
+                <span data-icon="chevron-down" style="font-size:14px;color:#7A8798"></span>
+              </button>
+              <sc-if value="{{ accountOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;z-index:40;top:40px;right:0;width:250px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.16);animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+                  <div style="display:flex;gap:10px;align-items:center;padding:10px">
+                    <span style="width:34px;height:34px;flex:none;border-radius:50%;background:#D9E6F5;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ userInitials }}</span>
+                    <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</span><span style="display:block;font-size:11px;color:#7A8798">{{ roleLabel }}</span></span>
+                  </div>
+                  <div style="height:1px;background:#F1F4F8;margin:4px 0"></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer" style-hover="background:#F1F4F8"><span data-icon="user" style="font-size:16px;color:#4A5666"></span>My profile</div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer" style-hover="background:#F1F4F8"><span data-icon="bell" style="font-size:16px;color:#4A5666"></span>Notification settings</div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer" style-hover="background:#F1F4F8"><span data-icon="moon" style="font-size:16px;color:#4A5666"></span>Dark mode<span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">soon</span></div>
+                  <div style="height:1px;background:#F1F4F8;margin:4px 0"></div>
+                  <div onClick="{{ signOut }}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13px;color:#B42318;cursor:pointer" style-hover="background:#FDECEA"><span data-icon="log-out" style="font-size:16px"></span>Sign out</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+
+          <div style="flex:1;padding:24px;min-width:0">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:20px">
+              <div>
+                <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">{{ greeting }}</h1>
+                <div style="font-size:14px;color:#4A5666">{{ subgreeting }}</div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ headerActions }}" as="ha" hint-placeholder-count="2">
+                  <button onClick="{{ ha.act }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid {{ ha.border }};border-radius:8px;background:{{ ha.bg }};color:{{ ha.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:opacity 140ms" style-hover="opacity:.88"><span data-icon="{{ ha.icon }}" style="font-size:15px"></span>{{ ha.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ stLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="animation:fadeIn 140ms">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+                  <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="4">
+                    <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                      <span style="display:block;height:10px;width:52%;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                      <span style="display:block;height:22px;width:38%;border-radius:5px;margin-top:14px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                      <span style="display:block;height:8px;width:66%;border-radius:4px;margin-top:12px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px">
+                  <sc-for list="{{ skeletonRows }}" as="sr" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <span style="width:30px;height:30px;flex:none;border-radius:50%;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                      <span style="flex:1;height:10px;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                      <span style="width:76px;height:10px;border-radius:4px;background:linear-gradient(90deg,#EEF1F5 0,#F7F9FB 40%,#EEF1F5 80%);background-size:420px 100%;animation:shimmer 1.4s linear infinite"></span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ stEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:64px 24px;text-align:center;animation:fadeIn 200ms">
+                <span data-icon="inbox" style="font-size:30px;color:#7FA6D3;display:inline-flex;margin-bottom:14px"></span>
+                <div style="font-size:18px;font-weight:600;margin-bottom:8px">Nothing to show yet</div>
+                <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:44ch;margin:0 auto 20px">This workspace has no attendance, task or payroll records yet. Once your team starts checking in, this dashboard fills itself.</div>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                  <button style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Invite your team</button>
+                  <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Import employees</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ stError }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border:1px solid #FADCD9;border-radius:14px;padding:64px 24px;text-align:center;animation:fadeIn 200ms">
+                <span data-icon="cloud-off" style="font-size:30px;color:#B42318;display:inline-flex;margin-bottom:14px"></span>
+                <div style="font-size:18px;font-weight:600;margin-bottom:8px">We couldn't load your dashboard</div>
+                <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:46ch;margin:0 auto 8px">The request timed out after 15 seconds. Nothing was lost — this screen only reads data.</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-bottom:20px">ref DASH-504 · 09:41:20 WAT</div>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                  <button onClick="{{ retryLoad }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Try again</button>
+                  <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Report a problem</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ stRestricted }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:64px 24px;text-align:center;animation:fadeIn 200ms">
+                <span data-icon="lock" style="font-size:30px;color:#7A8798;display:inline-flex;margin-bottom:14px"></span>
+                <div style="font-size:18px;font-weight:600;margin-bottom:8px">This section is restricted</div>
+                <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:46ch;margin:0 auto 20px">Your role — <b>{{ roleLabel }}</b> — can't open payroll figures. The item stays visible in the sidebar so you know it exists, but it's locked rather than hidden.</div>
+                <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Request access from HR</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ stReady }}" hint-placeholder-val="{{ true }}">
+              <div style="animation:fadeIn 200ms">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+                  <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                    <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:18px 20px;transition:box-shadow 140ms,transform 140ms" style-hover="box-shadow:0 2px 6px -1px rgba(16,24,40,.1);transform:translateY(-1px)">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                        <span style="font-size:13px;color:#4A5666">{{ s.label }}</span>
+                        <span data-icon="{{ s.icon }}" style="font-size:17px;color:{{ s.iconColor }}"></span>
+                      </div>
+                      <div style="font-size:{{ s.size }};font-weight:600;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums;font-family:{{ s.font }}">{{ s.value }}</div>
+                      <div style="font-size:12px;color:{{ s.footFg }};margin-top:7px">{{ s.foot }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
+                  <div style="flex:1 1 420px;min-width:300px;display:flex;flex-direction:column;gap:14px">
+
+                    <sc-if value="{{ isEmployee }}" hint-placeholder-val="{{ false }}">
+                      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+                          <div style="display:flex;gap:14px;align-items:center">
+                            <span style="width:48px;height:48px;flex:none;border-radius:50%;background:#E7F4EE;color:#0F7A54;display:grid;place-items:center;animation:pulseRing 2.4s ease-out infinite"><span data-icon="check" style="font-size:22px"></span></span>
+                            <span><span style="display:block;font-size:17px;font-weight:600;letter-spacing:-.01em">Checked in at 08:52</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;margin-top:3px">Head Office · ±6m · 4h 12m elapsed</span></span>
+                          </div>
+                          <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button onClick="{{ toast }}" style="height:42px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Start break</button>
+                            <button onClick="{{ toast }}" style="height:42px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Check out</button>
+                          </div>
+                        </div>
+                        <div style="margin-top:16px;height:8px;border-radius:4px;background:#F1F4F8;overflow:hidden"><span style="display:block;height:100%;width:52%;background:#0F7A54;border-radius:4px"></span></div>
+                        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:6px"><span>08:00</span><span>expected 8h 00m</span><span>17:00</span></div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ isAccounts }}" hint-placeholder-val="{{ false }}">
+                      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:20px">
+                          <span style="font-size:15px;font-weight:600">March 2026 payroll run</span>
+                          <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:11px;font-weight:600">▲ In review · due 26 Mar</span>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px">
+                          <sc-for list="{{ payrollSteps }}" as="ps" hint-placeholder-count="6">
+                            <div style="flex:1 1 92px;min-width:84px">
+                              <div style="height:5px;border-radius:3px;background:{{ ps.bar }};transition:background 200ms"></div>
+                              <div style="font-size:11px;font-weight:600;color:{{ ps.fg }};margin-top:8px">{{ ps.label }}</div>
+                              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:2px">{{ ps.date }}</div>
+                            </div>
+                          </sc-for>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+                          <button onClick="{{ toast }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Send for approval</button>
+                          <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Review adjustments (4)</button>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #E3E8EF">
+                        <span style="font-size:15px;font-weight:600">{{ panelTitle }}</span>
+                        <span style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">View all</span>
+                      </div>
+                      <sc-for list="{{ panelRows }}" as="p" hint-placeholder-count="5">
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:13px 20px;border-bottom:1px solid #F1F4F8;transition:background 80ms" style-hover="background:#F8FAFD">
+                          <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ p.initials }}</span>
+                          <span style="flex:1 1 160px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ p.title }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ p.sub }}</span></span>
+                          <span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ p.pillBg }};color:{{ p.pillFg }};font-size:11px;font-weight:600">{{ p.pill }}</span>
+                          <sc-if value="{{ p.hasAction }}" hint-placeholder-val="{{ false }}">
+                            <span onClick="{{ toast }}" style="flex:none;font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">{{ p.action }}</span>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+
+                    <sc-if value="{{ showChart }}" hint-placeholder-val="{{ true }}">
+                      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px">
+                          <span style="font-size:15px;font-weight:600">Attendance, last 7 days</span>
+                          <span style="display:flex;gap:14px;font-size:11px;color:#4A5666"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:2px;background:#1B4F8C"></span>Office</span><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:2px;background:#AFC9E7"></span>Remote</span></span>
+                        </div>
+                        <div style="display:flex;align-items:flex-end;gap:10px;height:150px">
+                          <sc-for list="{{ chart }}" as="c" hint-placeholder-count="7">
+                            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;height:100%">
+                              <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:100%;transition:opacity 140ms" style-hover="opacity:.75">
+                                <span style="display:block;width:100%;height:{{ c.remote }};background:#AFC9E7;border-radius:5px 5px 0 0;transform-origin:bottom;animation:barGrow 320ms cubic-bezier(.2,.8,.2,1)"></span>
+                                <span style="display:block;width:100%;height:{{ c.office }};background:#1B4F8C;transform-origin:bottom;animation:barGrow 320ms cubic-bezier(.2,.8,.2,1)"></span>
+                              </div>
+                              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ c.day }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+
+                  <div style="flex:1 1 280px;min-width:260px;display:flex;flex-direction:column;gap:14px">
+                    <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                      <div style="font-size:15px;font-weight:600;margin-bottom:14px">{{ sideTitle }}</div>
+                      <sc-for list="{{ sideRows }}" as="sr" hint-placeholder-count="4">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F4F8">
+                          <span style="font-size:13px;color:#4A5666;min-width:0">{{ sr.label }}</span>
+                          <span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;color:{{ sr.fg }}">{{ sr.value }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+
+                    <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:15px;font-weight:600">{{ feedTitle }}</span><span data-icon="activity" style="font-size:16px;color:#7A8798"></span></div>
+                      <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
+                        <div style="display:flex;gap:11px;padding-bottom:14px">
+                          <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:8px;height:8px;border-radius:50%;background:{{ f.dot }};margin-top:5px"></span><span style="flex:1;width:2px;background:#F1F4F8;margin-top:4px"></span></span>
+                          <span style="min-width:0"><span style="display:block;font-size:13px;line-height:20px">{{ f.text }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:3px">{{ f.time }}</span></span>
+                        </div>
+                      </sc-for>
+                    </div>
+
+                    <div style="background:#F7FAFD;border:1px solid #D9E6F5;border-radius:14px;padding:20px">
+                      <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><span data-icon="megaphone" style="font-size:17px;color:#1B4F8C"></span><span style="font-size:14px;font-weight:600">{{ announceTitle }}</span></div>
+                      <div style="font-size:13px;line-height:21px;color:#4A5666">{{ announceBody }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:10px">{{ announceMeta }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+            <div onClick="{{ closeMenus }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+            <div style="position:relative;width:min(400px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #E3E8EF">
+                <span style="font-size:16px;font-weight:600">Notifications</span>
+                <button onClick="{{ closeMenus }}" style="width:30px;height:30px;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+              </div>
+              <div style="display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid #E3E8EF">
+                <span style="padding:5px 12px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:12px;font-weight:500">All 3</span>
+                <span style="padding:5px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px;color:#4A5666;cursor:pointer">Approvals</span>
+                <span style="padding:5px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px;color:#4A5666;cursor:pointer">Mentions</span>
+              </div>
+              <div style="flex:1;overflow:auto">
+                <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="3">
+                  <div style="display:flex;gap:12px;padding:16px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                    <span style="width:32px;height:32px;flex:none;border-radius:8px;background:{{ n.bg }};color:{{ n.fg }};display:grid;place-items:center"><span data-icon="{{ n.icon }}" style="font-size:16px"></span></span>
+                    <span style="min-width:0"><span style="display:block;font-size:13px;line-height:20px"><b>{{ n.who }}</b> {{ n.what }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:4px">{{ n.time }}</span></span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding:14px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB"><button onClick="{{ closeMenus }}" style="width:100%;height:40px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Mark all as read</button></div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- MOBILE -->
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms;padding:32px 24px 56px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">Mobile</div>
+      <h2 style="margin:0 0 8px;font-size:24px;font-weight:600;letter-spacing:-.02em">The shell on a phone</h2>
+      <p style="margin:0 0 26px;max-width:62ch;font-size:14px;line-height:22px;color:#4A5666">The sidebar becomes a bottom bar of the five destinations that role actually uses — everything else lives under More. The role's single most important action is a sticky button, never buried in a menu.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:20px">
+
+        <div style="width:300px;max-width:100%;border:1px solid #E3E8EF;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.14)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #E3E8EF">
+            <span style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:7px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">H</span><span style="font-size:13px;font-weight:600">Good morning, Chidi</span></span>
+            <span style="position:relative"><span data-icon="bell" style="font-size:19px;color:#4A5666"></span><span style="position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#B42318;border:1.5px solid #fff"></span></span>
+          </div>
+          <div style="padding:14px 16px;background:#F8F9FB;display:flex;flex-direction:column;gap:12px">
+            <div style="background:#131A22;color:#fff;border-radius:14px;padding:18px">
+              <div style="font-size:12px;color:#9AA7B6;margin-bottom:4px">Not checked in yet</div>
+              <div style="font-size:22px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">09:04</div>
+              <button style="width:100%;height:48px;margin-top:14px;border:none;border-radius:10px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans'">Check in</button>
+              <div style="font-size:11px;color:#9AA7B6;margin-top:9px;text-align:center">Location and selfie captured once, at check-in</div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px"><div style="font-size:11px;color:#7A8798">My tasks</div><div style="font-size:20px;font-weight:600;margin-top:3px">5</div></div>
+              <div style="flex:1;background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px"><div style="font-size:11px;color:#7A8798">Leave left</div><div style="font-size:20px;font-weight:600;margin-top:3px">11d</div></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:14px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px">Due today</div>
+              <div style="font-size:13px;line-height:20px;color:#4A5666;padding-bottom:9px;border-bottom:1px solid #F1F4F8">Stock audit — Shoprite Lekki</div>
+              <div style="font-size:13px;line-height:20px;color:#4A5666;padding-top:9px">Restock check — Ebeano VI</div>
+            </div>
+          </div>
+          <div style="display:flex;border-top:1px solid #E3E8EF">
+            <div style="flex:1;padding:9px 0 11px;text-align:center;color:#1B4F8C"><span data-icon="home" style="font-size:19px;display:flex;justify-content:center"></span><span style="font-size:10px;font-weight:600">Home</span></div>
+            <div style="flex:1;padding:9px 0 11px;text-align:center;color:#7A8798"><span data-icon="calendar-check" style="font-size:19px;display:flex;justify-content:center"></span><span style="font-size:10px">Attend</span></div>
+            <div style="flex:1;padding:9px 0 11px;text-align:center;color:#7A8798"><span data-icon="clipboard-list" style="font-size:19px;display:flex;justify-content:center"></span><span style="font-size:10px">Tasks</span></div>
+            <div style="flex:1;padding:9px 0 11px;text-align:center;color:#7A8798"><span data-icon="plane" style="font-size:19px;display:flex;justify-content:center"></span><span style="font-size:10px">Leave</span></div>
+            <div style="flex:1;padding:9px 0 11px;text-align:center;color:#7A8798"><span data-icon="more-horizontal" style="font-size:19px;display:flex;justify-content:center"></span><span style="font-size:10px">More</span></div>
+          </div>
+        </div>
+
+        <div style="width:300px;max-width:100%;border:1px solid #E3E8EF;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.14)">
+          <div style="padding:12px 16px;border-bottom:1px solid #E3E8EF;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:600">HR · today</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">Mon 09 Mar</span></div>
+          <div style="padding:14px 16px;background:#F8F9FB;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px"><div style="font-size:11px;color:#7A8798">Present</div><div style="font-size:20px;font-weight:600;margin-top:3px">128<span style="font-size:12px;color:#7A8798;font-weight:400">/142</span></div></div>
+              <div style="flex:1;background:#fff;border:1px solid #FADCD9;border-radius:12px;padding:13px"><div style="font-size:11px;color:#B42318">Exceptions</div><div style="font-size:20px;font-weight:600;margin-top:3px;color:#B42318">6</div></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:14px">
+              <div style="font-size:13px;font-weight:600;margin-bottom:11px">Needs your review</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid #F1F4F8"><span style="font-size:13px">Chidi Uzo</span><span style="padding:2px 8px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:10px;font-weight:600">▲ ±140m</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px"><span style="font-size:13px">Musa Yakubu</span><span style="padding:2px 8px;border-radius:999px;background:#FDECEA;color:#B42318;font-size:10px;font-weight:600">✕ No check-in</span></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Pending leave · 9</div><div style="font-size:12px;line-height:19px;color:#4A5666">Oldest request has waited 3 days</div></div>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid #E3E8EF;background:#fff"><button style="width:100%;height:46px;border:none;border-radius:10px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans'">Review 6 exceptions</button></div>
+        </div>
+
+        <div style="width:300px;max-width:100%;position:relative;border:1px solid #E3E8EF;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.14)">
+          <div style="padding:12px 16px;border-bottom:1px solid #E3E8EF;font-size:14px;font-weight:600">Account menu</div>
+          <div style="height:130px;background:repeating-linear-gradient(135deg,#F8F9FB 0 9px,#F1F4F8 9px 18px)"></div>
+          <div style="position:absolute;inset:0;background:rgba(19,26,34,.32)"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;padding:10px 16px 20px">
+            <div style="width:36px;height:4px;border-radius:2px;background:#CDD5E0;margin:0 auto 14px"></div>
+            <div style="display:flex;gap:11px;align-items:center;padding-bottom:14px;border-bottom:1px solid #F1F4F8">
+              <span style="width:40px;height:40px;flex:none;border-radius:50%;background:#D9E6F5;color:#16406F;display:grid;place-items:center;font:600 14px 'IBM Plex Sans'">CU</span>
+              <span><span style="display:block;font-size:14px;font-weight:600">Chidi Uzo</span><span style="display:block;font-size:12px;color:#7A8798">Field Sales · EMP-0142</span></span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding-top:8px">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 8px;border-radius:8px;font-size:14px"><span data-icon="user" style="font-size:18px;color:#4A5666"></span>My profile</div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 8px;border-radius:8px;font-size:14px"><span data-icon="folder" style="font-size:18px;color:#4A5666"></span>My documents</div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 8px;border-radius:8px;font-size:14px"><span data-icon="settings" style="font-size:18px;color:#4A5666"></span>Settings</div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 8px;border-radius:8px;font-size:14px;color:#B42318"><span data-icon="log-out" style="font-size:18px"></span>Sign out</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:26px;background:#131A22;border-radius:14px;padding:26px;color:#E6EBF1">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7FA6D3;margin-bottom:12px">Phase 03 — decisions locked</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;font-size:13px;line-height:21px">
+          <div><b style="display:block;color:#fff;margin-bottom:5px">Role is the navigation</b>The sidebar is generated from the role's permissions. Restricted items stay visible but locked, so people learn the system's shape instead of guessing at it.</div>
+          <div><b style="display:block;color:#fff;margin-bottom:5px">One hero action</b>Every dashboard has exactly one primary action in the header — check in, review exceptions, send payroll for approval, verify visits.</div>
+          <div><b style="display:block;color:#fff;margin-bottom:5px">Session policy</b>30-minute idle timeout with draft preservation. Expiry explains itself rather than dumping you at a bare login.</div>
+          <div><b style="display:block;color:#fff;margin-bottom:5px">Multi-tenant ready</b>The org switcher sits above navigation from day one, even with a single workspace.</div>
+        </div>
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3540;font-size:13px;color:#9AA7B6">Next: <b style="color:#fff">Phase 04 — Employees, Departments, Attendance</b>.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:260px;max-width:340px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ t.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ t.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const NAV = {
+  Management: [["Dashboard","layout-dashboard"],["Employees","users"],["Departments","building-2"],["Attendance","calendar-check"],["Tasks","clipboard-list"],["Leave","plane",4],["Payroll","wallet"],["Recruitment","user-plus"],["Reports","bar-chart-3"],["Audit","shield-check"],["Settings","settings"]],
+  HR: [["Dashboard","layout-dashboard"],["Employees","users"],["Departments","building-2"],["Attendance","calendar-check",6],["Leave","plane",9],["Recruitment","user-plus"],["Documents","folder"],["Reports","bar-chart-3"],["Settings","settings"]],
+  Accounts: [["Dashboard","layout-dashboard"],["Payroll","wallet"],["Payslips","receipt"],["Employees","users"],["Reports","bar-chart-3"],["Settings","settings"]],
+  HOD: [["Dashboard","layout-dashboard"],["My department","users"],["Attendance","calendar-check"],["Tasks","clipboard-list",12],["Field visits","map-pin",3],["Leave","plane",2],["Reports","bar-chart-3"]],
+  Employee: [["Dashboard","layout-dashboard"],["Check in","calendar-check"],["My tasks","clipboard-list",5],["Leave","plane"],["Payslips","receipt"],["Documents","folder"],["Notifications","bell",3]]
+};
+const USER = {
+  Management: ["Ngozi Aliu", "NA"], HR: ["Amaka Duru", "AD"], Accounts: ["Ifeoma Eze", "IE"],
+  HOD: ["Tunde Bello", "TB"], Employee: ["Chidi Uzo", "CU"]
+};
+const N = "#4A5666", B = "#1B4F8C", G = "#0F7A54", W = "#8A5600", R = "#B42318";
+const MONO = "'IBM Plex Mono',monospace";
+const STATS = {
+  Management: [
+    ["Total headcount","142","users",B,"+6 this quarter",N,"30px",""],
+    ["Present today","128","user-check",G,"90% · 96 office / 32 remote",G,"30px",""],
+    ["Overdue tasks","7","alert-triangle",R,"3 field visits unverified",R,"30px",""],
+    ["Net payroll · Mar","₦48.2m","wallet",B,"In review · due 26 Mar",W,"24px",MONO]
+  ],
+  HR: [
+    ["Headcount","142","users",B,"4 starting this month",N,"30px",""],
+    ["Attendance today","128","user-check",G,"90% checked in",G,"30px",""],
+    ["Exceptions","6","alert-triangle",W,"2 low accuracy · 4 missing",W,"30px",""],
+    ["Pending leave","9","plane",B,"Oldest waiting 3 days",W,"30px",""]
+  ],
+  Accounts: [
+    ["Gross · March","₦61.4m","trending-up",B,"142 employees",N,"24px",MONO],
+    ["Deductions","₦13.2m","minus-circle",W,"PAYE, pension, loans",N,"24px",MONO],
+    ["Net payable","₦48.2m","wallet",G,"+2.1% vs. February",N,"24px",MONO],
+    ["Payslips published","0","receipt",N,"Publishes on approval",N,"30px",""]
+  ],
+  HOD: [
+    ["Department staff","24","users",B,"Sales · Lagos",N,"30px",""],
+    ["Present today","21","user-check",G,"3 on the road",G,"30px",""],
+    ["Open tasks","12","clipboard-list",B,"4 due today",W,"30px",""],
+    ["Unverified visits","3","map-pin",R,"Awaiting your review",R,"30px",""]
+  ],
+  Employee: [
+    ["Checked in","08:52","calendar-check",G,"Office · ±6m",G,"30px",MONO],
+    ["My tasks","5","clipboard-list",B,"2 due today",W,"30px",""],
+    ["Leave balance","11","plane",B,"days remaining in 2026",N,"30px",""],
+    ["Latest payslip","₦412k","receipt",B,"February · published",N,"24px",MONO]
+  ]
+};
+const PILL = { ok: ["#E7F4EE","#0F7A54"], warn: ["#FDF2DF","#8A5600"], bad: ["#FDECEA","#B42318"], info: ["#EEF4FB","#16406F"], mute: ["#F1F4F8","#4A5666"] };
+const PANELS = {
+  Management: ["Needs a decision from you", [
+    ["IE","March payroll ready for approval","Accounts · ₦48,204,150 net","In review","warn","Open"],
+    ["TB","Field visit proof rejected twice","Chidi Uzo · Shoprite Lekki","Escalated","bad","Review"],
+    ["AD","4 offers awaiting sign-off","Recruitment · Sales and Logistics","Pending","info","Open"],
+    ["NA","Q1 headcount report due Friday","Reports · Management","Due","mute",""],
+    ["EN","Warehouse overtime up 18%","Logistics · March to date","Watch","warn",""]
+  ]],
+  HR: ["Attendance exceptions today", [
+    ["CU","Chidi Uzo — low GPS accuracy","Field Sales · ±140m at 09:20","Review","warn","Resolve"],
+    ["MY","Musa Yakubu — no check-in","Warehouse · expected 08:00","Missing","bad","Contact"],
+    ["TB","Tunde Bello — late arrival","Sales · 10:07, 67 min late","Late","warn","Accept"],
+    ["AO","Adaeze Okonkwo — camera denied","Sales · checked in without selfie","Flagged","warn","Resolve"],
+    ["SK","Sade Kalu — no check-out yesterday","Finance · auto-closed at midnight","Fix","mute","Edit"]
+  ]],
+  Accounts: ["Recent payroll periods", [
+    ["MR","March 2026","142 employees · ₦48.2m net","In review","warn","Open"],
+    ["FE","February 2026","141 employees · ₦47.2m net","Published","ok",""],
+    ["JA","January 2026","139 employees · ₦46.4m net","Closed","mute",""],
+    ["DE","December 2025","139 employees · ₦58.9m net · 13th month","Closed","mute",""],
+    ["NO","November 2025","137 employees · ₦45.8m net","Closed","mute",""]
+  ]],
+  HOD: ["Your team today", [
+    ["CU","Chidi Uzo","Remote · 09:20 · 3.8km from office","Remote","info","Verify"],
+    ["AO","Adaeze Okonkwo","Office · 08:52","Present","ok",""],
+    ["SK","Sade Kalu","Field · 2 visits unverified","Action","warn","Review"],
+    ["BO","Bola Ogun","On approved leave until 12 Mar","Leave","mute",""],
+    ["JE","Joy Edet","Office · 09:58 · late","Late","warn","Accept"]
+  ]],
+  Employee: ["My tasks", [
+    ["01","Stock audit — Shoprite Lekki","Photo + location required · due today","Due today","warn","Start"],
+    ["02","Restock check — Ebeano VI","Photo required · due today","Due today","warn","Start"],
+    ["03","Weekly route report","Due Friday","Open","info",""],
+    ["04","Collect signed POD — Justrite Ikeja","Verified visit · complete","Done","ok",""],
+    ["05","Update outlet contact list","No deadline","Open","mute",""]
+  ]]
+};
+const SIDE = {
+  Management: ["Recruitment pipeline", [["Applied","64",N],["Screening","21",N],["Interview","9",N],["Offered","4",W],["Hired this month","3",G]]],
+  HR: ["Documents and onboarding", [["Contracts expiring (60d)","5",W],["Missing ID documents","8",R],["Probation reviews due","3",N],["New hires this month","4",G]]],
+  Accounts: ["This run at a glance", [["Employees","142",N],["Adjustments","4",W],["Loan deductions","₦2.4m",N],["Pension (8%)","₦4.9m",N],["PAYE","₦5.9m",N]]],
+  HOD: ["Department performance", [["Task completion","86%",G],["Visits verified","41 / 44",N],["Avg. check-in","08:57",N],["Overdue over 3 days","2",R]]],
+  Employee: ["My month", [["Days present","17",N],["Late arrivals","1",W],["Remote days","4",N],["Leave taken","2",N]]]
+};
+const FEED = {
+  Management: ["Organisation activity", [["Payroll moved to In review by Ifeoma Eze","09:12",B],["3 field visits verified in Lagos","08:55",G],["Contract uploaded for new hire","08:40",N],["Leave approved for Bola Ogun","Yesterday 17:22",G],["Audit log exported by HR","Yesterday 16:04",N]]],
+  HR: ["Recent activity", [["Adaeze Okonkwo checked in without a selfie","09:04",W],["Offer accepted — Warehouse Supervisor","08:47",G],["2 contracts expire within 30 days","08:30",W],["New application — Field Sales Rep","Yesterday 19:12",N],["Probation review completed — Joy Edet","Yesterday 15:40",G]]],
+  Accounts: ["Payroll activity", [["4 adjustments added by HR","09:02",W],["March draft generated","08:15",B],["February payslips downloaded ×112","Yesterday",N],["Pension schedule exported","2 days ago",N],["January period closed","04 Feb",G]]],
+  HOD: ["Team activity", [["Sade Kalu submitted a visit report","09:31",G],["Chidi Uzo checked in remotely","09:20",B],["Task overdue — Ebeano VI restock","08:00",R],["Joy Edet requested 2 days leave","Yesterday",W],["Adaeze Okonkwo closed 3 tasks","Yesterday",G]]],
+  Employee: ["My activity", [["Checked in at Head Office","08:52",G],["Task completed — Justrite POD","Yesterday 16:20",G],["Leave request approved","2 days ago",G],["February payslip published","01 Mar",N],["Visit verified — Shoprite Ikeja","03 Mar",G]]]
+};
+const ANNOUNCE = {
+  Management: ["Board pack due", "The Q1 board pack closes Friday 27 March. Department heads submit numbers by Wednesday.", "Posted by Ngozi Aliu · 2 days ago"],
+  HR: ["Health insurance renewal", "HMO renewal forms are due 20 March. 38 staff have not confirmed dependants yet.", "Posted by Amaka Duru · yesterday"],
+  Accounts: ["Bank cut-off", "Salary instructions must reach the bank by 15:00 on 26 March for same-day value.", "Posted by Ifeoma Eze · 3 days ago"],
+  HOD: ["Route plans", "New Q2 route plans go live 1 April. Review your team's territories before 28 March.", "Posted by Tunde Bello · today"],
+  Employee: ["Easter schedule", "The Lagos depot closes at 12:00 on Thursday 2 April and reopens Tuesday 7 April.", "Posted by HR · today"]
+};
+const NOTIFS = [
+  { who: "Amaka Duru", what: "asked you to review 6 attendance exceptions", time: "09:31 · today", icon: "alert-triangle", bg: "#FDF2DF", fg: "#8A5600" },
+  { who: "Chidi Uzo", what: "submitted field visit proof for Shoprite Lekki", time: "09:12 · today", icon: "map-pin", bg: "#EEF4FB", fg: "#16406F" },
+  { who: "Ifeoma Eze", what: "moved March payroll to In review", time: "08:15 · today", icon: "wallet", bg: "#E7F4EE", fg: "#0F7A54" }
+];
+const QUICK = {
+  Management: [["Add employee","user-plus"],["Post announcement","megaphone"],["Export report","download"],["Open audit log","shield-check"]],
+  HR: [["Add employee","user-plus"],["Record attendance","calendar-check"],["Post job opening","briefcase"],["Upload document","upload"]],
+  Accounts: [["Start payroll run","wallet"],["Add adjustment","plus-circle"],["Publish payslips","receipt"],["Export schedule","download"]],
+  HOD: [["Assign task","clipboard-list"],["Approve leave","plane"],["Verify field visit","map-pin"],["Message team","message-square"]],
+  Employee: [["Check in","calendar-check"],["Request leave","plane"],["Log a visit","map-pin"],["Upload document","upload"]]
+};
+const HEADER_ACTIONS = {
+  Management: [["Review payroll","wallet",1],["Export summary","download",0]],
+  HR: [["Review 6 exceptions","alert-triangle",1],["Approve leave (9)","plane",0]],
+  Accounts: [["Send for approval","send",1],["Add adjustment","plus",0]],
+  HOD: [["Verify 3 visits","map-pin",1],["Assign task","clipboard-list",0]],
+  Employee: [["Check out","log-out",1],["Request leave","plane",0]]
+};
+const SUB = {
+  Management: "Monday 9 March · here is the organisation at a glance",
+  HR: "Monday 9 March · 6 attendance exceptions need a decision",
+  Accounts: "Monday 9 March · March payroll is in review, due 26 March",
+  HOD: "Monday 9 March · 3 field visits are waiting on your verification",
+  Employee: "Monday 9 March · you checked in 4 hours ago"
+};
+
+class Component extends DCLogic {
+  state = {
+    mode: "app", auth: "login", role: "HR", nav: "Dashboard", data: "ready",
+    sidebarOpen: true, orgOpen: false, quickOpen: false, notifOpen: false, accountOpen: false,
+    email: "", loginError: false, signingIn: false, resetSent: false, pw: "", toasts: []
+  };
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const L = window.lucide; if (!L) return;
+    let need = false;
+    document.querySelectorAll("[data-icon]").forEach(el => {
+      const n = el.getAttribute("data-icon"); if (!n) return;
+      const svg = el.querySelector("svg");
+      if (svg && svg.classList.contains("lucide-" + n)) return;
+      el.innerHTML = '<i data-lucide="' + n + '"></i>';
+      need = true;
+    });
+    if (need) { try { L.createIcons(); } catch (e) {} }
+  }
+  toast(title, body) {
+    const id = Date.now() + Math.random();
+    this.setState(s => ({ toasts: [...s.toasts, { id, title, body }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 3800);
+  }
+
+  renderVals() {
+    const s = this.state, role = s.role;
+    const chip = (on) => ({ bg: on ? "#1B4F8C" : "#fff", fg: on ? "#fff" : "#4A5666", border: on ? "#1B4F8C" : "#CDD5E0" });
+    const dchip = (on) => ({ bg: on ? "#fff" : "transparent", fg: on ? "#131A22" : "#9AA7B6", border: on ? "#fff" : "#2A3540" });
+    const u = USER[role], panel = PANELS[role], side = SIDE[role], feed = FEED[role], ann = ANNOUNCE[role];
+    const pwScore = s.pw.length >= 12 ? 3 : s.pw.length >= 8 ? 2 : s.pw.length > 0 ? 1 : 0;
+    const pwCol = ["#E3E8EF", "#B42318", "#8A5600", "#0F7A54"];
+
+    return {
+      modes: [["app", "App shell"], ["auth", "Auth screens"], ["mobile", "Mobile + notes"]]
+        .map(m => ({ label: m[1], go: () => { this.setState({ mode: m[0] }); window.scrollTo({ top: 0, behavior: "smooth" }); }, ...dchip(s.mode === m[0]) })),
+      isApp: s.mode === "app", isAuth: s.mode === "auth", isMobile: s.mode === "mobile",
+
+      authScreens: [["login","Login"],["forgot","Forgot password"],["reset","Reset password"],["expired","Session expired"],["unauth","Unauthorized"],["first","First login"],["profile","Profile setup"]]
+        .map(a => ({ label: a[1], pick: () => this.setState({ auth: a[0] }), ...chip(s.auth === a[0]) })),
+      scLogin: s.auth === "login", scForgot: s.auth === "forgot", scReset: s.auth === "reset",
+      scExpired: s.auth === "expired", scUnauth: s.auth === "unauth", scFirst: s.auth === "first", scProfile: s.auth === "profile",
+      goForgot: () => this.setState({ auth: "forgot", resetSent: false }),
+      goLogin: () => this.setState({ auth: "login", loginError: false }),
+      goFirst: () => this.setState({ auth: "first" }),
+      goProfile: () => this.setState({ auth: "profile" }),
+      goApp: () => { this.setState({ mode: "app" }); window.scrollTo({ top: 0, behavior: "smooth" }); },
+      email: s.email,
+      onEmail: (e) => this.setState({ email: e.target.value, loginError: false }),
+      emailBorder: s.loginError ? "#B42318" : "#CDD5E0",
+      loginError: s.loginError,
+      signInLabel: s.signingIn ? "Signing in…" : "Sign in",
+      trySignIn: () => {
+        this.setState({ signingIn: true });
+        setTimeout(() => this.setState(x => ({ signingIn: false, loginError: !x.loginError })), 900);
+      },
+      sendReset: () => this.setState({ resetSent: true }),
+      resetSent: s.resetSent,
+      pw: s.pw,
+      onPw: (e) => this.setState({ pw: e.target.value }),
+      pw1: pwScore >= 1 ? pwCol[pwScore] : "#E3E8EF",
+      pw2: pwScore >= 2 ? pwCol[pwScore] : "#E3E8EF",
+      pw3: pwScore >= 3 ? pwCol[3] : "#E3E8EF",
+      pwLabel: ["enter a password", "weak", "fair", "strong"][pwScore],
+
+      roles: ["Management", "HR", "Accounts", "HOD", "Employee"].map(r => ({
+        label: r, pick: () => this.setState({ role: r, nav: "Dashboard" }), ...chip(role === r)
+      })),
+      roleLabel: role,
+      dataStates: [["ready","Ready"],["loading","Loading"],["empty","No data"],["error","Error"],["restricted","Restricted"]]
+        .map(d => ({ label: d[1], pick: () => this.setState({ data: d[0] }), ...chip(s.data === d[0]) })),
+      stReady: s.data === "ready", stLoading: s.data === "loading", stEmpty: s.data === "empty",
+      stError: s.data === "error", stRestricted: s.data === "restricted",
+      retryLoad: () => { this.setState({ data: "loading" }); setTimeout(() => this.setState({ data: "ready" }), 1400); },
+      skeletons: [1, 2, 3, 4], skeletonRows: [1, 2, 3, 4, 5, 6],
+
+      sidebarOpen: s.sidebarOpen,
+      sidebarW: s.sidebarOpen ? "212px" : "62px",
+      toggleSidebar: () => this.setState(x => ({ sidebarOpen: !x.sidebarOpen, orgOpen: false })),
+      navItems: NAV[role].map(n => ({
+        label: n[0], icon: n[1], badge: !!n[2], badgeCount: n[2] || "",
+        bg: s.nav === n[0] ? "#EEF4FB" : "transparent",
+        fg: s.nav === n[0] ? "#16406F" : "#4A5666",
+        pick: () => this.setState({ nav: n[0] })
+      })),
+      activeNav: s.nav,
+      orgOpen: s.orgOpen,
+      toggleOrg: () => this.setState(x => ({ orgOpen: !x.orgOpen })),
+      quickOpen: s.quickOpen, notifOpen: s.notifOpen, accountOpen: s.accountOpen,
+      toggleQuick: () => this.setState(x => ({ quickOpen: !x.quickOpen, accountOpen: false })),
+      toggleNotif: () => this.setState(x => ({ notifOpen: !x.notifOpen, accountOpen: false, quickOpen: false })),
+      toggleAccount: () => this.setState(x => ({ accountOpen: !x.accountOpen, quickOpen: false })),
+      closeMenus: () => this.setState({ quickOpen: false, notifOpen: false, accountOpen: false, orgOpen: false }),
+      signOut: () => { this.setState({ accountOpen: false, mode: "auth", auth: "login" }); window.scrollTo({ top: 0, behavior: "smooth" }); },
+      quickActions: QUICK[role].map(q => ({ label: q[0], icon: q[1] })),
+      notifications: NOTIFS,
+
+      userName: u[0], userInitials: u[1],
+      greeting: "Good morning, " + u[0].split(" ")[0],
+      subgreeting: SUB[role],
+      headerActions: HEADER_ACTIONS[role].map(h => ({
+        label: h[0], icon: h[1],
+        act: () => this.toast(h[0], "Opens the " + h[0].toLowerCase() + " flow"),
+        bg: h[2] ? "#1B4F8C" : "#fff", fg: h[2] ? "#fff" : "#131A22", border: h[2] ? "#1B4F8C" : "#CDD5E0"
+      })),
+
+      stats: STATS[role].map(st => ({
+        label: st[0], value: st[1], icon: st[2], iconColor: st[3],
+        foot: st[4], footFg: st[5], size: st[6], font: st[7] || "inherit"
+      })),
+      isEmployee: role === "Employee", isAccounts: role === "Accounts",
+      showChart: role === "Management" || role === "HR" || role === "HOD",
+      payrollSteps: [["Draft","02 Mar"],["Processing","18 Mar"],["Review","22 Mar"],["Approval","26 Mar"],["Published","28 Mar"],["Closed","31 Mar"]]
+        .map((p, i) => ({ label: p[0], date: p[1], bar: i <= 2 ? "#1B4F8C" : "#E3E8EF", fg: i <= 2 ? "#1B4F8C" : "#7A8798" })),
+
+      panelTitle: panel[0],
+      panelRows: panel[1].map(r => {
+        const p = PILL[r[4]];
+        return { initials: r[0], title: r[1], sub: r[2], pill: r[3], pillBg: p[0], pillFg: p[1], hasAction: !!r[5], action: r[5] };
+      }),
+      sideTitle: side[0],
+      sideRows: side[1].map(r => ({ label: r[0], value: r[1], fg: r[2] })),
+      feedTitle: feed[0],
+      feed: feed[1].map(f => ({ text: f[0], time: f[1], dot: f[2] })),
+      announceTitle: ann[0], announceBody: ann[1], announceMeta: ann[2],
+
+      chart: [["Mon",62,18],["Tue",70,22],["Wed",58,30],["Thu",74,16],["Fri",66,26],["Sat",30,10],["Sun",12,6]]
+        .map(c => ({ day: c[0], office: c[1] + "%", remote: c[2] + "%" })),
+
+      toast: () => this.toast("Recorded", "Change written to the audit log"),
+      toasts: s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

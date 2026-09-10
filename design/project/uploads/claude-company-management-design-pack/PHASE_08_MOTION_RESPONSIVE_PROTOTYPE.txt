@@ -1,0 +1,77 @@
+PHASE 8
+MOTION, RESPONSIVE QA, PROTOTYPE, FINAL DESIGN REVIEW
+
+Review the entire product as one system.
+
+MOTION
+Define animations for:
+- page transitions
+- sidebar
+- drawers
+- dialogs
+- notifications
+- tabs
+- Kanban
+- task completion
+- check-in success
+- check-out success
+- field verification
+- leave approval
+- payroll publishing
+- recruitment stage movement
+
+For each animation define:
+- trigger
+- duration style
+- easing character
+- reduced-motion behavior
+
+Do not use decorative animation without purpose.
+
+RESPONSIVE QA
+Review:
+- small phone
+- large phone
+- tablet
+- laptop
+- desktop
+
+Do not shrink desktop tables on mobile.
+Use mobile-specific patterns.
+
+PROTOTYPE FLOWS
+Create clickable/prototype-ready flows for:
+1. Employee login -> check-in -> selfie -> success
+2. Employee opens task -> field verification -> evidence submission
+3. Employee requests leave -> approval status
+4. HOD reviews leave
+5. HR final leave approval
+6. Accounts runs payroll -> approves -> publishes
+7. Employee views payslip
+8. Public applicant applies for job
+9. HR moves applicant through pipeline
+10. HR converts applicant to employee
+11. Management reviews dashboard
+12. Admin manages role permissions
+
+FINAL REVIEW
+Check:
+- consistency
+- accessibility
+- empty states
+- loading states
+- errors
+- permissions
+- mobile
+- desktop
+- dark mode
+- light mode
+- component reuse
+- visual hierarchy
+
+Create a final screen inventory.
+Create a final component inventory.
+Create a final interaction specification.
+Create a final responsive specification.
+Create a final motion specification.
+Prepare the design for developer handoff.

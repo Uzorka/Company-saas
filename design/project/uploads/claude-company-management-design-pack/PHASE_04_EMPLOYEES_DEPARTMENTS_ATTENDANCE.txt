@@ -1,0 +1,88 @@
+PHASE 4
+EMPLOYEES, DEPARTMENTS, ATTENDANCE
+
+Design the full employee management experience.
+
+EMPLOYEES
+Design:
+- employee directory
+- employee profile
+- create employee
+- edit employee
+- employee status
+- emergency contact
+- documents
+- employment info
+- compensation section
+- employee self-profile
+
+Directory:
+- search
+- department filter
+- status filter
+- position filter
+- table desktop
+- card/list mobile
+
+DEPARTMENTS
+Design:
+- department list
+- department profile
+- department head
+- staff list
+- department metrics
+- create/edit department
+- positions
+
+ATTENDANCE
+
+Employee check-in flow:
+1. Tap Check In
+2. Location permission
+3. Location captured
+4. Office/remote classification
+5. Live selfie
+6. Confirmation
+7. Attendance card updates
+
+Design:
+- before check-in
+- checking location
+- inside office geofence
+- outside office geofence
+- poor location accuracy
+- camera capture
+- selfie review
+- check-in success
+- already checked in
+- check-out
+- attendance history
+
+HR attendance:
+- today overview
+- office
+- remote
+- absent
+- incomplete
+- exception
+- attendance detail
+- selfie viewer
+- map/location summary
+- GPS accuracy
+- check-in/out time
+- manual review
+- correction request flow
+
+Company location settings:
+- office name
+- address
+- map
+- geofence radius
+- default radius 10 meters
+- location verification preview
+
+Design mobile and desktop.
+
+Important:
+Do not imply continuous tracking.
+Make privacy messaging clear during explicit check-in.

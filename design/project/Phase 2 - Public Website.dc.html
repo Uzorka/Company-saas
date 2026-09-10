@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes checkPop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes shimmer { 0% { background-position: -420px 0; } 100% { background-position: 420px 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#fff">
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 02 · Public website &amp; careers — live prototype</span>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="8">
+        <button onClick="{{ p.go }}" style="height:26px;padding:0 10px;border:1px solid {{ p.border }};border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font:500 11px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ p.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- SITE HEADER -->
+  <header style="position:sticky;top:0;z-index:40;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid #E3E8EF">
+    <div style="display:flex;align-items:center;gap:11px">
+      <span style="width:34px;height:34px;border-radius:9px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 15px 'IBM Plex Sans'">H</span>
+      <span><span style="display:block;font-size:15px;font-weight:600;letter-spacing:-.01em">CHF Heron Nigeria</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;letter-spacing:.04em">DISTRIBUTION SINCE 1989</span></span>
+    </div>
+    <nav style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">
+      <sc-for list="{{ navLinks }}" as="l" hint-placeholder-count="6">
+        <button onClick="{{ l.go }}" style="position:relative;padding:8px 12px;border:none;background:transparent;font:500 14px 'IBM Plex Sans';color:{{ l.fg }};cursor:pointer;transition:color 140ms" style-hover="color:#1B4F8C">{{ l.label }}<span style="position:absolute;left:12px;right:12px;bottom:2px;height:2px;border-radius:2px;background:{{ l.underline }};transition:background 200ms"></span></button>
+      </sc-for>
+      <button onClick="{{ goLogin }}" style="margin-left:8px;height:38px;padding:0 18px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#16406F">Staff login</button>
+    </nav>
+  </header>
+
+  <!-- HOME -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="display:flex;flex-wrap:wrap;gap:40px;align-items:center;padding:64px 32px;background:linear-gradient(180deg,#F7FAFD 0%,#fff 100%)">
+        <div style="flex:1 1 420px;min-width:290px">
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:12px;font-weight:600;margin-bottom:20px">36 states · 1,000+ products</div>
+          <h1 style="margin:0 0 18px;font-size:clamp(34px,4.6vw,54px);line-height:1.06;font-weight:600;letter-spacing:-.032em;max-width:15ch;text-wrap:balance">Trusted distribution for Nigeria's best-loved brands</h1>
+          <p style="margin:0 0 28px;max-width:52ch;font-size:16px;line-height:26px;color:#4A5666;text-wrap:pretty">Since December 1989 we've moved authentic beauty, home care and culinary brands from port to shelf — with the field teams, warehouses and accountability to prove it.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            <button onClick="{{ goServices }}" style="height:46px;padding:0 22px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,transform 80ms" style-hover="background:#16406F" style-active="transform:translateY(1px)">What we do</button>
+            <button onClick="{{ goCareers }}" style="height:46px;padding:0 22px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">See open roles</button>
+          </div>
+        </div>
+        <div style="flex:1 1 380px;min-width:290px;height:380px;border-radius:16px;background:repeating-linear-gradient(135deg,#EEF4FB 0 12px,#E2EDF8 12px 24px);display:grid;place-items:center;border:1px solid #D9E6F5">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#16406F;text-align:center;padding:20px">warehouse / distribution photo<br />3:2 · 1600×1067 min</span>
+        </div>
+      </section>
+
+      <section style="display:flex;flex-wrap:wrap;gap:1px;background:#E3E8EF;border-top:1px solid #E3E8EF;border-bottom:1px solid #E3E8EF">
+        <div style="flex:1 1 200px;padding:22px 24px;background:#fff"><div style="font-size:13px;font-weight:600;margin-bottom:3px">100% authentic</div><div style="font-size:13px;color:#4A5666">Direct from brand owners</div></div>
+        <div style="flex:1 1 200px;padding:22px 24px;background:#fff"><div style="font-size:13px;font-weight:600;margin-bottom:3px">Nationwide reach</div><div style="font-size:13px;color:#4A5666">2–5 working days, all 36 states</div></div>
+        <div style="flex:1 1 200px;padding:22px 24px;background:#fff"><div style="font-size:13px;font-weight:600;margin-bottom:3px">Cold-chain ready</div><div style="font-size:13px;color:#4A5666">Temperature-controlled storage</div></div>
+        <div style="flex:1 1 200px;padding:22px 24px;background:#fff"><div style="font-size:13px;font-weight:600;margin-bottom:3px">Verified field teams</div><div style="font-size:13px;color:#4A5666">Every visit logged and proven</div></div>
+      </section>
+
+      <section style="padding:64px 32px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">What we do</div>
+        <h2 style="margin:0 0 12px;font-size:clamp(26px,3vw,34px);font-weight:600;letter-spacing:-.024em;max-width:20ch">Four capabilities, one accountable chain</h2>
+        <p style="margin:0 0 32px;max-width:58ch;font-size:15px;line-height:25px;color:#4A5666">From clearing at Apapa to a shelf audit in Lekki — the same team, the same records.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+          <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+            <div style="border:1px solid #E3E8EF;border-radius:14px;padding:24px;background:#fff;transition:box-shadow 140ms,transform 140ms,border-color 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transform:translateY(-3px);border-color:#AFC9E7">
+              <span data-icon="{{ s.icon }}" style="font-size:24px;color:#1B4F8C;display:inline-flex;margin-bottom:14px"></span>
+              <div style="font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em">{{ s.title }}</div>
+              <div style="font-size:14px;line-height:22px;color:#4A5666">{{ s.body }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:52px 32px;background:#131A22;color:#fff">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:28px">
+          <div><div style="font-size:clamp(32px,4vw,44px);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums">36</div><div style="font-size:13px;color:#9AA7B6;margin-top:6px">States served</div></div>
+          <div><div style="font-size:clamp(32px,4vw,44px);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums">1,000+</div><div style="font-size:13px;color:#9AA7B6;margin-top:6px">Products in catalogue</div></div>
+          <div><div style="font-size:clamp(32px,4vw,44px);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums">14</div><div style="font-size:13px;color:#9AA7B6;margin-top:6px">Brand partnerships</div></div>
+          <div><div style="font-size:clamp(32px,4vw,44px);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums">36 yrs</div><div style="font-size:13px;color:#9AA7B6;margin-top:6px">Trading since 1989</div></div>
+        </div>
+      </section>
+
+      <section style="padding:64px 32px;background:#F8F9FB">
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:28px">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Leadership</div>
+            <h2 style="margin:0;font-size:clamp(26px,3vw,34px);font-weight:600;letter-spacing:-.024em">The people accountable</h2>
+          </div>
+          <button onClick="{{ goLeadership }}" style="height:38px;padding:0 16px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer" style-hover="background:#F1F4F8">Meet the team</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+          <sc-for list="{{ leadersPreview }}" as="p" hint-placeholder-count="4">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;transition:box-shadow 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.1)">
+              <div style="height:180px;background:repeating-linear-gradient(135deg,#F1F4F8 0 10px,#E7ECF3 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666">portrait 4:5</div>
+              <div style="padding:16px"><div style="font-size:15px;font-weight:600">{{ p.name }}</div><div style="font-size:13px;color:#4A5666;margin-top:3px">{{ p.role }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;padding:64px 32px">
+        <div style="flex:1 1 360px;min-width:280px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Careers</div>
+          <h2 style="margin:0 0 14px;font-size:clamp(26px,3vw,34px);font-weight:600;letter-spacing:-.024em;max-width:18ch">Build a career that moves things</h2>
+          <p style="margin:0 0 22px;max-width:50ch;font-size:15px;line-height:25px;color:#4A5666">Sales, logistics, warehousing and finance roles across Lagos, Abuja and Port Harcourt.</p>
+          <button onClick="{{ goCareers }}" style="height:44px;padding:0 20px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F">{{ openRolesLabel }}</button>
+        </div>
+        <div style="flex:1 1 360px;min-width:280px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ jobsPreview }}" as="j" hint-placeholder-count="3">
+            <div onClick="{{ j.open }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:16px 18px;border:1px solid #E3E8EF;border-radius:12px;cursor:pointer;transition:border-color 140ms,background 140ms" style-hover="border-color:#1B4F8C;background:#F7FAFD">
+              <span><span style="display:block;font-size:15px;font-weight:600">{{ j.title }}</span><span style="display:block;font-size:13px;color:#4A5666;margin-top:2px">{{ j.meta }}</span></span>
+              <span data-icon="arrow-right" style="font-size:18px;color:#1B4F8C"></span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="margin:0 32px 64px;padding:44px;border-radius:18px;background:#1B4F8C;color:#fff;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+        <div><h2 style="margin:0 0 8px;font-size:clamp(22px,2.6vw,30px);font-weight:600;letter-spacing:-.02em">Stock our brands</h2><p style="margin:0;font-size:15px;line-height:24px;color:#D9E6F5;max-width:46ch">Retailers, distributors and institutional buyers — talk to our trade team.</p></div>
+        <button onClick="{{ goContact }}" style="height:46px;padding:0 22px;border:none;border-radius:6px;background:#fff;color:#1B4F8C;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:transform 80ms" style-active="transform:translateY(1px)">Contact the trade team</button>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- ABOUT -->
+  <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:56px 32px 40px;border-bottom:1px solid #E3E8EF">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">About</div>
+        <h1 style="margin:0 0 16px;font-size:clamp(30px,3.8vw,42px);font-weight:600;letter-spacing:-.028em;max-width:18ch">Transparency, reliability, sincerity</h1>
+        <p style="margin:0;max-width:60ch;font-size:16px;line-height:26px;color:#4A5666;text-wrap:pretty">Three words that have governed how we buy, store, move and sell since our first container cleared Apapa in December 1989.</p>
+      </section>
+      <section style="display:flex;flex-wrap:wrap;gap:32px;padding:48px 32px">
+        <div style="flex:1 1 380px;min-width:290px;height:300px;border-radius:14px;background:repeating-linear-gradient(135deg,#F1F4F8 0 12px,#E7ECF3 12px 24px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666">company photo · 4:3</div>
+        <div style="flex:1 1 380px;min-width:290px">
+          <h2 style="margin:0 0 14px;font-size:22px;font-weight:600;letter-spacing:-.015em">How we work</h2>
+          <p style="margin:0 0 14px;font-size:15px;line-height:25px;color:#4A5666">We hold exclusive and semi-exclusive distribution for international household and personal-care brands. Every unit we sell is traceable to the brand owner, and every field visit our team makes is time-stamped and verified.</p>
+          <p style="margin:0;font-size:15px;line-height:25px;color:#4A5666">That accountability is why retailers across all 36 states keep re-ordering.</p>
+        </div>
+      </section>
+      <section style="padding:0 32px 64px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+          <div style="padding:22px;border:1px solid #E3E8EF;border-radius:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1B4F8C;margin-bottom:8px">1989</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">Founded in Lagos</div><div style="font-size:13px;line-height:21px;color:#4A5666">First container of household goods cleared and distributed across Lagos State.</div></div>
+          <div style="padding:22px;border:1px solid #E3E8EF;border-radius:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1B4F8C;margin-bottom:8px">2004</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">National coverage</div><div style="font-size:13px;line-height:21px;color:#4A5666">Regional depots opened in Abuja, Kano and Port Harcourt.</div></div>
+          <div style="padding:22px;border:1px solid #E3E8EF;border-radius:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1B4F8C;margin-bottom:8px">2018</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">Personal care portfolio</div><div style="font-size:13px;line-height:21px;color:#4A5666">Added dermatological and beauty brands to the household range.</div></div>
+          <div style="padding:22px;border:1px solid #E3E8EF;border-radius:14px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1B4F8C;margin-bottom:8px">2026</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">Verified field operations</div><div style="font-size:13px;line-height:21px;color:#4A5666">Every visit, delivery and shelf audit logged with location and photo proof.</div></div>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- SERVICES -->
+  <sc-if value="{{ isServices }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:56px 32px 40px;border-bottom:1px solid #E3E8EF">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Services</div>
+        <h1 style="margin:0 0 16px;font-size:clamp(30px,3.8vw,42px);font-weight:600;letter-spacing:-.028em;max-width:20ch">Port to shelf, under one roof</h1>
+        <p style="margin:0;max-width:60ch;font-size:16px;line-height:26px;color:#4A5666">Brand owners hand us a container. Retailers get stock, merchandising and proof it happened.</p>
+      </section>
+      <section style="padding:40px 32px 64px;display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;flex-wrap:wrap;gap:24px;padding:28px;border:1px solid #E3E8EF;border-radius:14px;transition:border-color 140ms" style-hover="border-color:#AFC9E7">
+            <div style="flex:0 0 52px;height:52px;border-radius:12px;background:#EEF4FB;color:#1B4F8C;display:grid;place-items:center"><span data-icon="{{ s.icon }}" style="font-size:24px"></span></div>
+            <div style="flex:1 1 300px;min-width:250px">
+              <div style="font-size:19px;font-weight:600;letter-spacing:-.015em;margin-bottom:8px">{{ s.title }}</div>
+              <div style="font-size:15px;line-height:24px;color:#4A5666;max-width:62ch">{{ s.long }}</div>
+            </div>
+            <div style="flex:0 1 220px;min-width:180px;padding:16px;border-radius:10px;background:#F8F9FB;font-size:13px;line-height:21px;color:#4A5666"><b style="display:block;color:#131A22;margin-bottom:5px">Typical clients</b>{{ s.clients }}</div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- LEADERSHIP -->
+  <sc-if value="{{ isLeadership }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:56px 32px 40px;border-bottom:1px solid #E3E8EF">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Leadership</div>
+        <h1 style="margin:0 0 16px;font-size:clamp(30px,3.8vw,42px);font-weight:600;letter-spacing:-.028em">Who runs the business</h1>
+        <p style="margin:0;max-width:56ch;font-size:16px;line-height:26px;color:#4A5666">Names, faces and remits — no anonymous management.</p>
+      </section>
+      <section style="padding:40px 32px 64px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px">
+          <sc-for list="{{ leaders }}" as="p" hint-placeholder-count="6">
+            <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;transition:box-shadow 140ms,transform 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transform:translateY(-2px)">
+              <div style="height:210px;background:repeating-linear-gradient(135deg,#F1F4F8 0 10px,#E7ECF3 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666">portrait 4:5</div>
+              <div style="padding:18px">
+                <div style="font-size:16px;font-weight:600">{{ p.name }}</div>
+                <div style="font-size:13px;color:#1B4F8C;margin-top:3px;font-weight:500">{{ p.role }}</div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666;margin-top:10px">{{ p.bio }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- CAREERS -->
+  <sc-if value="{{ isCareers }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:56px 32px 32px;border-bottom:1px solid #E3E8EF">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Careers</div>
+        <h1 style="margin:0 0 16px;font-size:clamp(30px,3.8vw,42px);font-weight:600;letter-spacing:-.028em;max-width:16ch">Open roles at CHF Heron</h1>
+        <p style="margin:0;max-width:56ch;font-size:16px;line-height:26px;color:#4A5666">Applications are reviewed weekly. You'll hear from us either way.</p>
+      </section>
+      <section style="padding:28px 32px 64px">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px">
+          <div style="flex:1 1 280px;min-width:230px;display:flex;align-items:center;gap:9px;height:44px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;transition:border-color 140ms,box-shadow 140ms" style-focus-within="border-color:#1B4F8C">
+            <span data-icon="search" style="font-size:17px;color:#7A8798"></span>
+            <input value="{{ jobQuery }}" onInput="{{ onJobQuery }}" placeholder="Search roles, e.g. sales" style="flex:1;border:none;outline:none;background:transparent;font:400 15px 'IBM Plex Sans';min-width:0" />
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            <sc-for list="{{ jobFilters }}" as="f" hint-placeholder-count="5">
+              <button onClick="{{ f.pick }}" style="height:36px;padding:0 14px;border:1px solid {{ f.border }};border-radius:999px;background:{{ f.bg }};color:{{ f.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ f.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="font-size:13px;color:#7A8798;margin-bottom:14px">{{ jobCountLabel }}</div>
+
+        <sc-if value="{{ hasJobs }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px">
+            <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="5">
+              <div onClick="{{ j.open }}" style="border:1px solid #E3E8EF;border-radius:14px;padding:22px;background:#fff;cursor:pointer;transition:border-color 140ms,box-shadow 140ms,transform 140ms" style-hover="border-color:#1B4F8C;box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transform:translateY(-2px)">
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+                  <span style="padding:3px 10px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:11px;font-weight:600">{{ j.dept }}</span>
+                  <span style="padding:3px 10px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:11px;font-weight:600">{{ j.type }}</span>
+                  <sc-if value="{{ j.closingSoon }}" hint-placeholder-val="{{ false }}">
+                    <span style="padding:3px 10px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:11px;font-weight:600">▲ Closes soon</span>
+                  </sc-if>
+                </div>
+                <div style="font-size:18px;font-weight:600;letter-spacing:-.015em;margin-bottom:8px">{{ j.title }}</div>
+                <div style="font-size:14px;line-height:22px;color:#4A5666;margin-bottom:16px">{{ j.summary }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#7A8798;font-family:'IBM Plex Mono',monospace">
+                  <span>{{ j.location }}</span><span>closes {{ j.deadline }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noJobs }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px dashed #CDD5E0;border-radius:14px;padding:52px 24px;text-align:center;background:#F8F9FB;animation:fadeIn 200ms">
+            <span data-icon="search-x" style="font-size:28px;color:#7FA6D3;display:inline-flex;margin-bottom:12px"></span>
+            <div style="font-size:17px;font-weight:600;margin-bottom:8px">No roles match that search</div>
+            <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:44ch;margin:0 auto 18px">Try a different keyword or clear the filters. You can also send a speculative application — we keep CVs on file for six months.</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+              <button onClick="{{ clearJobFilters }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Clear filters</button>
+              <button onClick="{{ goContact }}" style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Send a CV anyway</button>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- JOB DETAIL -->
+  <sc-if value="{{ isJob }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:24px 32px 0">
+        <button onClick="{{ goCareers }}" style="display:inline-flex;align-items:center;gap:7px;padding:6px 0;border:none;background:transparent;color:#1B4F8C;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="arrow-left" style="font-size:15px"></span>All open roles</button>
+      </section>
+      <section style="display:flex;flex-wrap:wrap;gap:32px;padding:20px 32px 64px;align-items:flex-start">
+        <div style="flex:1 1 480px;min-width:290px">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <span style="padding:4px 11px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:12px;font-weight:600">{{ job.dept }}</span>
+            <span style="padding:4px 11px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:12px;font-weight:600">{{ job.type }}</span>
+            <span style="padding:4px 11px;border-radius:999px;background:{{ jobStateBg }};color:{{ jobStateFg }};font-size:12px;font-weight:600">{{ jobStateLabel }}</span>
+          </div>
+          <h1 style="margin:0 0 12px;font-size:clamp(28px,3.4vw,38px);font-weight:600;letter-spacing:-.026em;max-width:20ch">{{ job.title }}</h1>
+          <div style="display:flex;flex-wrap:wrap;gap:18px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;margin-bottom:28px">
+            <span>{{ job.location }}</span><span>{{ job.type }}</span><span>closes {{ job.deadline }}</span>
+          </div>
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:600">About the role</h2>
+          <p style="margin:0 0 26px;max-width:64ch;font-size:15px;line-height:25px;color:#4A5666">{{ job.description }}</p>
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:600">What you'll do</h2>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:26px">
+            <sc-for list="{{ job.responsibilities }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;gap:10px;font-size:15px;line-height:24px;color:#4A5666"><span style="flex:none;width:6px;height:6px;border-radius:50%;background:#1B4F8C;margin-top:9px"></span>{{ r }}</div>
+            </sc-for>
+          </div>
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:600">What we need from you</h2>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ job.requirements }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;gap:10px;font-size:15px;line-height:24px;color:#4A5666"><span style="flex:none;width:6px;height:6px;border-radius:50%;background:#AFC9E7;margin-top:9px"></span>{{ r }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <aside style="flex:0 1 320px;min-width:270px;position:sticky;top:88px;border:1px solid #E3E8EF;border-radius:14px;padding:22px;background:#F8F9FB">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:14px">Apply</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#4A5666;margin-bottom:18px">
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>Department</span><span style="color:#131A22;font-weight:500">{{ job.dept }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>Location</span><span style="color:#131A22;font-weight:500">{{ job.location }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>Type</span><span style="color:#131A22;font-weight:500">{{ job.type }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>Deadline</span><span style="color:#131A22;font-weight:500;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ job.deadline }}</span></div>
+          </div>
+          <sc-if value="{{ jobOpen }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ startApply }}" style="width:100%;height:46px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#16406F">Apply for this role</button>
+            <div style="font-size:12px;line-height:18px;color:#7A8798;margin-top:10px;text-align:center">Takes about 5 minutes. CV required.</div>
+          </sc-if>
+          <sc-if value="{{ jobClosedState }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:14px;border-radius:10px;background:#FFFBFA;border:1px solid #FADCD9">
+              <div style="font-size:14px;font-weight:600;color:#B42318;margin-bottom:5px">{{ closedTitle }}</div>
+              <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:12px">{{ closedBody }}</div>
+              <button onClick="{{ goCareers }}" style="width:100%;height:40px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">See other open roles</button>
+            </div>
+          </sc-if>
+          <div style="margin-top:18px;padding-top:16px;border-top:1px solid #E3E8EF">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7A8798;margin-bottom:9px">Preview job state</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ jobStates }}" as="js" hint-placeholder-count="3">
+                <button onClick="{{ js.pick }}" style="height:28px;padding:0 10px;border:1px solid {{ js.border }};border-radius:999px;background:{{ js.bg }};color:{{ js.fg }};font:500 11px 'IBM Plex Sans';cursor:pointer">{{ js.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- CONTACT -->
+  <sc-if value="{{ isContact }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms">
+      <section style="padding:56px 32px 40px;border-bottom:1px solid #E3E8EF">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:12px">Contact</div>
+        <h1 style="margin:0 0 16px;font-size:clamp(30px,3.8vw,42px);font-weight:600;letter-spacing:-.028em">Talk to the right desk</h1>
+      </section>
+      <section style="display:flex;flex-wrap:wrap;gap:32px;padding:40px 32px 64px;align-items:flex-start">
+        <div style="flex:1 1 380px;min-width:290px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">First name</label><input style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Last name</label><input style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+          </div>
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Company email</label>
+          <input placeholder="you@company.com" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:14px;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">What's this about?</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <span style="padding:8px 14px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:13px;font-weight:500;cursor:pointer">Trade &amp; wholesale</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Brand partnership</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Careers</span>
+            <span style="padding:8px 14px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Something else</span>
+          </div>
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Message</label>
+          <textarea rows="5" placeholder="Tell us what you need and where you're based…" style="width:100%;padding:12px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;resize:vertical;margin-bottom:16px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+          <button onClick="{{ notifySent }}" style="height:46px;padding:0 22px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F">Send message</button>
+        </div>
+        <div style="flex:1 1 280px;min-width:250px;display:flex;flex-direction:column;gap:14px">
+          <div style="height:200px;border-radius:14px;background:repeating-linear-gradient(135deg,#EEF4FB 0 10px,#E2EDF8 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#16406F;border:1px solid #D9E6F5">static map · head office pin</div>
+          <div style="padding:20px;border:1px solid #E3E8EF;border-radius:14px">
+            <div style="font-size:15px;font-weight:600;margin-bottom:12px">Head office</div>
+            <div style="font-size:14px;line-height:23px;color:#4A5666">Plot 1C Akin Ogunlewe Street<br />Victoria Island, Lagos</div>
+            <div style="height:1px;background:#F1F4F8;margin:14px 0"></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+              <div style="display:flex;align-items:center;gap:9px"><span data-icon="phone" style="font-size:16px;color:#7A8798"></span>+234 704 410 2187</div>
+              <div style="display:flex;align-items:center;gap:9px"><span data-icon="mail" style="font-size:16px;color:#7A8798"></span>sales@chfheron.com</div>
+              <div style="display:flex;align-items:center;gap:9px"><span data-icon="clock" style="font-size:16px;color:#7A8798"></span>Mon–Fri, 08:00–17:00 WAT</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- LOGIN -->
+  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-wrap:wrap;min-height:600px;animation:fadeIn 200ms">
+      <div style="flex:1 1 420px;min-width:290px;padding:64px 32px;display:flex;flex-direction:column;justify-content:center">
+        <div style="max-width:380px;width:100%;margin:0 auto">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:14px">Staff access</div>
+          <h1 style="margin:0 0 10px;font-size:30px;font-weight:600;letter-spacing:-.026em">Sign in to the workspace</h1>
+          <p style="margin:0 0 26px;font-size:15px;line-height:24px;color:#4A5666">Use the work email your HR team registered.</p>
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Work email</label>
+          <input placeholder="you@chfheron.com" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:14px;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Password</label>
+          <input type="password" value="............" style="width:100%;height:46px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;margin-bottom:12px;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:#4A5666;cursor:pointer"><span style="width:18px;height:18px;border-radius:4px;border:1px solid #CDD5E0;background:#fff"></span>Keep me signed in</label>
+            <a href="#reset" style="font-size:13px;font-weight:500">Forgot password?</a>
+          </div>
+          <button onClick="{{ notifyLogin }}" style="width:100%;height:48px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#16406F">Sign in</button>
+          <div style="margin-top:20px;padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:20px;color:#4A5666">Accounts are created by HR. If you're a new hire and haven't received an invite, <a href="#contact" onClick="{{ goContact }}">contact HR</a>.</div>
+        </div>
+      </div>
+      <div style="flex:1 1 380px;min-width:290px;background:#131A22;color:#fff;padding:64px 40px;display:flex;flex-direction:column;justify-content:center">
+        <div style="max-width:400px">
+          <div style="width:40px;height:40px;border-radius:10px;background:#1B4F8C;display:grid;place-items:center;font:600 17px 'IBM Plex Sans';margin-bottom:24px">H</div>
+          <h2 style="margin:0 0 14px;font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.2">One workspace for the whole operation</h2>
+          <p style="margin:0 0 26px;font-size:15px;line-height:25px;color:#9AA7B6">Attendance, tasks, field-visit proof, leave, payroll and documents — for every depot, in one place.</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:11px;font-size:14px;color:#D9E6F5"><span data-icon="calendar-check" style="font-size:17px;color:#7FA6D3"></span>Check in from office or the field</div>
+            <div style="display:flex;align-items:center;gap:11px;font-size:14px;color:#D9E6F5"><span data-icon="map-pin" style="font-size:17px;color:#7FA6D3"></span>Verified visits with photo proof</div>
+            <div style="display:flex;align-items:center;gap:11px;font-size:14px;color:#D9E6F5"><span data-icon="receipt" style="font-size:17px;color:#7FA6D3"></span>Payslips the moment they publish</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- MOBILE + STATES REFERENCE -->
+  <sc-if value="{{ isStates }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn 200ms;padding:48px 32px 64px;background:#F1F4F8">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:10px">Mobile &amp; states reference</div>
+      <h2 style="margin:0 0 26px;font-size:26px;font-weight:600;letter-spacing:-.02em">Every state the careers flow can be in</h2>
+
+      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:26px">
+        <div style="width:290px;max-width:100%;border:1px solid #E3E8EF;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.12)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #E3E8EF"><span style="display:flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">H</span><span style="font-size:13px;font-weight:600">CHF Heron</span></span><span data-icon="menu" style="font-size:20px;color:#4A5666"></span></div>
+          <div style="padding:18px 16px">
+            <div style="font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px">Trusted distribution for Nigeria's brands</div>
+            <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:14px">Since 1989 · 36 states · 1,000+ products</div>
+            <button style="width:100%;height:46px;border:none;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans'">See open roles</button>
+            <div style="height:150px;border-radius:12px;margin-top:14px;background:repeating-linear-gradient(135deg,#EEF4FB 0 10px,#E2EDF8 10px 20px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#16406F">hero image</div>
+          </div>
+          <div style="padding:0 16px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;text-align:center">Mobile home · single column, 44px targets</div></div>
+        </div>
+
+        <div style="width:290px;max-width:100%;border:1px solid #E3E8EF;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.12)">
+          <div style="padding:12px 16px;border-bottom:1px solid #E3E8EF;font-size:14px;font-weight:600">Open roles</div>
+          <div style="padding:12px 16px;display:flex;gap:8px;border-bottom:1px solid #E3E8EF;overflow-x:auto">
+            <span style="flex:none;padding:6px 12px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:12px;font-weight:500">All 5</span>
+            <span style="flex:none;padding:6px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px">Sales</span>
+            <span style="flex:none;padding:6px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px">Logistics</span>
+          </div>
+          <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;background:#F8F9FB">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:14px"><div style="font-size:14px;font-weight:600;margin-bottom:5px">Field Sales Representative</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">Lagos · Full-time · closes 30 Sep</div></div>
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:14px"><div style="font-size:14px;font-weight:600;margin-bottom:5px">Warehouse Supervisor</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">Ikeja · Full-time · closes 12 Oct</div></div>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid #E3E8EF"><button style="width:100%;height:44px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans'">Filters</button></div>
+        </div>
+
+        <div style="width:290px;max-width:100%;position:relative;border:1px solid #E3E8EF;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.12)">
+          <div style="padding:12px 16px;border-bottom:1px solid #E3E8EF;font-size:14px;font-weight:600">Apply · mobile</div>
+          <div style="height:190px;background:repeating-linear-gradient(135deg,#F8F9FB 0 9px,#F1F4F8 9px 18px)"></div>
+          <div style="position:absolute;inset:0;background:rgba(19,26,34,.32)"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;padding:10px 16px 18px;animation:sheetUp 320ms cubic-bezier(.2,.8,.2,1)">
+            <div style="width:36px;height:4px;border-radius:2px;background:#CDD5E0;margin:0 auto 14px"></div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px">Step 2 of 3 · Documents</div>
+            <div style="height:4px;border-radius:2px;background:#E3E8EF;margin:10px 0 14px;overflow:hidden"><span style="display:block;height:100%;width:66%;background:#1B4F8C"></span></div>
+            <div style="border:1.5px dashed #AFC9E7;border-radius:10px;background:#F8FAFD;padding:20px;text-align:center;margin-bottom:12px"><div style="font-size:14px;font-weight:500">Upload your CV</div><div style="font-size:12px;color:#7A8798;margin-top:3px">PDF or DOCX · max 10 MB</div></div>
+            <button style="width:100%;height:46px;border:none;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans'">Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">Field validation</div>
+          <label style="display:block;font-size:12px;font-weight:500;margin-bottom:5px">Phone number</label>
+          <div style="display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border:1px solid #B42318;border-radius:8px;background:#FFFBFA"><span data-icon="alert-circle" style="font-size:16px;color:#B42318"></span><input value="0704 410" readonly="" style="flex:1;border:none;background:transparent;outline:none;font:400 14px 'IBM Plex Sans';min-width:0" /></div>
+          <div style="font-size:12px;color:#B42318;margin-top:6px">Nigerian numbers need 11 digits.</div>
+          <div style="font-size:12px;line-height:19px;color:#4A5666;margin-top:12px">Validated on blur, not on keystroke. The submit button never disables — pressing it scrolls to and focuses the first error.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">Upload progress</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E3E8EF;border-radius:8px;margin-bottom:8px">
+            <span data-icon="file-text" style="font-size:18px;color:#B42318"></span>
+            <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">cv-okonkwo.pdf</span><span style="display:block;height:4px;border-radius:2px;background:#E3E8EF;margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:48%;background:#1B4F8C;border-radius:2px"></span></span></span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">48%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #FADCD9;border-radius:8px;background:#FFFBFA">
+            <span data-icon="x-circle" style="font-size:18px;color:#B42318"></span>
+            <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">portfolio.zip</span><span style="display:block;font-size:11px;color:#B42318">Unsupported format · PDF, DOCX, PNG only</span></span>
+            <span style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">Retry</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px;text-align:center">
+          <div style="width:44px;height:44px;margin:0 auto 10px;border-radius:50%;border:3px solid #E3E8EF;border-top-color:#1B4F8C;animation:spin 900ms linear infinite"></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:5px">Submitting application</div>
+          <div style="font-size:13px;line-height:20px;color:#4A5666">Button becomes a spinner and locks. Back navigation warns before discarding.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #FADCD9;border-radius:14px;padding:20px">
+          <div style="display:flex;gap:11px">
+            <span data-icon="cloud-off" style="font-size:20px;color:#B42318"></span>
+            <span><span style="display:block;font-size:14px;font-weight:600;margin-bottom:4px">Submission failed</span><span style="display:block;font-size:13px;line-height:20px;color:#4A5666">Your answers and uploads are kept. Retry, or we'll email you a resume link.</span></span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px"><button style="flex:1;height:38px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Try again</button><button style="flex:1;height:38px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Email me a link</button></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:11px;font-weight:600;margin-bottom:10px">— Closed</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:5px">Role filled</div>
+          <div style="font-size:13px;line-height:20px;color:#4A5666">Page stays live for SEO. Apply button is replaced by similar roles and a job-alert signup — never a 404.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:11px;font-weight:600;margin-bottom:10px">▲ Deadline passed</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:5px">Applications closed 30 Sep</div>
+          <div style="font-size:13px;line-height:20px;color:#4A5666">Content stays readable, apply disabled with the reason stated in words, plus "notify me if it reopens".</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- FOOTER -->
+  <footer style="background:#131A22;color:#9AA7B6;padding:48px 32px 28px">
+    <div style="display:flex;flex-wrap:wrap;gap:32px;justify-content:space-between;margin-bottom:32px">
+      <div style="flex:1 1 260px;max-width:320px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="width:30px;height:30px;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span><span style="color:#fff;font-size:15px;font-weight:600">CHF Heron Nigeria</span></div>
+        <div style="font-size:13px;line-height:21px">Authentic household, personal-care and culinary brands, distributed nationwide since 1989.</div>
+      </div>
+      <div style="flex:0 1 160px"><div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Company</div><div style="display:flex;flex-direction:column;gap:9px;font-size:13px"><span onClick="{{ goAbout }}" style="cursor:pointer;transition:color 140ms" style-hover="color:#fff">About</span><span onClick="{{ goServices }}" style="cursor:pointer" style-hover="color:#fff">Services</span><span onClick="{{ goLeadership }}" style="cursor:pointer" style-hover="color:#fff">Leadership</span><span onClick="{{ goContact }}" style="cursor:pointer" style-hover="color:#fff">Contact</span></div></div>
+      <div style="flex:0 1 160px"><div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Work with us</div><div style="display:flex;flex-direction:column;gap:9px;font-size:13px"><span onClick="{{ goCareers }}" style="cursor:pointer" style-hover="color:#fff">Open roles</span><span onClick="{{ goStates }}" style="cursor:pointer" style-hover="color:#fff">Mobile &amp; states</span><span onClick="{{ goLogin }}" style="cursor:pointer" style-hover="color:#fff">Staff login</span></div></div>
+      <div style="flex:0 1 200px"><div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Head office</div><div style="font-size:13px;line-height:21px">Plot 1C Akin Ogunlewe Street<br />Victoria Island, Lagos<br />+234 704 410 2187</div></div>
+    </div>
+    <div style="padding-top:20px;border-top:1px solid #2A3540;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:12px"><span>© 2026 CHF Heron Nigeria Ltd.</span><span>Terms · Privacy</span></div>
+  </footer>
+
+  <!-- APPLICATION FLOW -->
+  <sc-if value="{{ applyOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:90;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:0">
+      <div onClick="{{ closeApply }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(680px,100%);min-height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);animation:rise 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#fff;padding:20px 26px 0;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px">
+            <div><div style="font-size:18px;font-weight:600;letter-spacing:-.015em">Apply · {{ job.title }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ job.location }} · closes {{ job.deadline }}</div></div>
+            <button onClick="{{ closeApply }}" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:17px"></span></button>
+          </div>
+          <div style="display:flex;gap:8px;padding-bottom:14px">
+            <sc-for list="{{ applySteps }}" as="st" hint-placeholder-count="3">
+              <div style="flex:1"><div style="height:4px;border-radius:2px;background:{{ st.bar }};transition:background 200ms"></div><div style="font-size:11px;font-weight:600;color:{{ st.fg }};margin-top:7px">{{ st.label }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1;padding:26px">
+          <sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Full name <span style="color:#B42318">*</span></label><input value="{{ appName }}" onInput="{{ onName }}" placeholder="Adaeze Okonkwo" style="width:100%;height:44px;padding:0 13px;border:1px solid {{ nameBorder }};border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /><sc-if value="{{ nameError }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#B42318;margin-top:6px;animation:fadeIn 140ms">Please tell us your name.</div></sc-if></div>
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Email <span style="color:#B42318">*</span></label><input value="{{ appEmail }}" onInput="{{ onEmail }}" placeholder="you@email.com" style="width:100%;height:44px;padding:0 13px;border:1px solid {{ emailBorder }};border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;transition:border-color 140ms,box-shadow 140ms" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /><sc-if value="{{ emailError }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#B42318;margin-top:6px;animation:fadeIn 140ms">Enter a complete email address.</div></sc-if></div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Phone</label><input placeholder="0704 410 2187" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Current location</label><input placeholder="Lagos" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              </div>
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Years of relevant experience</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ expOptions }}" as="e" hint-placeholder-count="4">
+                  <button onClick="{{ e.pick }}" style="height:38px;padding:0 16px;border:1px solid {{ e.border }};border-radius:999px;background:{{ e.bg }};color:{{ e.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ e.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">CV <span style="color:#B42318">*</span></label>
+              <div onClick="{{ uploadCv }}" style="border:1.5px dashed {{ cvBorder }};border-radius:12px;background:{{ cvBg }};padding:30px;text-align:center;cursor:pointer;transition:background 140ms,border-color 140ms" style-hover="background:#EEF4FB;border-color:#1B4F8C">
+                <span data-icon="upload-cloud" style="font-size:26px;color:#1B4F8C;display:inline-flex;margin-bottom:10px"></span>
+                <div style="font-size:15px;font-weight:500">Drop your CV here, or click to browse</div>
+                <div style="font-size:12px;color:#7A8798;margin-top:4px">PDF or DOCX · max 10 MB</div>
+              </div>
+              <sc-if value="{{ cvError }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#B42318;margin-top:7px;animation:fadeIn 140ms">A CV is required to continue.</div></sc-if>
+              <sc-if value="{{ cvUploading }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #E3E8EF;border-radius:10px;margin-top:12px;animation:fadeIn 140ms">
+                  <span data-icon="file-text" style="font-size:19px;color:#B42318"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">cv-adaeze-okonkwo.pdf</span><span style="display:block;height:4px;border-radius:2px;background:#E3E8EF;margin-top:7px;overflow:hidden"><span style="display:block;height:100%;width:{{ cvPct }};background:#1B4F8C;border-radius:2px;transition:width 200ms linear"></span></span></span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ cvPct }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ cvDone }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #BFE3D3;border-radius:10px;background:#F4FBF8;margin-top:12px;animation:fadeIn 200ms">
+                  <span data-icon="check-circle-2" style="font-size:19px;color:#0F7A54"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">cv-adaeze-okonkwo.pdf</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">1.4 MB · uploaded</span></span>
+                  <span onClick="{{ removeCv }}" data-icon="x" style="font-size:16px;color:#7A8798;cursor:pointer"></span>
+                </div>
+              </sc-if>
+
+              <label style="display:block;font-size:13px;font-weight:500;margin:20px 0 8px">Supporting documents <span style="color:#7A8798;font-weight:400">— optional</span></label>
+              <div style="border:1.5px dashed #CDD5E0;border-radius:12px;padding:20px;text-align:center;font-size:13px;color:#4A5666;transition:border-color 140ms" style-hover="border-color:#AFC9E7">Certificates, references, portfolio · up to 3 files</div>
+
+              <label style="display:block;font-size:13px;font-weight:500;margin:20px 0 6px">Cover letter <span style="color:#7A8798;font-weight:400">— optional</span></label>
+              <textarea rows="5" placeholder="Why this role, and what you'd bring to it…" style="width:100%;padding:12px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+              <div style="font-size:12px;color:#7A8798;margin-top:6px">Roughly 200 words is plenty.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:16px">
+                <div style="padding:12px 16px;background:#F8F9FB;border-bottom:1px solid #E3E8EF;font-size:13px;font-weight:600">Check before you send</div>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #F1F4F8;font-size:14px"><span style="color:#4A5666">Name</span><span style="font-weight:500">{{ reviewName }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #F1F4F8;font-size:14px"><span style="color:#4A5666">Email</span><span style="font-weight:500">{{ reviewEmail }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #F1F4F8;font-size:14px"><span style="color:#4A5666">Experience</span><span style="font-weight:500">{{ exp }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 16px;font-size:14px"><span style="color:#4A5666">CV</span><span style="font-weight:500">{{ reviewCv }}</span></div>
+              </div>
+              <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:20px;color:#4A5666;cursor:pointer">
+                <span onClick="{{ toggleConsent }}" style="flex:none;width:18px;height:18px;margin-top:1px;border-radius:4px;border:1px solid {{ consentBorder }};background:{{ consentBg }};color:#fff;display:grid;place-items:center;font-size:12px;transition:background 140ms">{{ consentMark }}</span>
+                I agree to CHF Heron storing my application for up to six months and contacting me about this and similar roles.
+              </label>
+              <sc-if value="{{ consentError }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#B42318;margin-top:8px;animation:fadeIn 140ms">Please confirm this to submit.</div></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ submitting }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:60px 20px;text-align:center;animation:fadeIn 200ms">
+              <div style="width:46px;height:46px;margin:0 auto 16px;border-radius:50%;border:3px solid #E3E8EF;border-top-color:#1B4F8C;animation:spin 900ms linear infinite"></div>
+              <div style="font-size:16px;font-weight:600;margin-bottom:6px">Sending your application</div>
+              <div style="font-size:14px;color:#4A5666">Don't close this window.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ failed }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:44px 20px;text-align:center;animation:fadeIn 200ms">
+              <span data-icon="cloud-off" style="font-size:34px;color:#B42318;display:inline-flex;margin-bottom:14px"></span>
+              <div style="font-size:18px;font-weight:600;margin-bottom:8px">We couldn't send that</div>
+              <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:42ch;margin:0 auto 20px">The connection dropped mid-upload. Nothing you typed was lost — your CV is still attached.</div>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button onClick="{{ retrySubmit }}" style="height:44px;padding:0 20px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Try again</button>
+                <button onClick="{{ backToReview }}" style="height:44px;padding:0 20px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Back to review</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ succeeded }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:44px 20px;text-align:center;animation:fadeIn 200ms">
+              <div style="width:70px;height:70px;margin:0 auto 18px;border-radius:50%;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:32px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">✓</div>
+              <div style="font-size:21px;font-weight:600;letter-spacing:-.015em;margin-bottom:10px">Application received</div>
+              <div style="font-size:15px;line-height:24px;color:#4A5666;max-width:44ch;margin:0 auto 20px">We've emailed a copy to <b style="color:#131A22">{{ reviewEmail }}</b>. Our HR team reviews applications weekly — you'll hear back either way within 10 working days.</div>
+              <div style="display:inline-flex;flex-direction:column;gap:8px;padding:16px 20px;border-radius:12px;background:#F8F9FB;border:1px solid #E3E8EF;text-align:left;margin-bottom:22px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;letter-spacing:.06em;text-transform:uppercase">Reference</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500">APP-2026-0417</div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button onClick="{{ closeApply }}" style="height:44px;padding:0 20px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Back to the site</button>
+                <button onClick="{{ browseMore }}" style="height:44px;padding:0 20px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 15px 'IBM Plex Sans';cursor:pointer">Browse other roles</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ showApplyFooter }}" hint-placeholder-val="{{ true }}">
+          <div style="position:sticky;bottom:0;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:16px 26px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+            <button onClick="{{ prevStep }}" style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">{{ backLabel }}</button>
+            <button onClick="{{ nextStep }}" style="height:44px;padding:0 22px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="background:#16406F">{{ nextLabel }}</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:270px;max-width:360px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ t.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ t.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280}}">
+const SERVICES = [
+  { icon: "ship", title: "Import & clearing", body: "Container handling, customs and NAFDAC compliance from Apapa and Tin Can.", long: "We take a brand owner's container from the port to a bonded, temperature-appropriate warehouse — handling customs, NAFDAC registration and batch documentation so nothing sits idle on the quay.", clients: "International brand owners, licensed importers" },
+  { icon: "warehouse", title: "Warehousing", body: "Bonded and ambient storage across Lagos, Abuja and Port Harcourt depots.", long: "Racked, batch-tracked storage with FEFO picking. Stock levels reconcile daily against the ERP, and every movement is attributable to a named staff member.", clients: "Brand owners, large-format retail" },
+  { icon: "truck", title: "Distribution", body: "Nationwide delivery in 2–5 working days, all 36 states.", long: "Our own fleet in Lagos plus vetted third-party carriers upcountry. Proof of delivery is captured on the driver's phone with photo and location, not a paper waybill.", clients: "Supermarkets, open-market distributors, pharmacies" },
+  { icon: "clipboard-check", title: "Merchandising & audit", body: "Field teams that check facings, pricing and stock — with proof.", long: "Field representatives visit stores on a route plan and submit a verified report: photo of the shelf, GPS position, timestamp and stock count. Brand owners see what actually happened.", clients: "Brand owners running trade programmes" }
+];
+const LEADERS = [
+  { name: "Ngozi Aliu", role: "Managing Director", bio: "Joined 2001. Runs the trading business and brand relationships." },
+  { name: "Emeka Nwosu", role: "Director, Operations", bio: "Warehousing, fleet and the national depot network." },
+  { name: "Ifeoma Eze", role: "Head of Finance", bio: "Treasury, payroll and brand-owner reconciliation." },
+  { name: "Tunde Bello", role: "Head of Sales", bio: "Modern trade, open market and the field sales organisation." },
+  { name: "Amaka Duru", role: "Head of People", bio: "Hiring, HR operations and the depot training programme." },
+  { name: "Yusuf Lawal", role: "Head of Compliance", bio: "NAFDAC, customs documentation and quality assurance." }
+];
+const JOBS = [
+  { id: "fsr", title: "Field Sales Representative", dept: "Sales", type: "Full-time", location: "Lagos", deadline: "30 Sep 2026", closingSoon: true,
+    summary: "Own a route of 60+ retail outlets across Lagos Island and Lekki, and grow the shelf.",
+    description: "You'll be the face of our brands in your territory — visiting stores on a weekly route plan, taking orders, fixing availability problems and submitting a verified visit report from each stop.",
+    responsibilities: ["Visit every outlet on your route plan each week and submit a verified visit report", "Hit monthly volume targets across the Sebamed, Vileda and Badia ranges", "Fix out-of-stocks and pricing errors at the shelf, escalating what you can't", "Build relationships with store managers and open new outlets in your territory"],
+    requirements: ["2+ years in FMCG field sales, ideally in Lagos", "Comfortable working from a smartphone all day — check-in, photos, reports", "Valid driver's licence", "OND minimum; BSc an advantage"] },
+  { id: "whs", title: "Warehouse Supervisor", dept: "Logistics", type: "Full-time", location: "Ikeja, Lagos", deadline: "12 Oct 2026", closingSoon: false,
+    summary: "Run the receiving, picking and dispatch floor at our main Lagos depot.",
+    description: "You'll supervise a team of twelve across two shifts, keeping the floor safe, the stock accurate and the trucks loading on time.",
+    responsibilities: ["Supervise receiving, put-away, FEFO picking and dispatch", "Keep cycle-count variance under 0.5%", "Enforce safety and housekeeping standards on the floor", "Own the shift handover and daily stock reconciliation"],
+    requirements: ["3+ years supervising a warehouse team", "Confident with WMS or ERP stock systems", "Strong numeracy and record-keeping", "Willing to work rotating shifts"] },
+  { id: "acc", title: "Accounts Officer", dept: "Finance", type: "Full-time", location: "Victoria Island, Lagos", deadline: "05 Oct 2026", closingSoon: false,
+    summary: "Receivables, brand-owner reconciliation and month-end close support.",
+    description: "You'll sit with the finance team keeping customer accounts clean and helping close the month on time, every month.",
+    responsibilities: ["Post and reconcile customer receipts daily", "Chase overdue receivables with the sales team", "Prepare brand-owner settlement schedules", "Support month-end close and audit requests"],
+    requirements: ["2+ years in an accounts role", "Part-qualified ICAN/ACCA an advantage", "Strong Excel", "Meticulous with documentation"] },
+  { id: "mkt", title: "Trade Marketing Executive", dept: "Marketing", type: "Full-time", location: "Lagos", deadline: "18 Oct 2026", closingSoon: false,
+    summary: "Plan and measure in-store activations for our brand partners.",
+    description: "You'll design trade programmes, brief the field team and report back to brand owners with evidence of what ran and what it moved.",
+    responsibilities: ["Plan quarterly trade activations per brand", "Brief and equip field teams", "Analyse activation results against sell-out data", "Produce brand-owner reports with field photo evidence"],
+    requirements: ["2+ years in trade or brand marketing, FMCG", "Comfortable with data and spreadsheets", "Strong written English", "Willing to travel to depots"] },
+  { id: "drv", title: "Delivery Driver", dept: "Logistics", type: "Contract", location: "Port Harcourt", deadline: "28 Sep 2026", closingSoon: true,
+    summary: "Run scheduled deliveries from the Port Harcourt depot with proof of delivery.",
+    description: "You'll load, deliver and confirm each drop on the mobile app — photo, signature and location captured at the point of delivery.",
+    responsibilities: ["Complete the daily delivery manifest safely and on time", "Capture proof of delivery at every stop", "Keep the vehicle clean, fuelled and serviced", "Report damages or shortages immediately"],
+    requirements: ["Valid Class E licence, 3+ years driving commercially", "Knowledge of Port Harcourt and Rivers State routes", "Able to use a smartphone app", "Clean driving record"] }
+];
+const FILTERS = ["All", "Sales", "Logistics", "Finance", "Marketing"];
+
+class Component extends DCLogic {
+  state = {
+    page: "home", jobId: "fsr", jobState: "open", jobQuery: "", jobFilter: "All",
+    applyOpen: false, step: 1, phase: "form", name: "", email: "", exp: "2–4 years",
+    cv: "none", cvPct: 0, consent: false, errors: {}, toasts: []
+  };
+
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const L = window.lucide; if (!L) return;
+    let need = false;
+    document.querySelectorAll("[data-icon]").forEach(el => {
+      const n = el.getAttribute("data-icon"); if (!n) return;
+      const svg = el.querySelector("svg");
+      if (svg && svg.classList.contains("lucide-" + n)) return;
+      el.innerHTML = '<i data-lucide="' + n + '"></i>';
+      need = true;
+    });
+    if (need) { try { L.createIcons(); } catch (e) {} }
+  }
+
+  go(page) { this.setState({ page }); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  toast(title, body) {
+    const id = Date.now() + Math.random();
+    this.setState(s => ({ toasts: [...s.toasts, { id, title, body }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+  uploadCv() {
+    if (this.state.cv === "uploading") return;
+    this.setState({ cv: "uploading", cvPct: 0, errors: { ...this.state.errors, cv: false } });
+    const tick = () => {
+      this.setState(s => {
+        const p = s.cvPct + 12;
+        if (p >= 100) { setTimeout(() => this.setState({ cv: "done" }), 200); return { cvPct: 100 }; }
+        setTimeout(tick, 130);
+        return { cvPct: p };
+      });
+    };
+    setTimeout(tick, 200);
+  }
+  next() {
+    const s = this.state;
+    if (s.step === 1) {
+      const errors = { name: !s.name.trim(), email: !/^\S+@\S+\.\S+$/.test(s.email) };
+      if (errors.name || errors.email) return this.setState({ errors });
+      return this.setState({ step: 2, errors: {} });
+    }
+    if (s.step === 2) {
+      if (s.cv !== "done") return this.setState({ errors: { cv: true } });
+      return this.setState({ step: 3, errors: {} });
+    }
+    if (!s.consent) return this.setState({ errors: { consent: true } });
+    this.setState({ phase: "submitting", errors: {} });
+    setTimeout(() => this.setState({ phase: Math.random() < 0.25 ? "failed" : "success" }), 1800);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const job = JOBS.find(j => j.id === s.jobId) || JOBS[0];
+    const q = s.jobQuery.trim().toLowerCase();
+    const jobs = JOBS.filter(j =>
+      (s.jobFilter === "All" || j.dept === s.jobFilter) &&
+      (!q || (j.title + j.summary + j.location + j.dept).toLowerCase().includes(q))
+    );
+    const chip = (on) => ({ bg: on ? "#1B4F8C" : "#fff", fg: on ? "#fff" : "#4A5666", border: on ? "#1B4F8C" : "#CDD5E0" });
+    const JS = { open: ["Accepting applications", "#E7F4EE", "#0F7A54"], closed: ["Closed", "#F1F4F8", "#4A5666"], expired: ["Deadline passed", "#FDF2DF", "#8A5600"] };
+    const st = JS[s.jobState];
+    const done = s.phase !== "form";
+
+    return {
+      pages: [["home", "Home"], ["about", "About"], ["services", "Services"], ["leadership", "Leadership"], ["careers", "Careers"], ["job", "Job detail"], ["contact", "Contact"], ["login", "Login"], ["states", "Mobile + states"]]
+        .map(p => ({ label: p[1], go: () => this.go(p[0]), ...(s.page === p[0] ? { bg: "#fff", fg: "#131A22", border: "#fff" } : { bg: "transparent", fg: "#9AA7B6", border: "#2A3540" }) })),
+      navLinks: [["home", "Home"], ["about", "About"], ["services", "Services"], ["leadership", "Leadership"], ["careers", "Careers"], ["contact", "Contact"]]
+        .map(p => ({ label: p[1], go: () => this.go(p[0]), fg: s.page === p[0] ? "#1B4F8C" : "#4A5666", underline: s.page === p[0] ? "#1B4F8C" : "transparent" })),
+
+      isHome: s.page === "home", isAbout: s.page === "about", isServices: s.page === "services",
+      isLeadership: s.page === "leadership", isCareers: s.page === "careers", isJob: s.page === "job",
+      isContact: s.page === "contact", isLogin: s.page === "login", isStates: s.page === "states",
+      goCareers: () => this.go("careers"), goContact: () => this.go("contact"), goServices: () => this.go("services"),
+      goLeadership: () => this.go("leadership"), goAbout: () => this.go("about"), goLogin: () => this.go("login"),
+      goStates: () => this.go("states"),
+
+      services: SERVICES,
+      leaders: LEADERS,
+      leadersPreview: LEADERS.slice(0, 4),
+      openRolesLabel: "View all " + JOBS.length + " open roles",
+      jobsPreview: JOBS.slice(0, 3).map(j => ({
+        title: j.title, meta: j.dept + " · " + j.location + " · " + j.type,
+        open: () => { this.setState({ jobId: j.id, jobState: "open" }); this.go("job"); }
+      })),
+
+      jobQuery: s.jobQuery,
+      onJobQuery: (e) => this.setState({ jobQuery: e.target.value }),
+      jobFilters: FILTERS.map(f => ({ label: f, pick: () => this.setState({ jobFilter: f }), ...chip(s.jobFilter === f) })),
+      clearJobFilters: () => this.setState({ jobFilter: "All", jobQuery: "" }),
+      jobCountLabel: jobs.length === 1 ? "1 role" : jobs.length + " roles",
+      hasJobs: jobs.length > 0, noJobs: jobs.length === 0,
+      jobs: jobs.map(j => ({ ...j, open: () => { this.setState({ jobId: j.id, jobState: "open" }); this.go("job"); } })),
+
+      job,
+      jobStateLabel: st[0], jobStateBg: st[1], jobStateFg: st[2],
+      jobOpen: s.jobState === "open",
+      jobClosedState: s.jobState !== "open",
+      closedTitle: s.jobState === "closed" ? "This role has been filled" : "Applications closed 30 Sep 2026",
+      closedBody: s.jobState === "closed"
+        ? "We're no longer accepting applications. The description stays up for reference."
+        : "The deadline for this role has passed. We'll post similar roles as they open.",
+      jobStates: [["open", "Open"], ["closed", "Filled"], ["expired", "Deadline passed"]]
+        .map(j => ({ label: j[1], pick: () => this.setState({ jobState: j[0] }), ...chip(s.jobState === j[0]) })),
+
+      startApply: () => this.setState({ applyOpen: true, step: 1, phase: "form" }),
+      closeApply: () => this.setState({ applyOpen: false, step: 1, phase: "form", cv: "none", cvPct: 0, consent: false, errors: {} }),
+      browseMore: () => { this.setState({ applyOpen: false, step: 1, phase: "form", cv: "none", cvPct: 0, consent: false }); this.go("careers"); },
+      applyOpen: s.applyOpen,
+      applySteps: ["Your details", "Documents", "Review"].map((l, i) => ({
+        label: l, bar: s.step > i ? "#1B4F8C" : "#E3E8EF", fg: s.step > i ? "#1B4F8C" : "#7A8798"
+      })),
+      step1: s.step === 1 && !done, step2: s.step === 2 && !done, step3: s.step === 3 && !done,
+      submitting: s.phase === "submitting", failed: s.phase === "failed", succeeded: s.phase === "success",
+      showApplyFooter: !done,
+      backLabel: s.step === 1 ? "Cancel" : "Back",
+      nextLabel: s.step === 3 ? "Submit application" : "Continue",
+      prevStep: () => s.step === 1
+        ? this.setState({ applyOpen: false, errors: {} })
+        : this.setState({ step: s.step - 1, errors: {} }),
+      nextStep: () => this.next(),
+      retrySubmit: () => { this.setState({ phase: "submitting" }); setTimeout(() => this.setState({ phase: "success" }), 1500); },
+      backToReview: () => this.setState({ phase: "form", step: 3 }),
+
+      appName: s.name, appEmail: s.email,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      nameError: !!s.errors.name, emailError: !!s.errors.email, cvError: !!s.errors.cv, consentError: !!s.errors.consent,
+      nameBorder: s.errors.name ? "#B42318" : "#CDD5E0",
+      emailBorder: s.errors.email ? "#B42318" : "#CDD5E0",
+      expOptions: ["Under 2 years", "2–4 years", "5–9 years", "10+ years"].map(e => ({ label: e, pick: () => this.setState({ exp: e }), ...chip(s.exp === e) })),
+      exp: s.exp,
+
+      uploadCv: () => this.uploadCv(),
+      removeCv: () => this.setState({ cv: "none", cvPct: 0 }),
+      cvUploading: s.cv === "uploading", cvDone: s.cv === "done",
+      cvPct: s.cvPct + "%",
+      cvBorder: s.errors.cv ? "#B42318" : "#AFC9E7",
+      cvBg: s.errors.cv ? "#FFFBFA" : "#F8FAFD",
+
+      consentMark: s.consent ? "✓" : "",
+      consentBg: s.consent ? "#1B4F8C" : "#fff",
+      consentBorder: s.consent ? "#1B4F8C" : "#CDD5E0",
+      toggleConsent: () => this.setState(x => ({ consent: !x.consent, errors: { ...x.errors, consent: false } })),
+      reviewName: s.name || "—", reviewEmail: s.email || "—",
+      reviewCv: s.cv === "done" ? "cv-adaeze-okonkwo.pdf" : "not attached",
+
+      notifySent: () => this.toast("Message sent", "Our trade desk replies within one working day"),
+      notifyLogin: () => this.toast("Signing in…", "You'd land on your role's dashboard"),
+      toasts: s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

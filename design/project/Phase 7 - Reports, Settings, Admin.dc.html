@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  input[type="range"] { accent-color: #1B4F8C; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 07 · Reports, settings, roles, audit</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">viewing as <b style="color:#fff">Ngozi Aliu · Management</b></span>
+  </div>
+
+  <div style="display:flex;min-height:900px">
+    <div style="width:214px;flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:16px">
+        <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+        <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CHF Heron Nigeria</span><span style="display:block;font-size:10px;color:#7A8798">Lagos HQ workspace</span></span>
+      </div>
+      <sc-for list="{{ sections }}" as="nav" hint-placeholder-count="5">
+        <div onClick="{{ nav.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ nav.bg }};color:{{ nav.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+          <span data-icon="{{ nav.icon }}" style="font-size:18px;flex:none"></span>
+          <span style="flex:1;font-size:13px;font-weight:500;white-space:nowrap">{{ nav.label }}</span>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:11px;line-height:17px;color:#4A5666">Reports read data, they never change it. Settings and role changes are always written to the audit log.</div>
+    </div>
+
+    <div style="flex:1;min-width:0">
+
+      <!-- REPORTS -->
+      <sc-if value="{{ isReports }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Reports</h1>
+              <div style="font-size:14px;color:#4A5666">{{ repSub }}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="position:relative">
+                <button onClick="{{ toggleRange }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="calendar" style="font-size:15px;color:#7A8798"></span>{{ range }}<span data-icon="chevron-down" style="font-size:15px;color:#7A8798"></span></button>
+                <sc-if value="{{ rangeOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;z-index:30;top:42px;right:0;width:200px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.16);animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+                    <sc-for list="{{ ranges }}" as="rng" hint-placeholder-count="5">
+                      <div onClick="{{ rng.pick }}" style="padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer;background:{{ rng.bg }}" style-hover="background:#F1F4F8">{{ rng.label }}</div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+              <button onClick="{{ toastExport }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F"><span data-icon="download" style="font-size:15px"></span>Export</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
+            <sc-for list="{{ repTabs }}" as="rtab" hint-placeholder-count="6">
+              <button onClick="{{ rtab.pick }}" style="height:34px;padding:0 13px;border:1px solid {{ rtab.border }};border-radius:999px;background:{{ rtab.bg }};color:{{ rtab.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ rtab.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px">
+            <sc-for list="{{ kpis }}" as="kpi" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:18px 20px;transition:box-shadow 140ms,transform 140ms" style-hover="box-shadow:0 2px 6px -1px rgba(16,24,40,.1);transform:translateY(-1px)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;color:#4A5666">{{ kpi.label }}</span><span data-icon="{{ kpi.icon }}" style="font-size:16px;color:{{ kpi.fg }}"></span></div>
+                <div style="font-size:{{ kpi.size }};font-weight:600;letter-spacing:-.02em;margin-top:9px;font-variant-numeric:tabular-nums;font-family:{{ kpi.font }}">{{ kpi.value }}</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:{{ kpi.trendFg }};margin-top:8px"><span data-icon="{{ kpi.trendIcon }}" style="font-size:13px"></span>{{ kpi.trend }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
+            <div style="flex:1 1 380px;min-width:320px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:20px">
+                <span style="font-size:15px;font-weight:600">{{ chartTitle }}</span>
+                <span style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#4A5666">
+                  <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:2px;background:#1B4F8C"></span>{{ legendA }}</span>
+                  <sc-if value="{{ twoSeries }}" hint-placeholder-val="{{ true }}">
+                    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:2px;background:#AFC9E7"></span>{{ legendB }}</span>
+                  </sc-if>
+                </span>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:10px;height:190px">
+                <sc-for list="{{ chart }}" as="bar" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;height:100%">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666">{{ bar.top }}</span>
+                    <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:100%;transition:opacity 140ms" style-hover="opacity:.75">
+                      <span style="display:block;width:100%;height:{{ bar.b }};background:#AFC9E7;border-radius:5px 5px 0 0;transform-origin:bottom;animation:barGrow 320ms cubic-bezier(.2,.8,.2,1)"></span>
+                      <span style="display:block;width:100%;height:{{ bar.a }};background:#1B4F8C;border-radius:{{ bar.aRadius }};transform-origin:bottom;animation:barGrow 320ms cubic-bezier(.2,.8,.2,1)"></span>
+                    </div>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ bar.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin-top:16px;padding-top:14px;border-top:1px solid #F1F4F8;font-size:12px;line-height:19px;color:#4A5666">{{ chartNote }}</div>
+            </div>
+
+            <div style="flex:1 1 260px;min-width:250px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+              <div style="font-size:15px;font-weight:600;margin-bottom:16px">{{ breakTitle }}</div>
+              <sc-for list="{{ breakdown }}" as="brk" hint-placeholder-count="5">
+                <div style="margin-bottom:14px">
+                  <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:7px"><span style="font-size:13px;color:#4A5666;min-width:0">{{ brk.label }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap">{{ brk.value }}</span></div>
+                  <div style="height:7px;border-radius:4px;background:#F1F4F8;overflow:hidden"><span style="display:block;height:100%;width:{{ brk.pct }};background:{{ brk.fg }};border-radius:4px;transition:width 320ms cubic-bezier(.2,.8,.2,1)"></span></div>
+                </div>
+              </sc-for>
+              <div style="padding-top:12px;border-top:1px solid #F1F4F8;font-size:12px;line-height:19px;color:#4A5666">{{ breakNote }}</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+              <span style="font-size:15px;font-weight:600">{{ tableTitle }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ range }}</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:720px">
+                <thead>
+                  <tr style="background:#F8F9FB">
+                    <th style="padding:11px 16px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h1 }}</th>
+                    <th style="padding:11px 16px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h2 }}</th>
+                    <th style="padding:11px 16px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h3 }}</th>
+                    <th style="padding:11px 16px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h4 }}</th>
+                    <th style="padding:11px 16px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h5 }}</th>
+                    <th style="padding:11px 16px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ h6 }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ tableRows }}" as="trw" hint-placeholder-count="7">
+                    <tr style="border-top:1px solid #F1F4F8;transition:background 80ms" style-hover="background:#F8FAFD">
+                      <td style="padding:12px 16px;text-align:left;font-size:13px;font-weight:500;white-space:nowrap">{{ trw.c1 }}</td>
+                      <td style="padding:12px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;white-space:nowrap">{{ trw.c2 }}</td>
+                      <td style="padding:12px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;white-space:nowrap">{{ trw.c3 }}</td>
+                      <td style="padding:12px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;white-space:nowrap">{{ trw.c4 }}</td>
+                      <td style="padding:12px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;white-space:nowrap">{{ trw.c5 }}</td>
+                      <td style="padding:12px 16px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666;white-space:nowrap">{{ trw.c6 }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:14px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">{{ tableNote }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- SETTINGS -->
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:16px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Settings</h1>
+            <div style="font-size:14px;color:#4A5666">Company-wide configuration · changes take effect immediately</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
+            <sc-for list="{{ setTabs }}" as="stab" hint-placeholder-count="6">
+              <button onClick="{{ stab.pick }}" style="height:34px;padding:0 13px;border:1px solid {{ stab.border }};border-radius:999px;background:{{ stab.bg }};color:{{ stab.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ stab.label }}</button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ setCompany }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;animation:fadeIn 200ms">
+              <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:16px">Company profile</div>
+                <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+                  <div style="width:70px;height:70px;flex:none;border-radius:14px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 28px 'IBM Plex Sans'">H</div>
+                  <div><button onClick="{{ toast }}" style="height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Replace logo</button><div style="font-size:12px;color:#7A8798;margin-top:7px">SVG or PNG, square, min 512px. Used on payslips and the careers site.</div></div>
+                </div>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Registered name</label>
+                <input value="CHF Heron Nigeria Ltd." style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px;margin-bottom:14px">
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">RC number</label><input value="RC 184402" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Tax ID</label><input value="TIN 01029934-0001" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                </div>
+                <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Registered address</label>
+                <textarea rows="2" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)">Plot 1C Akin Ogunlewe Street, Victoria Island, Lagos</textarea>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px">
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Currency</label><input value="NGN · ₦" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Timezone</label><input value="WAT · UTC+1" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                </div>
+                <button onClick="{{ toastSave }}" style="height:42px;padding:0 18px;margin-top:20px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Save company profile</button>
+              </div>
+
+              <div style="flex:1 1 300px;min-width:280px;display:flex;flex-direction:column;gap:14px">
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                  <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+                    <span style="font-size:14px;font-weight:600">Office locations</span>
+                    <span onClick="{{ toast }}" style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">Add office</span>
+                  </div>
+                  <sc-for list="{{ offices }}" as="off" hint-placeholder-count="4">
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid #F1F4F8">
+                      <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#EEF4FB;color:#16406F;display:grid;place-items:center"><span data-icon="building-2" style="font-size:16px"></span></span>
+                      <span style="flex:1 1 140px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ off.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ off.coords }}</span></span>
+                      <span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ off.bg }};color:{{ off.fg }};font-size:11px;font-weight:600">{{ off.radius }}</span>
+                      <span style="flex:none;font-size:11px;color:#7A8798;min-width:56px">{{ off.staff }} staff</span>
+                    </div>
+                  </sc-for>
+                  <div style="padding:14px 20px;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">Each office carries its own geofence radius. Anything under 25m or over 250m is flagged when you save it.</div>
+                </div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+                    <span style="font-size:14px;font-weight:600">Default attendance radius</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B4F8C">{{ radiusLabel }}</span>
+                  </div>
+                  <input type="range" min="10" max="300" step="5" value="{{ radius }}" onInput="{{ onRadius }}" style="width:100%;margin-bottom:6px" />
+                  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-bottom:12px"><span>10m</span><span>sensible 25–250m</span><span>300m</span></div>
+                  <div style="padding:12px 14px;border-radius:10px;background:{{ radiusBg }};border:1px solid {{ radiusBorder }};font-size:12px;line-height:19px;color:#4A5666">{{ radiusHint }}</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ setStructure }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;animation:fadeIn 200ms">
+              <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;display:flex;gap:10px;align-items:center;justify-content:space-between">
+                  <span style="font-size:14px;font-weight:600">Departments · 7</span>
+                  <span onClick="{{ toast }}" style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">Add</span>
+                </div>
+                <sc-for list="{{ deptRows }}" as="drw" hint-placeholder-count="7">
+                  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:13px 20px;border-bottom:1px solid #F1F4F8">
+                    <span style="flex:1 1 120px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ drw.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ drw.code }}</span></span>
+                    <span style="font-size:12px;color:#4A5666;white-space:nowrap">{{ drw.roles }} roles · {{ drw.staff }} staff</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;display:flex;gap:10px;align-items:center;justify-content:space-between">
+                  <span style="font-size:14px;font-weight:600">Leave types</span>
+                  <span onClick="{{ toast }}" style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">Add</span>
+                </div>
+                <sc-for list="{{ leaveTypeRows }}" as="ltr" hint-placeholder-count="5">
+                  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:13px 20px;border-bottom:1px solid #F1F4F8">
+                    <span style="flex:1 1 130px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ ltr.name }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ ltr.rule }}</span></span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap">{{ ltr.days }}</span>
+                    <sc-if value="{{ ltr.needsDoc }}" hint-placeholder-val="{{ false }}">
+                      <span style="padding:2px 8px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:10px;font-weight:600;white-space:nowrap">▲ Doc required</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <div style="padding:14px 20px;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">Changing an accrual rate applies from the next cycle, never retroactively — balances people have already earned are theirs.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ setPayroll }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;animation:fadeIn 200ms">
+              <div style="flex:1 1 330px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:16px">Payroll settings</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:13px;margin-bottom:16px">
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Pay day</label><input value="28th of the month" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                  <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Bank cut-off</label><input value="2 working days prior" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin:20px 0 12px">Statutory rates</div>
+                <div style="display:flex;flex-direction:column;gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:10px;overflow:hidden">
+                  <sc-for list="{{ rates }}" as="rte" hint-placeholder-count="4">
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:13px 15px;background:#fff">
+                      <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ rte.name }}</span><span style="display:block;font-size:11px;color:#7A8798;margin-top:2px">{{ rte.note }}</span></span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;white-space:nowrap">{{ rte.value }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:16px;padding:13px 14px;border-radius:10px;background:#FFFDF7;border:1px solid #F6E3BF;font-size:12px;line-height:19px;color:#4A5666"><b style="color:#8A5600">Statutory rates are locked mid-period.</b> Editing PAYE or pension while a run is in review would silently change figures Accounts has already checked. Changes apply from the next period.</div>
+              </div>
+              <div style="flex:1 1 280px;min-width:270px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:16px">Notifications</div>
+                <sc-for list="{{ notifSettings }}" as="nsw" hint-placeholder-count="6">
+                  <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #F1F4F8">
+                    <span onClick="{{ nsw.toggle }}" style="flex:none;width:38px;height:22px;margin-top:1px;border-radius:999px;background:{{ nsw.bg }};padding:2px;display:flex;justify-content:{{ nsw.align }};cursor:pointer;transition:background 140ms cubic-bezier(.2,.8,.2,1)"><span style="width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.2)"></span></span>
+                    <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ nsw.label }}</span><span style="display:block;font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ nsw.note }}</span></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ setSecurity }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;animation:fadeIn 200ms">
+              <div style="flex:1 1 320px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:16px">Security</div>
+                <sc-for list="{{ security }}" as="sec" hint-placeholder-count="5">
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #F1F4F8">
+                    <span style="flex:1 1 180px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ sec.label }}</span><span style="display:block;font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ sec.note }}</span></span>
+                    <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:{{ sec.bg }};color:{{ sec.fg }}">{{ sec.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex:1 1 280px;min-width:270px;background:#fff;border:1px solid #FADCD9;border-radius:14px;padding:22px">
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><span data-icon="alert-triangle" style="font-size:18px;color:#B42318"></span><span style="font-size:14px;font-weight:600;color:#B42318">Data retention</span></div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666;margin-bottom:16px">Check-in selfies and visit photos are kept for <b>24 months</b>, then deleted automatically. Location coordinates are kept for <b>12 months</b>. Neither can be extended without a written policy change — the limit is deliberately hard to raise.</div>
+                <button onClick="{{ toast }}" style="width:100%;height:40px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">View the retention policy</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <!-- ROLES -->
+      <sc-if value="{{ isRoles }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Roles and access</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:66ch">Five roles, 142 people. A person can hold more than one role — permissions add up, they never cancel out.</div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;margin-bottom:16px">
+            <div style="flex:1 1 260px;min-width:250px;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ roleList }}" as="rol" hint-placeholder-count="5">
+                <div onClick="{{ rol.pick }}" style="background:#fff;border:1px solid {{ rol.border }};border-radius:14px;padding:16px;cursor:pointer;transition:border-color 140ms,transform 140ms" style-hover="transform:translateY(-1px)">
+                  <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px">
+                    <span style="width:32px;height:32px;flex:none;border-radius:9px;background:#EEF4FB;color:#16406F;display:grid;place-items:center"><span data-icon="{{ rol.icon }}" style="font-size:17px"></span></span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ rol.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ rol.users }} users</span></span>
+                    <span style="flex:none;padding:3px 9px;border-radius:999px;background:{{ rol.riskBg }};color:{{ rol.riskFg }};font-size:10px;font-weight:600">{{ rol.riskLabel }}</span>
+                  </div>
+                  <div style="font-size:12px;line-height:18px;color:#4A5666">{{ rol.desc }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 380px;min-width:320px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:20px;border-bottom:1px solid #E3E8EF">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between">
+                  <div style="display:flex;gap:13px;align-items:center;min-width:0">
+                    <span style="width:42px;height:42px;flex:none;border-radius:11px;background:#1B4F8C;color:#fff;display:grid;place-items:center"><span data-icon="{{ role.icon }}" style="font-size:20px"></span></span>
+                    <span style="min-width:0"><span style="display:block;font-size:19px;font-weight:600;letter-spacing:-.015em">{{ role.name }}</span><span style="display:block;font-size:13px;color:#4A5666;margin-top:2px">{{ role.users }} users hold this role</span></span>
+                  </div>
+                  <span style="padding:4px 11px;border-radius:999px;background:{{ role.riskBg }};color:{{ role.riskFg }};font-size:11px;font-weight:600">{{ role.riskLabel }}</span>
+                </div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666;margin-top:14px">{{ role.desc }}</div>
+              </div>
+              <sc-if value="{{ role.hasWarning }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:11px;padding:16px 20px;background:#FFFBFA;border-bottom:1px solid #FADCD9">
+                  <span data-icon="shield-alert" style="font-size:19px;color:#B42318"></span>
+                  <span style="font-size:13px;line-height:20px;color:#4A5666"><b style="color:#B42318">High-risk role.</b> {{ role.warning }}</span>
+                </div>
+              </sc-if>
+              <div style="padding:18px 20px;border-bottom:1px solid #E3E8EF">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Assigned users</div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ role.members }}" as="mem" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:11px">
+                      <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ mem.i }}</span>
+                      <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ mem.name }}</span><span style="display:block;font-size:11px;color:#7A8798">{{ mem.title }}</span></span>
+                      <span onClick="{{ toast }}" style="flex:none;font-size:12px;font-weight:500;color:#B42318;cursor:pointer">Revoke</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="padding:16px 20px;background:#F8F9FB">
+                <button onClick="{{ openGrant }}" style="width:100%;height:42px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F">Assign this role to someone</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF">
+              <div style="font-size:15px;font-weight:600;margin-bottom:4px">Permission matrix</div>
+              <div style="font-size:13px;color:#4A5666">Rows marked with a triangle carry salary, personal or audit data.</div>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:760px">
+                <thead>
+                  <tr style="background:#F8F9FB">
+                    <th style="padding:11px 20px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">Module</th>
+                    <sc-for list="{{ matrixRoles }}" as="mrl" hint-placeholder-count="5">
+                      <th style="padding:11px 12px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">{{ mrl.name }}</th>
+                    </sc-for>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ matrix }}" as="mrow" hint-placeholder-count="10">
+                    <tr style="border-top:1px solid #F1F4F8;transition:background 80ms" style-hover="background:#F8FAFD">
+                      <td style="padding:11px 20px;font-size:13px;font-weight:500;white-space:nowrap">
+                        <sc-if value="{{ mrow.risky }}" hint-placeholder-val="{{ false }}">
+                          <span style="color:#8A5600;margin-right:6px">▲</span>
+                        </sc-if>{{ mrow.module }}
+                      </td>
+                      <sc-for list="{{ mrow.cells }}" as="mcell" hint-placeholder-count="5">
+                        <td style="padding:9px 12px;text-align:center"><span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:{{ mcell.bg }};color:{{ mcell.fg }};border:{{ mcell.border }};font-size:11px;font-weight:600;white-space:nowrap">{{ mcell.label }}</span></td>
+                      </sc-for>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:14px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">"Own only" means a person sees their own record and nothing else — it is not a weaker version of Read, it is a different scope. "Dept only" is scoped to the department the user heads. "Some areas" is scoped by subject rather than by department: HR owns departments and leave types, Accounts owns payroll settings and statutory rates, and neither can open the other's.</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- AUDIT -->
+      <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Audit log</h1>
+              <div style="font-size:14px;color:#4A5666">Every action, immutable, kept 7 years · {{ auditCount }}</div>
+            </div>
+            <button onClick="{{ toastExport }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="download" style="font-size:15px"></span>Export log</button>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">
+            <div style="flex:1 1 220px;min-width:190px;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff">
+              <span data-icon="search" style="font-size:16px;color:#7A8798"></span>
+              <input value="{{ auditQuery }}" onInput="{{ onAuditQuery }}" placeholder="Search actor, action or entity…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 14px 'IBM Plex Sans'" />
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ auditCats }}" as="acat" hint-placeholder-count="7">
+                <button onClick="{{ acat.pick }}" style="height:36px;padding:0 12px;border:1px solid {{ acat.border }};border-radius:999px;background:{{ acat.bg }};color:{{ acat.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ acat.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasAudit }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;animation:fadeIn 200ms">
+              <sc-for list="{{ auditRows }}" as="arow" hint-placeholder-count="8">
+                <div onClick="{{ arow.open }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                  <span style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ arow.bg }};color:{{ arow.fg }};display:grid;place-items:center"><span data-icon="{{ arow.icon }}" style="font-size:17px"></span></span>
+                  <span style="flex:1 1 220px;min-width:0">
+                    <span style="display:block;font-size:13px;line-height:20px"><b>{{ arow.who }}</b> {{ arow.what }}</span>
+                    <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ arow.entity }}</span>
+                  </span>
+                  <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;min-width:120px">{{ arow.when }}</span>
+                  <span style="flex:none;font-size:12px;font-weight:500;color:#1B4F8C">Detail</span>
+                </div>
+              </sc-for>
+              <div style="padding:14px 20px;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">Entries can't be edited or deleted by anyone, including Management. A correction is a new entry that references the original.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noAudit }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px dashed #CDD5E0;border-radius:14px;padding:56px 24px;text-align:center;animation:fadeIn 200ms">
+              <span data-icon="search-x" style="font-size:28px;color:#7FA6D3;display:inline-flex;margin-bottom:12px"></span>
+              <div style="font-size:17px;font-weight:600;margin-bottom:7px">No entries match</div>
+              <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:42ch;margin:0 auto 16px">An empty audit result means nothing happened in that scope — never that a record was removed.</div>
+              <button onClick="{{ clearAudit }}" style="height:38px;padding:0 16px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Clear filters</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- PLATFORM -->
+      <sc-if value="{{ isPlatform }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:#131A22;color:#9AA7B6;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px">Concept only · not built this phase</div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Platform administration</h1>
+              <div style="font-size:14px;color:#4A5666;max-width:64ch">How the product looks when CHF Heron is one tenant among many. Billing is deliberately out of scope.</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px">
+            <sc-for list="{{ platformStats }}" as="pstat" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:18px 20px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;color:#4A5666">{{ pstat.label }}</span><span data-icon="{{ pstat.icon }}" style="font-size:16px;color:{{ pstat.fg }}"></span></div>
+                <div style="font-size:28px;font-weight:600;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums">{{ pstat.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:1 1 300px;min-width:280px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:14px;font-weight:600">Organisations</div>
+              <sc-for list="{{ orgs }}" as="orw" hint-placeholder-count="5">
+                <div onClick="{{ orw.pick }}" style="display:flex;flex-wrap:wrap;gap:11px;align-items:center;padding:14px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;border-left:3px solid {{ orw.border }};transition:background 80ms" style-hover="background:#F8FAFD">
+                  <span style="width:32px;height:32px;flex:none;border-radius:9px;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ orw.mark }}</span>
+                  <span style="flex:1 1 130px;min-width:0"><span style="display:block;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ orw.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ orw.slug }} · {{ orw.users }} users</span></span>
+                  <span style="flex:none;padding:3px 9px;border-radius:999px;background:{{ orw.bg }};color:{{ orw.fg }};font-size:11px;font-weight:600">{{ orw.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 320px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:20px;border-bottom:1px solid #E3E8EF">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between">
+                  <div style="min-width:0">
+                    <h2 style="margin:0 0 5px;font-size:19px;font-weight:600;letter-spacing:-.015em">{{ org.name }}</h2>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A8798">{{ org.slug }}.heron.app</div>
+                  </div>
+                  <span style="padding:4px 11px;border-radius:999px;background:{{ org.bg }};color:{{ org.fg }};font-size:11px;font-weight:600">{{ org.status }}</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:#E3E8EF">
+                <div style="background:#fff;padding:16px"><div style="font-size:11px;color:#7A8798">Users</div><div style="font-family:'IBM Plex Mono',monospace;font-size:16px;margin-top:4px">{{ org.users }}</div></div>
+                <div style="background:#fff;padding:16px"><div style="font-size:11px;color:#7A8798">Offices</div><div style="font-size:14px;font-weight:500;margin-top:5px">{{ org.offices }}</div></div>
+                <div style="background:#fff;padding:16px"><div style="font-size:11px;color:#7A8798">Sector</div><div style="font-size:13px;font-weight:500;margin-top:5px">{{ org.sector }}</div></div>
+                <div style="background:#fff;padding:16px"><div style="font-size:11px;color:#7A8798">Workspace theme</div><div style="font-size:13px;font-weight:500;margin-top:5px">{{ org.theme }}</div></div>
+              </div>
+              <div style="padding:20px;border-top:1px solid #E3E8EF">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Status behaviour</div>
+                <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666">{{ org.note }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:12px">{{ org.since }}</div>
+              </div>
+              <div style="padding:16px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB;display:flex;gap:10px;flex-wrap:wrap">
+                <button onClick="{{ toast }}" style="flex:1 1 130px;height:40px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Open workspace</button>
+                <sc-if value="{{ org.isSuspended }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ toast }}" style="flex:1 1 130px;height:40px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Reactivate</button>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="flex:1 1 280px;min-width:270px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">What makes a workspace its own</div>
+              <div style="display:flex;flex-direction:column;gap:11px;font-size:13px;line-height:20px;color:#4A5666">
+                <div><b style="color:#131A22">Identity.</b> Logo, name and one accent colour. The layout, type and spacing never change — a tenant customises their mark, not the product.</div>
+                <div><b style="color:#131A22">Data.</b> Fully isolated. No cross-tenant query exists, including for platform admins, who see counts and status but not employee records.</div>
+                <div><b style="color:#131A22">Configuration.</b> Departments, offices, geofences, leave types and payroll rates are all per-tenant.</div>
+                <div><b style="color:#131A22">Audit.</b> Each tenant's log is theirs. Platform actions are logged separately, and visibly, in the tenant's own log.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- GRANT ROLE CONFIRM -->
+  <sc-if value="{{ grantOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:grid;place-items:center;padding:20px">
+      <div onClick="{{ closeGrant }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(480px,100%);background:#fff;border-radius:14px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);padding:24px;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <div style="display:flex;gap:13px;margin-bottom:18px">
+          <span style="width:40px;height:40px;flex:none;border-radius:10px;background:#FDECEA;color:#B42318;display:grid;place-items:center"><span data-icon="shield-alert" style="font-size:19px"></span></span>
+          <div>
+            <div style="font-size:17px;font-weight:600;letter-spacing:-.01em">Grant the {{ grantRoleName }} role?</div>
+            <div style="font-size:13px;line-height:20px;color:#4A5666;margin-top:5px">{{ grantBody }}</div>
+          </div>
+        </div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">User</label>
+        <input placeholder="Search by name or employee ID…" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reason (required, appears in the audit log)</label>
+        <textarea rows="2" placeholder="Covering payroll while Ifeoma is on leave, 17–21 March." style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+        <sc-if value="{{ grantNeedsSecond }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:10px;margin-top:14px;padding:13px 14px;border-radius:10px;background:#FFFDF7;border:1px solid #F6E3BF">
+            <span data-icon="users" style="font-size:17px;color:#8A5600"></span>
+            <span style="font-size:12px;line-height:19px;color:#4A5666"><b style="color:#8A5600">Second approver required.</b> A role with payroll or audit access can't be granted by one person alone. HR will be asked to confirm before it takes effect.</span>
+          </div>
+        </sc-if>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+          <button onClick="{{ closeGrant }}" style="height:42px;padding:0 17px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ doGrant }}" style="height:42px;padding:0 20px;border:1px solid #B42318;border-radius:8px;background:#B42318;color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Grant {{ grantRoleName }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- AUDIT DETAIL -->
+  <sc-if value="{{ auditOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAudit }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(480px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:20px 22px;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
+            <span style="width:38px;height:38px;flex:none;border-radius:10px;background:{{ ad.bg }};color:{{ ad.fg }};display:grid;place-items:center"><span data-icon="{{ ad.icon }}" style="font-size:18px"></span></span>
+            <span style="min-width:0">
+              <span style="display:block;font-size:15px;font-weight:600;line-height:21px"><b>{{ ad.who }}</b> {{ ad.what }}</span>
+              <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:5px">{{ ad.when }}</span>
+            </span>
+          </div>
+          <button onClick="{{ closeAudit }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+        </div>
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <sc-if value="{{ ad.sensitive }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:11px;padding:14px;border-radius:12px;background:#FFFDF7;border:1px solid #F6E3BF;margin-bottom:18px">
+              <span data-icon="alert-triangle" style="font-size:18px;color:#8A5600"></span>
+              <span style="font-size:12px;line-height:19px;color:#4A5666">This entry touches salary, personal or access data. It's retained for 7 years and cannot be amended.</span>
+            </div>
+          </sc-if>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Entry metadata</div>
+          <div style="display:flex;flex-direction:column;gap:1px;background:#F1F4F8;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+            <sc-for list="{{ ad.meta }}" as="amt" hint-placeholder-count="7">
+              <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:12px 15px;background:#fff">
+                <span style="font-size:13px;color:#4A5666">{{ amt.k }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;text-align:right">{{ amt.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:18px;padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:12px;line-height:19px;color:#4A5666">Metadata is captured at the moment of the action. IP and device are truncated — enough to spot an anomaly, not enough to track a person's movements.</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:270px;max-width:350px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ tst.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ tst.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const N="#4A5666",B="#1B4F8C",G="#0F7A54",W="#8A5600",R="#B42318";
+const MONO="'IBM Plex Mono',monospace";
+const REPORTS={
+  Management:{sub:"Organisation-wide · updated 09:41 today",
+    kpis:[["Headcount","142","users",B,"+6 this quarter","trending-up",G,"30px",""],
+      ["Attendance rate","90.1%","user-check",G,"+1.4pts vs. February","trending-up",G,"30px",""],
+      ["Net payroll","₦48.2m","wallet",B,"+2.1% vs. February","trending-up",N,"24px",MONO],
+      ["Task completion","86%","clipboard-check",B,"−3pts vs. February","trending-down",W,"30px",""]],
+    chartTitle:"Headcount · last 6 months",single:true,legendA:"Headcount",legendB:"",
+    chart:[["Oct",137,0,"137"],["Nov",137,0,"137"],["Dec",139,0,"139"],["Jan",139,0,"139"],["Feb",141,0,"141"],["Mar",142,0,"142"]],
+    chartNote:"Headcount only. Payroll is plotted separately in the Payroll report — the two use different units and stacking them would invite a false comparison.",
+    breakTitle:"Headcount by department",
+    breakdown:[["Sales",38,"38"],["Warehouse",31,"31"],["Logistics",29,"29"],["Management",18,"18"],["Finance",12,"12"],["Compliance",8,"8"],["People",6,"6"]],
+    breakNote:"Sales and Warehouse are 49% of headcount and 41% of payroll cost.",
+    tableTitle:"Department summary",
+    cols:[["Department","left"],["Staff","right"],["Present today","right"],["Attendance","right"],["Open tasks","right"],["Net payroll","right"]],
+    rows:[["Sales",38,34,"92%",12,"₦14.8m"],["Warehouse",31,27,"87%",5,"₦6.2m"],["Logistics",29,26,"90%",8,"₦9.1m"],
+      ["Management",18,16,"89%",9,"₦11.4m"],["Finance",12,11,"92%",6,"₦4.1m"],["Compliance",8,8,"100%",3,"₦1.8m"],["People",6,6,"100%",2,"₦0.8m"]],
+    tableNote:"Attendance counts anyone who checked in, office or remote. Absent-without-notice is reported separately in the HR view."},
+  HR:{sub:"People operations · March 2026",
+    kpis:[["Attendance rate","90.1%","user-check",G,"128 of 142 today","trending-up",G,"30px",""],
+      ["Open exceptions today","6","alert-triangle",W,"2 low GPS · 4 no check-in","minus",W,"30px",""],
+      ["Pending leave","9","plane",B,"oldest waiting 3 days","trending-up",W,"30px",""],
+      ["Avg. time to hire","31d","user-plus",B,"−4 days vs. Q4","trending-down",G,"30px",""]],
+    chartTitle:"Attendance by week · this month",legendA:"Office",legendB:"Remote",
+    chart:[["W1",96,32,"128"],["W2",99,29,"128"],["W3",92,36,"128"],["W4",97,31,"128"],["W5",94,34,"128"]],
+    chartNote:"Office and remote sum to the same 128 checked-in staff each week — what moves is the split, not the total. Remote peaks in week 3 around the depot stock-take.",
+    breakTitle:"Exceptions this month · 17",
+    breakdown:[["No check-in",4,"4"],["Low GPS accuracy",2,"2"],["Late arrival",6,"6"],["No check-out",4,"4"],["Camera denied",1,"1"]],
+    breakNote:"Month to date. The KPI above counts only the 6 raised today and still open. Every exception has an owner and a recovery action — none auto-penalise the employee.",
+    tableTitle:"Leave and absence by department",
+    cols:[["Department","left"],["On leave","right"],["Pending","right"],["Absent today","right"],["Leave taken YTD","right"],["Coverage","right"]],
+    rows:[["Sales",2,4,1,"84 days","82%"],["Warehouse",2,2,2,"61 days","87%"],["Logistics",1,1,0,"48 days","90%"],
+      ["Management",1,1,0,"31 days","94%"],["Finance",1,1,0,"22 days","92%"],["Compliance",0,0,0,"14 days","100%"],["People",0,0,0,"9 days","100%"]],
+    tableNote:"Coverage is the share of a department's route or shift plan that is staffed on the days people are away."},
+  Payroll:{sub:"Accounts view · March 2026 in review",
+    kpis:[["Gross","₦61.41m","trending-up",B,"142 employees","minus",N,"24px",MONO],
+      ["Deductions","₦13.21m","minus-circle",W,"21.5% of gross","minus",N,"24px",MONO],
+      ["Net payable","₦48.20m","wallet",G,"+2.1% vs. February","trending-up",N,"24px",MONO],
+      ["Cost per head","₦432k","users",B,"+0.8% vs. February","trending-up",N,"24px",MONO]],
+    chartTitle:"Net paid and deductions · last 6 months",legendA:"Net paid",legendB:"Deductions",
+    chart:[["Oct",45.6,12.4,"₦58.0m"],["Nov",45.8,12.5,"₦58.3m"],["Dec",58.9,15.9,"₦74.8m"],["Jan",46.4,12.6,"₦59.0m"],["Feb",47.2,12.9,"₦60.1m"],["Mar",48.2,13.2,"₦61.4m"]],
+    chartNote:"Stacked to gross, in ₦m. The deduction share sits between 21% and 22% every month — December's taller bar is the 13th-month payment, not a rate change.",
+    breakTitle:"Deduction breakdown",
+    breakdown:[["PAYE","₦5.90m",5899400],["Pension (8%)","₦4.91m",4912960],["NHF (2.5%)","₦1.54m",1535300],["Staff loans","₦0.62m",620000],["Unpaid leave","₦0.24m",240190]],
+    breakNote:"PAYE and pension are statutory. Loans and unpaid leave are the only discretionary lines.",
+    tableTitle:"Payroll by department",
+    cols:[["Department","left"],["Staff","right"],["Gross","right"],["PAYE","right"],["Pension","right"],["Net","right"]],
+    rows:[["Sales",38,"₦18.7m","₦1.80m","₦1.50m","₦14.8m"],["Management",18,"₦14.4m","₦1.38m","₦1.15m","₦11.4m"],
+      ["Logistics",29,"₦11.5m","₦1.10m","₦0.92m","₦9.1m"],["Warehouse",31,"₦7.9m","₦0.76m","₦0.63m","₦6.2m"],
+      ["Finance",12,"₦5.2m","₦0.50m","₦0.42m","₦4.1m"],["Compliance",8,"₦2.3m","₦0.22m","₦0.18m","₦1.8m"],["People",6,"₦1.4m","₦0.13m","₦0.11m","₦0.8m"]],
+    tableNote:"Figures are provisional until the run is approved. Nothing here is remitted yet."},
+  Tasks:{sub:"Task and field-visit performance · March 2026",
+    kpis:[["Tasks closed","218","clipboard-check",G,"+12% vs. February","trending-up",G,"30px",""],
+      ["On-time rate","86%","clock",B,"−3pts vs. February","trending-down",W,"30px",""],
+      ["Visits verified","41 / 44","map-pin",G,"93% first-time pass","trending-up",G,"30px",""],
+      ["Avg. review time","3h 40m","hourglass",B,"−1h vs. February","trending-down",G,"30px",""]],
+    chartTitle:"Tasks closed and returned · last 5 weeks",legendA:"Closed",legendB:"Returned",
+    chart:[["W1",46,2,"48"],["W2",52,3,"55"],["W3",41,5,"46"],["W4",48,2,"50"],["W5",31,1,"32"]],
+    chartNote:"218 tasks closed across the five weeks, 13 sent back for more work. Returns peaked at 5 in week 3 when the Q1 planogram changed — a briefing problem, not a compliance one. Of those 13, three were field visits needing a re-capture.",
+    breakTitle:"Verification outcomes",
+    breakdown:[["Verified first time",41,"41"],["Returned once",3,"3"],["Flagged to HR",1,"1"],["Submitted without GPS",2,"2"],["Submitted without photo",1,"1"]],
+    breakNote:"Submissions missing GPS or a photo are always reviewed by a person, never auto-rejected.",
+    tableTitle:"Field visits by representative",
+    cols:[["Representative","left"],["Visits","right"],["Verified","right"],["Returned","right"],["Avg. distance","right"],["Pass rate","right"]],
+    rows:[["Chidi Uzo",14,13,1,"22 m","93%"],["Sade Kalu",11,9,2,"180 m","82%"],["Joy Edet",9,9,0,"31 m","100%"],
+      ["Adaeze Okonkwo",6,6,0,"18 m","100%"],["Chinedu Eze",4,4,0,"26 m","100%"]],
+    tableNote:"Average distance is from the store pin at the moment of capture. Sade Kalu's 180m average is worth a conversation about pin accuracy, not discipline."},
+  Recruitment:{sub:"Hiring funnel · rolling 90 days",
+    kpis:[["Applications","64","inbox",B,"5 open roles","trending-up",G,"30px",""],
+      ["In pipeline now","19","users",B,"across 4 live stages","minus",N,"30px",""],
+      ["Offers out","4","file-check",G,"1 accepted","trending-up",G,"30px",""],
+      ["Offer accept rate","75%","check-circle-2",G,"3 of 4 last quarter","minus",N,"30px",""]],
+    chartTitle:"Funnel · applications to hires",legendA:"Progressed",legendB:"Dropped out",
+    chart:[["Applied",21,43,"64"],["Screen",9,12,"21"],["Short",6,3,"9"],["Interview",4,2,"6"],["Offer",3,1,"4"],["Hired",3,0,"3"]],
+    chartNote:"Each bar is the cohort that reached that stage, split into those who progressed and those who didn't. The sharpest drop is Applied to Screening — 43 of 64 CVs filtered in one pass. That's where a sharper job description pays off most.",
+    breakTitle:"In pipeline right now · 19",
+    breakdown:[["Screening",6,"6"],["Shortlisted",6,"6"],["Interview",4,"4"],["Offered",3,"3"]],
+    breakNote:"Current occupancy, not cumulative — the 64 applications and the stage-by-stage drop-off are in the funnel chart above. Rejected and withdrawn candidates stay searchable for 12 months.",
+    tableTitle:"Open roles",
+    cols:[["Role","left"],["Applied","right"],["In pipeline","right"],["Days open","right"],["Stage","left"],["Closes","left"]],
+    rows:[["Field Sales Representative",24,9,"18","Interview","30 Sep"],["Warehouse Supervisor",18,6,"26","Offered","12 Oct"],
+      ["Accounts Officer",14,4,"12","Screening","05 Oct"],["Trade Marketing Executive",0,0,"0","Draft","not set"],["Delivery Driver",8,0,"31","Closed","28 Sep"]],
+    tableNote:"Days open counts from publication. Anything over 45 days gets flagged to the hiring manager."},
+  Attendance:{sub:"Attendance detail · March 2026",
+    kpis:[["Avg. check-in","08:57","clock",B,"3 min earlier than February","trending-down",G,"30px",MONO],
+      ["Office vs remote","96 / 32","building-2",B,"75% office","minus",N,"30px",""],
+      ["Avg. GPS accuracy","±11m","crosshair",G,"well inside the fence","minus",G,"30px",MONO],
+      ["Auto-closed days","4","moon",W,"no check-out recorded","trending-down",G,"30px",""]],
+    chartTitle:"Check-in distribution · this month",legendA:"On time",legendB:"Late",
+    chart:[["07-08",20,0,"20"],["08-09",62,3,"65"],["09-10",26,5,"31"],["10-11",6,2,"8"],["11+",2,2,"4"]],
+    chartNote:"128 check-ins across five hourly bands — 116 on time, 12 late. The 08:00–09:00 band is the real shift start; late arrivals cluster after 09:00, mostly Lagos mainland traffic.",
+    breakTitle:"Mode of work",
+    breakdown:[["Office",96,"96"],["Remote / field",32,"32"],["On leave",8,"8"],["Absent",6,"6"]],
+    breakNote:"Remote is a classification, not an exception — field roles are expected to be out.",
+    tableTitle:"Attendance by office",
+    cols:[["Office","left"],["Staff","right"],["Checked in","right"],["of which remote","right"],["Avg. accuracy","right"],["Geofence","right"]],
+    rows:[["Head Office · VI",64,58,18,"±8m","150m"],["Ikeja depot",41,36,4,"±14m","200m"],
+      ["Port Harcourt depot",22,19,7,"±11m","180m"],["Abuja office",15,15,3,"±9m","120m"]],
+    tableNote:"Checked in is inclusive — 128 people in total, of whom 32 were remote or in the field. Ikeja's ±14m average reflects warehouse steelwork degrading GPS indoors, which is why its fence is set to 200m."}
+};
+const OFFICES=[["Head Office · Victoria Island","6.4312°N, 3.4219°E","150 m",64,"ok"],
+  ["Ikeja depot","6.6018°N, 3.3515°E","200 m",41,"ok"],
+  ["Port Harcourt depot","4.8156°N, 7.0498°E","180 m",22,"ok"],
+  ["Abuja office","9.0579°N, 7.4951°E","120 m",15,"ok"]];
+const DEPTS=[["Sales","DPT-SLS",5,38],["Logistics","DPT-LOG",4,29],["Warehouse","DPT-WHS",3,31],["Finance","DPT-FIN",4,12],
+  ["People","DPT-HR",3,6],["Compliance","DPT-CMP",3,8],["Management","DPT-MGT",5,18]];
+const LEAVE_TYPES=[["Annual leave","Accrues 1.67 days a month","20 days",false],
+  ["Sick leave","3+ consecutive days needs a certificate","10 days",true],
+  ["Compassionate","At HR discretion","5 days",false],
+  ["Maternity","Statutory, full pay","16 weeks",true],
+  ["Unpaid leave","Needs HOD and HR approval","no cap",false]];
+const RATES=[["PAYE","Progressive, per FIRS bands","6 bands"],["Pension","Employee contribution","8.0%"],
+  ["Pension · employer","Company contribution","10.0%"],["NHF","National Housing Fund","2.5%"]];
+const SECURITY=[["Session timeout","Signed out after inactivity, with drafts preserved","30 min","info"],
+  ["Two-factor authentication","Required for Management and Accounts roles","Required","ok"],
+  ["Password minimum","10 characters, one number, one symbol","10 chars","info"],
+  ["Failed login lockout","After 3 attempts, for 15 minutes","3 / 15 min","info"],
+  ["Audit log retention","Every action, immutable","7 years","ok"]];
+
+const ROLES=[
+  {name:"Management",users:4,icon:"crown",risk:"high",desc:"Full visibility across the organisation, including payroll figures and the audit log.",
+   perms:{Employees:"full",Attendance:"full",Tasks:"full",Leave:"approve",Payroll:"full",Recruitment:"full",Documents:"full",Reports:"full",Settings:"full",Audit:"read"},
+   members:[["Ngozi Aliu","NA","Managing Director"],["Emeka Nwosu","EN","Director, Operations"],["Ifeoma Eze","IE","Head of Finance"],["Yusuf Lawal","YL","Head of Compliance"]]},
+  {name:"HR",users:6,icon:"users",risk:"high",desc:"Owns people data, hiring and documents. Cannot see payroll figures.",
+   perms:{Employees:"full",Attendance:"full",Tasks:"read",Leave:"approve",Payroll:"none",Recruitment:"full",Documents:"full",Reports:"read",Settings:"area",Audit:"none"},
+   members:[["Amaka Duru","AD","Head of People"],["Ruth Igwe","RI","HR Officer"],["Zainab Bala","ZB","HR Officer"],["Femi Ola","FO","Recruiter"]]},
+  {name:"Accounts",users:5,icon:"wallet",risk:"high",desc:"Runs payroll and publishes payslips. Sees salary for every employee.",
+   perms:{Employees:"read",Attendance:"read",Tasks:"none",Leave:"read",Payroll:"full",Recruitment:"none",Documents:"read",Reports:"read",Settings:"area",Audit:"none"},
+   members:[["Ifeoma Eze","IE","Head of Finance"],["Sade Kalu","SK","Accounts Officer"],["Uche Nna","UN","Payroll Officer"]]},
+  {name:"Head of Department",users:9,icon:"user-cog",risk:"medium",desc:"Manages one department: its people, tasks, visits and leave approvals.",
+   perms:{Employees:"partial",Attendance:"partial",Tasks:"full",Leave:"approve",Payroll:"none",Recruitment:"partial",Documents:"partial",Reports:"partial",Settings:"none",Audit:"none"},
+   members:[["Tunde Bello","TB","Head of Sales"],["Kunle Ade","KA","Warehouse Supervisor"],["Emeka Nwosu","EN","Director, Operations"]]},
+  {name:"Employee",users:118,icon:"user",risk:"low",desc:"Own attendance, tasks, leave, payslips and documents. Nothing else.",
+   perms:{Employees:"none",Attendance:"own",Tasks:"own",Leave:"own",Payroll:"own",Recruitment:"none",Documents:"own",Reports:"none",Settings:"none",Audit:"none"},
+   members:[["Chidi Uzo","CU","Field Sales Representative"],["Adaeze Okonkwo","AO","Sales Representative"],["Joy Edet","JE","Sales Representative"]]}
+];
+const MODULES=["Employees","Attendance","Tasks","Leave","Payroll","Recruitment","Documents","Reports","Settings","Audit"];
+const PERM={full:["Full","#E7F4EE","#0F7A54"],approve:["Approve","#EEF4FB","#16406F"],partial:["Dept only","#EEF4FB","#16406F"],
+  area:["Some areas","#EEF4FB","#16406F"],
+  read:["Read","#F1F4F8","#4A5666"],own:["Own only","#F1F4F8","#4A5666"],none:["None","#FFFFFF","#A6B0BE"]};
+const HIGH_RISK=["Payroll","Settings","Audit","Documents"];
+const AUDIT=[
+  ["Ifeoma Eze","IE","moved payroll period to In review","Payroll · March 2026","today 08:15","payroll","wallet","info",
+   [["Actor","Ifeoma Eze · Accounts"],["Action","period.status.change"],["From","Processing"],["To","In review"],["Entity","payroll_period #2026-03"],["IP","102.89.x.x · Lagos"],["Device","Chrome 128 · macOS"]]],
+  ["Amaka Duru","AD","opened a confidential document","Employment contract — Chidi Uzo","today 09:22","docs","file-lock","warn",
+   [["Actor","Amaka Duru · HR"],["Action","document.view"],["Entity","document #4471"],["Sensitivity","Confidential"],["Reason given","Contract renewal review"],["IP","102.89.x.x · Lagos"],["Device","Chrome 128 · Windows"]]],
+  ["Tunde Bello","TB","returned a field visit for re-capture","TSK-2041 · Chidi Uzo","today 15:20","visits","rotate-ccw","info",
+   [["Actor","Tunde Bello · Head of Sales"],["Action","visit.reject"],["Entity","field_visit #8812"],["Reason","Photo only shows the top shelf"],["Original kept","Yes · immutable"],["IP","102.89.x.x · Lagos"]]],
+  ["Ngozi Aliu","NA","granted the Accounts role to a user","Uche Nna · EMP-0155","yesterday 16:40","roles","shield-alert","bad",
+   [["Actor","Ngozi Aliu · Management"],["Action","role.grant"],["Entity","user #0155"],["Role granted","Accounts"],["Grants access to","Payroll · all salary figures"],["Second approver","Amaka Duru · HR"],["IP","102.89.x.x · Lagos"]]],
+  ["Amaka Duru","AD","corrected an attendance record","Sade Kalu · 08 March","yesterday 11:05","attendance","pencil","warn",
+   [["Actor","Amaka Duru · HR"],["Action","attendance.correct"],["Entity","attendance #33194"],["Field","check_out"],["From","(none · auto-closed)"],["To","17:20"],["Reason","Confirmed by phone with the employee"],["Original kept","Yes · immutable"]]],
+  ["System","SY","auto-closed 4 open attendance days","Nightly job · 00:00","yesterday 00:00","system","moon","mute",
+   [["Actor","System · scheduled job"],["Action","attendance.autoclose"],["Records affected","4"],["Flagged for HR","Yes"],["Policy","Open days close at midnight and are flagged, never deleted"]]],
+  ["Ifeoma Eze","IE","exported a payroll CSV","March 2026 · 142 rows","2 days ago 14:12","payroll","download","warn",
+   [["Actor","Ifeoma Eze · Accounts"],["Action","payroll.export"],["Entity","payroll_period #2026-03"],["Rows","142"],["Format","Bank transfer CSV"],["Contains","Salary and account numbers"],["IP","102.89.x.x · Lagos"]]],
+  ["Amaka Duru","AD","changed the default geofence radius","Settings · Attendance","3 days ago 10:30","settings","settings","warn",
+   [["Actor","Amaka Duru · HR"],["Action","settings.update"],["Key","attendance.default_radius"],["From","100 m"],["To","150 m"],["Affects","4 offices · 142 employees"]]]
+];
+const AUDIT_CATS=[["all","All activity"],["payroll","Payroll"],["docs","Documents"],["roles","Roles"],["attendance","Attendance"],["settings","Settings"],["system","System"]];
+const ORGS=[
+  ["CHF Heron Nigeria","chfheron",142,"Active","ok","FMCG distribution · Lagos","since Dec 1989","4 offices","Heron Blue"],
+  ["Sahel Foods Ltd.","sahelfoods",64,"Active","ok","Food processing · Kano","onboarded Jan 2026","2 offices","Amber"],
+  ["Lagos Clearing Co.","lagosclearing",28,"Trial","warn","Customs clearing · Apapa","trial ends 30 Sep","1 office","Teal"],
+  ["Delta Logistics","deltalogistics",0,"Setup","info","Haulage · Warri","invited 04 Sep","not set","default"],
+  ["Kano Retail Group","kanoretail",96,"Suspended","bad","Retail · Kano","suspended 12 Aug","3 offices","Slate"]
+];
+
+class Component extends DCLogic {
+  state={section:"reports",repTab:"Management",range:"March 2026",rangeOpen:false,
+    setTab:"Company",radius:150,notifs:[true,true,true,false,true,true],
+    roleIdx:0,grantOpen:false,grantRole:null,auditCat:"all",auditQuery:"",auditOpen:false,auditIdx:0,
+    orgIdx:0,toasts:[]};
+  componentDidMount(){this._icons();}
+  componentDidUpdate(){this._icons();}
+  _icons(){
+    const L=window.lucide; if(!L) return;
+    let need=false;
+    document.querySelectorAll("[data-icon]").forEach(el=>{
+      const n=el.getAttribute("data-icon"); if(!n) return;
+      const svg=el.querySelector("svg");
+      if(svg&&svg.classList.contains("lucide-"+n)) return;
+      el.innerHTML='<i data-lucide="'+n+'"></i>'; need=true;
+    });
+    if(need){try{L.createIcons();}catch(e){}}
+  }
+  toast(title,body){
+    const id=Date.now()+Math.random();
+    this.setState(s=>({toasts:[...s.toasts,{id,title,body}]}));
+    setTimeout(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})),3800);
+  }
+
+  renderVals(){
+    const s=this.state;
+    const chip=on=>({bg:on?"#1B4F8C":"#fff",fg:on?"#fff":"#4A5666",border:on?"#1B4F8C":"#CDD5E0"});
+    const rep=REPORTS[s.repTab];
+    const PILLA={ok:["#E7F4EE","#0F7A54"],warn:["#FDF2DF","#8A5600"],bad:["#FDECEA","#B42318"],info:["#EEF4FB","#16406F"],mute:["#F1F4F8","#4A5666"]};
+    const role=ROLES[s.roleIdx];
+    const aq=s.auditQuery.trim().toLowerCase();
+    const alist=AUDIT.filter(a=>{
+      if(s.auditCat!=="all"&&a[5]!==s.auditCat)return false;
+      if(aq&&!(a[0]+a[2]+a[3]).toLowerCase().includes(aq))return false;
+      return true;
+    });
+    const av=AUDIT[s.auditIdx];
+    const org=ORGS[s.orgIdx];
+    const maxBreak=Math.max(...rep.breakdown.map(b=>b[1]));
+    const chartMax=Math.max(...rep.chart.map(c=>c[1]+c[2]));
+    const r=s.radius;
+    const NOTIF=[["Attendance exceptions","HR gets a daily digest at 10:00 of anything needing review."],
+      ["Leave requests","The HOD is notified immediately; HR when it reaches them."],
+      ["Payslip published","Every employee gets an in-app and email notice on pay day."],
+      ["Task assigned","Instant push. Turning this off is why people miss work."],
+      ["Field visit returned","The representative is told the same minute, with the reason."],
+      ["Contract expiring","HR is warned 60 days out, then 30, then 7."]];
+
+    return {
+      sections:[["reports","Reports","bar-chart-3"],["settings","Settings","settings"],["roles","Roles & access","shield-check"],["audit","Audit log","file-clock"],["platform","Platform admin","layers"]]
+        .map(x=>({label:x[1],icon:x[2],pick:()=>this.setState({section:x[0],auditOpen:false,grantOpen:false}),
+          bg:s.section===x[0]?"#EEF4FB":"transparent",fg:s.section===x[0]?"#16406F":"#4A5666"})),
+      isReports:s.section==="reports",isSettings:s.section==="settings",
+      isRoles:s.section==="roles",isAudit:s.section==="audit",isPlatform:s.section==="platform",
+
+      roleList:ROLES.map((r,i)=>{const rk=r.risk==="high"?["#FDECEA","#B42318","High access"]:r.risk==="medium"?["#FDF2DF","#8A5600","Scoped"]:["#F1F4F8","#4A5666","Standard"];
+        return {name:r.name,users:r.users,icon:r.icon,desc:r.desc,riskLabel:rk[2],riskBg:rk[0],riskFg:rk[1],
+          border:i===s.roleIdx?"#1B4F8C":"#E3E8EF",pick:()=>this.setState({roleIdx:i})};}),
+      role:{name:role.name,desc:role.desc,users:role.users,icon:role.icon,
+        riskLabel:role.risk==="high"?"High access":role.risk==="medium"?"Scoped":"Standard",
+        riskBg:role.risk==="high"?"#FDECEA":role.risk==="medium"?"#FDF2DF":"#F1F4F8",
+        riskFg:role.risk==="high"?"#B42318":role.risk==="medium"?"#8A5600":"#4A5666",
+        hasWarning:role.risk==="high",
+        warning:role.name==="Accounts"?"This role can see every employee's salary and export bank details. Grant it to as few people as the business allows."
+          :role.name==="Management"?"This role can read the audit log and change any setting. Two approvers are required to grant it."
+          :"This role can open confidential documents including contracts and medical notes. Every view is logged.",
+        members:role.members.map(m=>({name:m[0],i:m[1],title:m[2]}))},
+      matrix:MODULES.map(m=>{
+        const cells=ROLES.map(r=>{const p=PERM[r.perms[m]];
+          return {label:p[0],bg:p[1],fg:p[2],border:r.perms[m]==="none"?"1px solid #E3E8EF":"1px solid transparent"};});
+        return {module:m,risky:HIGH_RISK.includes(m),cells};}),
+      matrixRoles:ROLES.map(r=>({name:r.name})),
+      openGrant:()=>this.setState({grantOpen:true,grantRole:role.name}),
+      grantOpen:s.grantOpen,grantRoleName:s.grantRole||"",
+      grantBody:s.grantRole==="Accounts"?"They will be able to see every employee's salary, run payroll and export bank account details."
+        :s.grantRole==="Management"?"They will be able to read the audit log, change any company setting and see all payroll figures."
+        :s.grantRole==="HR"?"They will be able to open confidential documents including contracts and medical certificates."
+        :"They will be able to manage their department's tasks, visits and leave approvals.",
+      grantNeedsSecond:s.grantRole==="Management"||s.grantRole==="Accounts",
+      closeGrant:()=>this.setState({grantOpen:false}),
+      doGrant:()=>{this.setState({grantOpen:false});this.toast("Role granted",s.grantRole+" · written to the audit log with both approvers");},
+
+      auditCats:AUDIT_CATS.map(c=>({label:c[1],pick:()=>this.setState({auditCat:c[0]}),...chip(s.auditCat===c[0])})),
+      auditQuery:s.auditQuery,onAuditQuery:ev=>this.setState({auditQuery:ev.target.value}),
+      auditCount:alist.length+" of "+AUDIT.length+" entries",
+      hasAudit:alist.length>0,noAudit:alist.length===0,
+      clearAudit:()=>this.setState({auditCat:"all",auditQuery:""}),
+      auditRows:alist.map(a=>{const c=PILLA[a[7]];
+        return {who:a[0],initials:a[1],what:a[2],entity:a[3],when:a[4],icon:a[6],bg:c[0],fg:c[1],
+          isSystem:a[0]==="System",
+          open:()=>this.setState({auditOpen:true,auditIdx:AUDIT.indexOf(a)})};}),
+      auditOpen:s.auditOpen,
+      closeAudit:()=>this.setState({auditOpen:false}),
+      ad:{who:av[0],initials:av[1],what:av[2],entity:av[3],when:av[4],icon:av[6],
+        bg:PILLA[av[7]][0],fg:PILLA[av[7]][1],
+        sensitive:av[7]==="bad"||av[7]==="warn",
+        meta:av[8].map(m=>({k:m[0],v:m[1]}))},
+
+      orgs:ORGS.map((o,i)=>{const c=PILLA[o[4]];
+        return {name:o[0],mark:o[0].slice(0,2).toUpperCase(),slug:o[1],users:o[2],status:o[3],bg:c[0],fg:c[1],sector:o[5],since:o[6],offices:o[7],
+          border:i===s.orgIdx?"#1B4F8C":"#E3E8EF",pick:()=>this.setState({orgIdx:i})};}),
+      org:{name:org[0],slug:org[1],users:org[2],status:org[3],bg:PILLA[org[4]][0],fg:PILLA[org[4]][1],
+        sector:org[5],since:org[6],offices:org[7],theme:org[8],
+        isSuspended:org[3]==="Suspended",isTrial:org[3]==="Trial",isSetup:org[3]==="Setup",
+        note:org[3]==="Suspended"?"Data is retained and read-only. Users see a notice explaining who to contact, never a broken screen."
+          :org[3]==="Trial"?"Full functionality with a visible countdown in the workspace header. No feature is withheld during a trial."
+          :org[3]==="Setup"?"Invited but nobody has signed in yet. The workspace exists with no data in it."
+          :"Running normally."},
+      platformStats:[["Organisations","5","layers",B],["Total users","330","users",B],["Active workspaces","2","check-circle-2",G],["Needs attention","2","alert-triangle",W]]
+        .map(x=>({label:x[0],value:x[1],icon:x[2],fg:x[3]})),
+
+      repSub:rep.sub,
+      repTabs:["Management","HR","Payroll","Tasks","Recruitment","Attendance"]
+        .map(t=>({label:t,pick:()=>this.setState({repTab:t}),...chip(s.repTab===t)})),
+      range:s.range,rangeOpen:s.rangeOpen,
+      toggleRange:()=>this.setState(x=>({rangeOpen:!x.rangeOpen})),
+      ranges:["March 2026","February 2026","Q1 2026","Last 6 months","Year to date"]
+        .map(x=>({label:x,bg:s.range===x?"#EEF4FB":"transparent",pick:()=>this.setState({range:x,rangeOpen:false})})),
+      kpis:rep.kpis.map(k=>({label:k[0],value:k[1],icon:k[2],fg:k[3],trend:k[4],trendIcon:k[5],trendFg:k[6],size:k[7],font:k[8]||"inherit"})),
+      chartTitle:rep.chartTitle,legendA:rep.legendA,legendB:rep.legendB,chartNote:rep.chartNote,
+      chart:rep.chart.map(c=>({label:c[0],top:c[3],
+        a:Math.round(c[1]/chartMax*80)+"%",
+        b:Math.round(c[2]/chartMax*80)+"%",
+        aRadius:c[2]>0?"0":"5px 5px 0 0"})),
+      twoSeries:!rep.single,
+      breakTitle:rep.breakTitle,breakNote:rep.breakNote,
+      breakdown:rep.breakdown.map((b,i)=>({label:b[0],value:b[2],pct:Math.round(b[1]/maxBreak*100)+"%",
+        fg:i===0?"#1B4F8C":i===1?"#2A63A0":i===2?"#4E80B9":i===3?"#7FA6D3":"#AFC9E7"})),
+      tableTitle:rep.tableTitle,tableNote:rep.tableNote,
+      h1:rep.cols[0][0],h2:rep.cols[1][0],h3:rep.cols[2][0],h4:rep.cols[3][0],h5:rep.cols[4][0],h6:rep.cols[5][0],
+      tableRows:rep.rows.map(row=>({c1:row[0],c2:row[1],c3:row[2],c4:row[3],c5:row[4],c6:row[5]})),
+      toastExport:()=>this.toast("Report exported",s.repTab+" · "+s.range+" · CSV and PDF"),
+
+      setTabs:["Company","Structure","Payroll","Security"].map(t=>({label:t,pick:()=>this.setState({setTab:t}),...chip(s.setTab===t)})),
+      setCompany:s.setTab==="Company",setStructure:s.setTab==="Structure",setPayroll:s.setTab==="Payroll",setSecurity:s.setTab==="Security",
+      offices:OFFICES.map(o=>({name:o[0],coords:o[1],radius:o[2],staff:o[3],bg:"#EEF4FB",fg:"#16406F"})),
+      radius:r,radiusLabel:r+" m",
+      onRadius:ev=>this.setState({radius:Number(ev.target.value)}),
+      radiusHint:r<=25?"Too tight for city offices. Ordinary GPS drift will classify office staff as remote on a cloudy day or indoors."
+        :r>=250?"Too loose. The fence would reach past the compound — someone across the street registers as being in the office."
+        :"Sensible. Typical phone accuracy in Lagos is ±8–25m, comfortably inside this fence.",
+      radiusBg:r<=25||r>=250?"#FFFDF7":"#F4FBF8",
+      radiusBorder:r<=25||r>=250?"#F6E3BF":"#BFE3D3",
+      deptRows:DEPTS.map(d=>({name:d[0],code:d[1],roles:d[2],staff:d[3]})),
+      leaveTypeRows:LEAVE_TYPES.map(l=>({name:l[0],rule:l[1],days:l[2],needsDoc:l[3]})),
+      rates:RATES.map(x=>({name:x[0],note:x[1],value:x[2]})),
+      notifSettings:NOTIF.map((x,i)=>({label:x[0],note:x[1],
+        bg:s.notifs[i]?"#1B4F8C":"#CDD5E0",align:s.notifs[i]?"flex-end":"flex-start",
+        toggle:()=>this.setState(st=>{const n=[...st.notifs];n[i]=!n[i];return {notifs:n};})})),
+      security:SECURITY.map(x=>{const c=x[3]==="ok"?["#E7F4EE","#0F7A54"]:["#F1F4F8","#4A5666"];
+        return {label:x[0],note:x[1],value:x[2],bg:c[0],fg:c[1]};}),
+
+      toast:()=>this.toast("Saved","Change written to the audit log"),
+      toastSave:()=>this.toast("Company profile saved","Logo and details updated on payslips and the careers site"),
+      toasts:s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

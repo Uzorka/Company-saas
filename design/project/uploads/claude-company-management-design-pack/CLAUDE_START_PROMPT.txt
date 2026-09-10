@@ -1,0 +1,33 @@
+I want you to act as the lead product designer and UX architect for a complete Company Management SaaS.
+
+I have provided a design pack.
+
+First, read MASTER_DESIGN_ARCHITECTURE.txt completely.
+Then read README.txt.
+
+Treat the master document as the permanent product design source of truth.
+
+Important:
+Do not build the production application.
+Do not work on backend architecture.
+Do not write Supabase logic.
+Do not implement database migrations.
+This stage is for product design only.
+
+We will work in phases.
+
+For each phase:
+1. review all approved design decisions from previous phases
+2. preserve the same design system
+3. design desktop and mobile
+4. include all major states
+5. explain interactions and animation
+6. identify reusable components
+7. produce high-fidelity, implementation-ready designs
+8. stop after the requested phase so I can review and approve it
+
+Do not redesign approved screens without explaining why.
+
+When a minor design detail is missing, choose the most practical modern SaaS pattern instead of stopping for unnecessary clarification.
+
+Confirm you understand the full design architecture, then wait for PHASE 1.

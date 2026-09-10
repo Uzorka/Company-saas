@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/*
+ * Heron design tokens.
+ * Source of truth: design/project/Phase 1 - Design System.dc.html and
+ * design/project/Developer Handoff.dc.html section 02.
+ *
+ * Light mode only, deliberately. The dark ramp below is defined because the
+ * design defines it, but per-screen dark treatments were never designed and
+ * the design forbids inventing them (DECISIONS.md D4). The tokens are declared
+ * as custom properties so dark becomes a swap under [data-theme="dark"] once a
+ * dark design phase exists. Do not wire it up before then.
+ */
+
+@theme {
+  /* Brand · Heron Blue */
+  --color-brand-50: #eef4fb;
+  --color-brand-100: #d9e6f5;
+  --color-brand-200: #afc9e7;
+  --color-brand-300: #7fa6d3;
+  --color-brand-400: #4e80b9;
+  --color-brand-500: #2a63a0;
+  --color-brand-600: #1b4f8c;
+  --color-brand-700: #16406f;
+  --color-brand-800: #112f52;
+
+  /* Neutral · surfaces & ink */
+  --color-bg: #ffffff;
+  --color-surface: #f8f9fb;
+  --color-canvas: #f1f4f8;
+  --color-border: #e3e8ef;
+  --color-border-hi: #cdd5e0;
+  --color-text-3: #7a8798;
+  --color-text-2: #4a5666;
+  --color-text: #131a22;
+
+  /* Semantic pairs · ink on tint, all >= 4.5:1.
+     Colour never carries meaning alone — every status also has a glyph and a word. */
+  --color-success-bg: #e7f4ee;
+  --color-success-fg: #0f7a54;
+  --color-warn-bg: #fdf2df;
+  --color-warn-fg: #8a5600;
+  --color-danger-bg: #fdecea;
+  --color-danger-fg: #b42318;
+  --color-info-bg: #eef4fb;
+  --color-info-fg: #16406f;
+
+  /* Validation surfaces */
+  --color-error-surface: #fffbfa;
+  --color-error-border: #fadcd9;
+  --color-success-surface: #f4fbf8;
+  --color-success-border: #bfe3d3;
+  --color-warn-surface: #fffdf7;
+  --color-warn-border: #f6e3bf;
+  --color-disabled-bg: #f1f4f8;
+  --color-disabled-fg: #a6b0be;
+
+  /* Type families */
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Type scale — size/line-height/weight/tracking per the design */
+  --text-display: 34px;
+  --text-display--line-height: 40px;
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: -0.025em;
+
+  --text-h1: 26px;
+  --text-h1--line-height: 32px;
+  --text-h1--font-weight: 600;
+  --text-h1--letter-spacing: -0.02em;
+
+  --text-h2: 20px;
+  --text-h2--line-height: 28px;
+  --text-h2--font-weight: 600;
+  --text-h2--letter-spacing: -0.015em;
+
+  --text-h3: 16px;
+  --text-h3--line-height: 24px;
+  --text-h3--font-weight: 600;
+
+  --text-body: 14px;
+  --text-body--line-height: 22px;
+
+  --text-small: 13px;
+  --text-small--line-height: 20px;
+
+  --text-overline: 11px;
+  --text-overline--line-height: 16px;
+  --text-overline--font-weight: 600;
+  --text-overline--letter-spacing: 0.09em;
+
+  /* data — mono, tabular. Every comparable figure: IDs, coordinates,
+     timestamps, currency, accuracy. */
+  --text-data: 13px;
+  --text-data--line-height: 20px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-e1: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-e2: 0 2px 6px -1px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-e3: 0 8px 24px -6px rgba(16, 24, 40, 0.12);
+  --shadow-e4: 0 20px 48px -12px rgba(16, 24, 40, 0.2);
+
+  /* Motion — 5 durations, 3 easings */
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --duration-confirm: 420ms;
+
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0.6, 0.25, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Shell geometry */
+  --spacing-sidebar: 186px;
+  --spacing-sidebar-collapsed: 58px;
+  --spacing-content-max: 1440px;
+}
+
+/* Dark ramp — defined, not applied. See the note at the top of this file. */
+:root {
+  --dark-bg: #0e1319;
+  --dark-surface: #151c24;
+  --dark-raised: #1d262f;
+  --dark-border: #2a3540;
+  --dark-brand: #6fa0d8;
+  --dark-text: #e6ebf1;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Every comparable figure is tabular. */
+  .font-mono,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus is never removed, only restyled. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+
+  /* Under prefers-reduced-motion transforms drop; opacity and colour stay.
+     A user who disables motion must still see that their check-in worked. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Skip-to-content is the first tab stop in the app shell. */
+  .sr-only-focusable {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only-focusable:focus {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 100;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 10px 16px;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border-radius: var(--radius-md);
+    background: var(--color-brand-600);
+    color: #fff;
+  }
+}

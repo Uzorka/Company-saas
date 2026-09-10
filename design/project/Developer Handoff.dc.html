@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:0;max-width:1600px;margin:0 auto;background:#F1F4F8">
+
+  <aside style="position:sticky;top:0;flex:1 1 232px;min-width:220px;max-width:270px;height:100vh;overflow:auto;padding:26px 18px 40px;background:#fff;border-right:1px solid #E3E8EF">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+      <span style="font-size:13px;font-weight:600;letter-spacing:-.01em">CHF Heron Nigeria</span>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;letter-spacing:.07em;text-transform:uppercase;margin-bottom:20px">Developer handoff · v1.0</div>
+    <nav style="display:flex;flex-direction:column;gap:1px">
+      <sc-for list="{{ contents }}" as="toc" hint-placeholder-count="14">
+        <a href="{{ toc.href }}" style="font-size:12px;line-height:17px;color:#4A5666;padding:7px 9px;border-radius:6px;display:flex;gap:8px" style-hover="background:#F1F4F8;color:#131A22"><span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;min-width:16px">{{ toc.n }}</span>{{ toc.label }}</a>
+      </sc-for>
+    </nav>
+    <div style="margin-top:22px;padding:13px;border-radius:10px;background:#FFFBFA;border:1px solid #FADCD9;font-size:11px;line-height:17px;color:#4A5666"><b style="color:#B42318">Implement, don't reinterpret.</b> Every visual decision here was approved in design. Where something is genuinely open it says so explicitly.</div>
+  </aside>
+
+  <main style="flex:1 1 640px;min-width:0;padding:0 0 100px">
+
+    <header style="padding:44px 40px 34px;background:#fff;border-bottom:1px solid #E3E8EF">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#1B4F8C;margin-bottom:13px">Design → development handoff</div>
+      <h1 style="margin:0 0 14px;font-size:clamp(27px,3.2vw,36px);line-height:1.14;font-weight:600;letter-spacing:-.025em;max-width:24ch">Company Management System</h1>
+      <p style="margin:0;max-width:70ch;font-size:15px;line-height:24px;color:#4A5666;text-wrap:pretty">A multi-tenant HR, attendance, field-verification and payroll platform for an FMCG distributor in Lagos. Eight design phases, 58 screens, 15 components. This document is the complete specification — routes, tokens, states, workflows and motion — sufficient to build from without further design input.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-top:24px">
+        <sc-for list="{{ tallies }}" as="tal" hint-placeholder-count="6">
+          <div style="background:#fff;padding:15px 16px;box-shadow:1px 0 0 #E3E8EF,0 1px 0 #E3E8EF">
+            <div style="font-size:22px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ tal.n }}</div>
+            <div style="font-size:11px;line-height:16px;color:#4A5666;margin-top:3px">{{ tal.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </header>
+
+    <!-- 01 STACK & PRINCIPLES -->
+    <section id="s01" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">01 — Ground rules</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Non-negotiables</h2>
+      <p style="margin:0 0 18px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">These hold across every screen. Where an implementation choice would violate one of these, the rule wins and the choice changes.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px">
+        <sc-for list="{{ principles }}" as="pr" hint-placeholder-count="8">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:17px 19px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px">{{ pr.k }}</div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666">{{ pr.v }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 02 TOKENS -->
+    <section id="s02" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">02 — Design tokens</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Colour</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">One brand ramp, one neutral ramp, four semantic pairs. No gradients. No second brand hue. Semantic colour never carries meaning alone — every state also has a glyph and a word.</p>
+
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:20px;margin-bottom:12px">
+        <sc-for list="{{ ramps }}" as="rmp" hint-placeholder-count="2">
+          <div style="margin-bottom:20px">
+            <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">{{ rmp.name }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:7px">
+              <sc-for list="{{ rmp.steps }}" as="stp" hint-placeholder-count="9">
+                <div>
+                  <div style="height:44px;border-radius:7px;background:{{ stp.hex }};border:1px solid #E3E8EF"></div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;margin-top:5px">{{ stp.token }}</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ stp.hex }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Semantic pairs · ink on tint, all ≥ 4.5:1</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          <sc-for list="{{ semantics }}" as="sem" hint-placeholder-count="4">
+            <div style="border:1px solid #E3E8EF;border-radius:9px;overflow:hidden">
+              <div style="background:{{ sem.bg }};color:{{ sem.fg }};padding:13px;font-size:13px;font-weight:600">{{ sem.glyph }} {{ sem.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;padding:8px 13px;border-top:1px solid #E3E8EF;line-height:15px">{{ sem.tokens }}<br />{{ sem.use }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:20px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Dark mode ramp — defined, not yet themed screen by screen</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:7px;margin-bottom:12px">
+          <sc-for list="{{ darkRamp }}" as="drk" hint-placeholder-count="6">
+            <div>
+              <div style="height:40px;border-radius:7px;background:{{ drk.hex }};border:1px solid #2A3540"></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;margin-top:5px">{{ drk.token }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ drk.hex }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:12px 14px;border-radius:9px;background:#FFFDF7;border:1px solid #F6E3BF;font-size:12px;line-height:19px;color:#4A5666"><b style="color:#8A5600">Open item.</b> Build light mode first. The dark ramp is authoritative for surfaces and ink, but per-screen dark treatments were not designed — do not invent them. Ship light-only and schedule dark as its own phase.</div>
+      </div>
+
+      <h2 style="margin:26px 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Typography</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">IBM Plex Sans for interface, IBM Plex Mono for every figure that can be compared vertically — IDs, coordinates, timestamps, currency, accuracy. Tabular figures on all of them.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:12px">
+        <sc-for list="{{ typeScale }}" as="ty" hint-placeholder-count="8">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;padding:13px 20px;border-bottom:1px solid #F1F4F8">
+            <span style="flex:0 0 128px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ ty.spec }}</span>
+            <span style="flex:1;min-width:0;font-size:{{ ty.size }};line-height:{{ ty.lh }};font-weight:{{ ty.weight }};letter-spacing:{{ ty.ls }};font-family:{{ ty.font }}">{{ ty.sample }}</span>
+            <span style="flex:0 0 auto;font-size:11px;color:#4A5666;max-width:26ch">{{ ty.use }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <h2 style="margin:26px 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Spacing, radius, elevation, icons</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:13px">Spacing · 4px base</div>
+          <sc-for list="{{ spacing }}" as="sp" hint-placeholder-count="8">
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:7px">
+              <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;width:32px">{{ sp.n }}</span>
+              <span style="flex:none;height:9px;width:{{ sp.w }};background:{{ sp.bg }};border-radius:2px"></span>
+              <span style="flex:1;min-width:0;font-size:11px;color:#4A5666">{{ sp.use }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:13px">Radius</div>
+          <sc-for list="{{ radii }}" as="rd" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:9px">
+              <span style="flex:none;width:44px;height:30px;background:#EEF4FB;border:1px solid #AFC9E7;border-radius:{{ rd.r }}"></span>
+              <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;width:52px">{{ rd.token }}</span>
+              <span style="flex:1;min-width:0;font-size:11px;color:#4A5666">{{ rd.use }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:13px">Elevation</div>
+          <sc-for list="{{ shadows }}" as="sh" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px">
+              <span style="flex:none;width:44px;height:30px;background:#fff;border-radius:7px;border:{{ sh.border }};box-shadow:{{ sh.css }}"></span>
+              <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;width:24px">{{ sh.token }}</span>
+              <span style="flex:1;min-width:0;font-size:11px;color:#4A5666">{{ sh.use }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:13px">Icon rules</div>
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:12px;line-height:19px;color:#4A5666">
+            <sc-for list="{{ iconRules }}" as="ir" hint-placeholder-count="5">
+              <div><b style="color:#131A22">{{ ir.k }}</b> — {{ ir.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ROUTES -->
+    <section id="s03" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">03 — Route map &amp; role access</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Every route, and who reaches it</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Two apps on one codebase: a public marketing site and an authenticated multi-tenant workspace. A user holding several roles gets the union of their permissions — scopes add, never cancel.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+        <sc-for list="{{ routeGroups }}" as="rg" hint-placeholder-count="5">
+          <div>
+            <div style="padding:12px 20px;background:#F8F9FB;border-bottom:1px solid #E3E8EF;border-top:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+              <span style="font-size:13px;font-weight:600">{{ rg.name }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ rg.base }}</span>
+            </div>
+            <sc-for list="{{ rg.routes }}" as="rt" hint-placeholder-count="6">
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:12px 20px;border-bottom:1px solid #F1F4F8">
+                <span style="flex:1 1 200px;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#1B4F8C;word-break:break-all">{{ rt.path }}</span>
+                <span style="flex:1 1 190px;min-width:0;font-size:12px;line-height:18px;color:#4A5666">{{ rt.purpose }}</span>
+                <span style="flex:0 1 200px;min-width:0;font-size:11px;line-height:17px;color:#131A22;font-weight:500">{{ rt.roles }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 04 PERMISSION MATRIX -->
+    <section id="s04" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">04 — Permissions</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Ten modules × five roles</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Six distinct scope levels. <b>Own only</b> is not a weaker Read — it is a different scope. <b>Some areas</b> is scoped by subject, not department.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:12px">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:700px">
+            <thead>
+              <tr style="background:#F8F9FB">
+                <th style="padding:11px 20px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">Module</th>
+                <th style="padding:11px 10px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">Management</th>
+                <th style="padding:11px 10px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">HR</th>
+                <th style="padding:11px 10px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">Accounts</th>
+                <th style="padding:11px 10px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">HOD</th>
+                <th style="padding:11px 10px;text-align:center;font:600 12px 'IBM Plex Sans';color:#4A5666;white-space:nowrap">Employee</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ matrix }}" as="mx" hint-placeholder-count="10">
+                <tr style="border-top:1px solid #F1F4F8">
+                  <td style="padding:10px 20px;font-size:13px;font-weight:500;white-space:nowrap">{{ mx.flag }}{{ mx.module }}</td>
+                  <td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:{{ mx.m.bg }};color:{{ mx.m.fg }};border:{{ mx.m.border }};font-size:10px;font-weight:600;white-space:nowrap">{{ mx.m.label }}</span></td>
+                  <td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:{{ mx.hr.bg }};color:{{ mx.hr.fg }};border:{{ mx.hr.border }};font-size:10px;font-weight:600;white-space:nowrap">{{ mx.hr.label }}</span></td>
+                  <td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:{{ mx.ac.bg }};color:{{ mx.ac.fg }};border:{{ mx.ac.border }};font-size:10px;font-weight:600;white-space:nowrap">{{ mx.ac.label }}</span></td>
+                  <td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:{{ mx.hd.bg }};color:{{ mx.hd.fg }};border:{{ mx.hd.border }};font-size:10px;font-weight:600;white-space:nowrap">{{ mx.hd.label }}</span></td>
+                  <td style="padding:8px 10px;text-align:center"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:{{ mx.em.bg }};color:{{ mx.em.fg }};border:{{ mx.em.border }};font-size:10px;font-weight:600;white-space:nowrap">{{ mx.em.label }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:13px 20px;background:#F8F9FB;border-top:1px solid #E3E8EF;font-size:12px;line-height:19px;color:#4A5666">▲ marks a module carrying salary, personal or audit data. Granting a role with Full access to any flagged module requires a written reason and a second approver.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
+        <sc-for list="{{ scopes }}" as="sc" hint-placeholder-count="7">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:16px 18px">
+            <span style="display:inline-block;padding:3px 9px;border-radius:999px;background:{{ sc.bg }};color:{{ sc.fg }};border:{{ sc.border }};font-size:10px;font-weight:600;margin-bottom:9px">{{ sc.label }}</span>
+            <div style="font-size:12px;line-height:19px;color:#4A5666">{{ sc.def }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 05 SCREEN SPECS -->
+    <section id="s05" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">05 — Screen specifications</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Fifteen screen groups, fully specified</h2>
+      <p style="margin:0 0 18px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Each group below covers its member screens with a single spec, because they share layout, components and behaviour. Where a member screen differs materially it is called out in <b>Special states</b>.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ screenSpecs }}" as="sp2" hint-placeholder-count="15">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:13px;overflow:hidden">
+            <div style="padding:17px 20px;border-bottom:1px solid #E3E8EF;background:#F8F9FB">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:7px">
+                <span style="font-size:16px;font-weight:600;letter-spacing:-.01em">{{ sp2.name }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ sp2.count }} screens · phase {{ sp2.phase }}</span>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#1B4F8C;word-break:break-all;margin-bottom:8px">{{ sp2.route }}</div>
+              <div style="font-size:13px;line-height:20px;color:#4A5666">{{ sp2.purpose }}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));background:#fff">
+              <sc-for list="{{ sp2.fields }}" as="fd" hint-placeholder-count="8">
+                <div style="background:#fff;padding:14px 18px;box-shadow:1px 0 0 #F1F4F8,0 1px 0 #F1F4F8">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#7A8798;margin-bottom:6px">{{ fd.k }}</div>
+                  <div style="font-size:12px;line-height:19px;color:#4A5666">{{ fd.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 06 COMPONENTS -->
+    <section id="s06" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">06 — Component inventory</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Fifteen components cover 58 screens</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">No screen introduces a one-off pattern. If a new requirement doesn't fit one of these, that is a design question — raise it rather than inventing a variant.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+        <sc-for list="{{ components }}" as="cp" hint-placeholder-count="15">
+          <div style="padding:15px 20px;border-bottom:1px solid #F1F4F8">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+              <span style="font-size:14px;font-weight:600">{{ cp.name }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ cp.used }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">variants</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ cp.variants }}</div></div>
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">states</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ cp.states }}</div></div>
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">rules</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ cp.rules }}</div></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 07 NAVIGATION -->
+    <section id="s07" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">07 — Navigation</div>
+      <h2 style="margin:0 0 16px;font-size:21px;font-weight:600;letter-spacing:-.015em">Desktop and mobile rules</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px">
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Desktop · ≥ 1024px</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;line-height:19px;color:#4A5666">
+            <sc-for list="{{ navDesktop }}" as="nd" hint-placeholder-count="7">
+              <div><b style="color:#131A22">{{ nd.k }}</b> — {{ nd.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Mobile · &lt; 640px</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;line-height:19px;color:#4A5666">
+            <sc-for list="{{ navMobile }}" as="nm" hint-placeholder-count="7">
+              <div><b style="color:#131A22">{{ nm.k }}</b> — {{ nm.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 BREAKPOINTS -->
+    <section id="s08" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">08 — Responsive</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Five breakpoints</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Desktop-first design, but mobile is not a shrunken desktop. Under 640px a table becomes cards — horizontally scrolling a payroll table on a phone is not an acceptable implementation.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+        <sc-for list="{{ breakpoints }}" as="bp" hint-placeholder-count="5">
+          <div style="padding:15px 20px;border-bottom:1px solid #F1F4F8">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:8px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#1B4F8C">{{ bp.range }}</span>
+              <span style="font-size:13px;font-weight:600">{{ bp.name }}</span>
+              <span style="font-size:11px;color:#7A8798">{{ bp.mode }}</span>
+            </div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666">{{ bp.rules }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 09 FORMS & STATES -->
+    <section id="s09" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">09 — Forms, validation, universal states</div>
+      <h2 style="margin:0 0 16px;font-size:21px;font-weight:600;letter-spacing:-.015em">Behaviour every form and list shares</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-bottom:12px">
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Form behaviour</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;line-height:19px;color:#4A5666">
+            <sc-for list="{{ formRules }}" as="fr" hint-placeholder-count="8">
+              <div><b style="color:#131A22">{{ fr.k }}</b> — {{ fr.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:19px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Validation states</div>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <sc-for list="{{ validation }}" as="vl" hint-placeholder-count="5">
+              <div style="padding:11px 13px;border-radius:9px;background:{{ vl.bg }};border:1px solid {{ vl.border }}">
+                <div style="font-size:12px;font-weight:600;color:{{ vl.fg }};margin-bottom:4px">{{ vl.name }}</div>
+                <div style="font-size:12px;line-height:18px;color:#4A5666">{{ vl.spec }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+        <sc-for list="{{ uniStates }}" as="us" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid {{ us.border }};border-radius:12px;padding:18px">
+            <div style="font-size:13px;font-weight:600;color:{{ us.fg }};margin-bottom:8px">{{ us.name }}</div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666;margin-bottom:10px">{{ us.spec }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:16px;color:#7A8798;padding-top:9px;border-top:1px solid #F1F4F8">{{ us.copy }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 10 MOTION -->
+    <section id="s10" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">10 — Animation specification</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Sixteen animations, five durations, three easings</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Motion answers one of three questions: where did this come from, did my action land, or what changed? Nothing decorative ships. See <b>Phase 8</b> for these running live.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:12px">
+        <sc-for list="{{ durations }}" as="du" hint-placeholder-count="5">
+          <div style="background:#fff;padding:14px 16px;box-shadow:1px 0 0 #E3E8EF,0 1px 0 #E3E8EF">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#1B4F8C">{{ du.name }}</div>
+            <div style="font-size:11px;line-height:17px;color:#4A5666;margin-top:5px">{{ du.use }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:18px 20px;margin-bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:20px;color:#4A5666">
+        standard · cubic-bezier(.2,.8,.2,1) — position, size, colour<br />enter&nbsp;&nbsp;&nbsp;&nbsp;· cubic-bezier(0,.6,.25,1) — things arriving<br />exit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;· cubic-bezier(.4,0,1,1) — things leaving
+      </div>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+        <sc-for list="{{ motions }}" as="mo" hint-placeholder-count="16">
+          <div style="padding:14px 20px;border-bottom:1px solid #F1F4F8">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:600">{{ mo.name }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;background:#EEF4FB;color:#16406F">{{ mo.dur }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px">
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">trigger</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ mo.trigger }}</div></div>
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">easing &amp; character</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ mo.easing }}</div></div>
+              <div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">reduced motion</span><div style="font-size:12px;line-height:18px;color:#4A5666;margin-top:3px">{{ mo.reduced }}</div></div>
+            </div>
+          </div>
+        </sc-for>
+        <div style="padding:13px 20px;background:#F8F9FB;font-size:12px;line-height:19px;color:#4A5666">Under <span style="font-family:'IBM Plex Mono',monospace">prefers-reduced-motion</span>: transforms drop, opacity and colour stay. A user who disables motion must still see that their check-in worked. Entrance animations run on first paint only — refiltering a table must never re-run them.</div>
+      </div>
+    </section>
+
+    <!-- 11 WORKFLOWS -->
+    <section id="s11" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">11 — Workflows</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Eight stateful workflows</h2>
+      <p style="margin:0 0 18px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">These carry state across roles and time. Each lists its states, who advances it, what is irreversible, and what must be written to the audit log.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ workflows }}" as="wf" hint-placeholder-count="8">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:13px;overflow:hidden">
+            <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;background:#F8F9FB">
+              <div style="font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px">{{ wf.name }}</div>
+              <div style="font-size:12px;line-height:19px;color:#4A5666">{{ wf.purpose }}</div>
+            </div>
+            <div style="padding:16px 20px;border-bottom:1px solid #F1F4F8">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#7A8798;margin-bottom:10px">States</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center">
+                <sc-for list="{{ wf.states }}" as="ws" hint-placeholder-count="5">
+                  <span style="padding:4px 10px;border-radius:999px;background:{{ ws.bg }};color:{{ ws.fg }};font-size:11px;font-weight:600;white-space:nowrap">{{ ws.label }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));background:#fff">
+              <sc-for list="{{ wf.fields }}" as="wfd" hint-placeholder-count="4">
+                <div style="background:#fff;padding:14px 18px;box-shadow:1px 0 0 #F1F4F8,0 1px 0 #F1F4F8">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#7A8798;margin-bottom:6px">{{ wfd.k }}</div>
+                  <div style="font-size:12px;line-height:19px;color:#4A5666">{{ wfd.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 12 DASHBOARDS -->
+    <section id="s12" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">12 — Dashboards by role</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Five dashboards, one rule</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Every dashboard leads with the decision or number that role opened the app to find — never with a chart, never with module order.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ dashboards }}" as="db" hint-placeholder-count="5">
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:18px 20px">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:14px;font-weight:600">{{ db.role }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ db.route }}</span>
+            </div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666;margin-bottom:12px"><b style="color:#131A22">Leads with:</b> {{ db.leads }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:11px">
+              <sc-for list="{{ db.kpis }}" as="dk" hint-placeholder-count="4">
+                <div style="padding:11px 13px;border-radius:9px;background:#F8F9FB;border:1px solid #E3E8EF">
+                  <div style="font-size:11px;color:#7A8798">{{ dk.k }}</div>
+                  <div style="font-size:15px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums">{{ dk.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666">{{ db.below }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 13 BUILD ORDER -->
+    <section id="s13" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">13 — Build sequence</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">What to build, in what order</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">The verification loop is why this product exists. Build it early enough that real field data is arriving while the rest is still being written.</p>
+      <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+        <sc-for list="{{ buildOrder }}" as="bo" hint-placeholder-count="7">
+          <div style="display:flex;gap:14px;padding:16px 20px;border-bottom:1px solid #F1F4F8">
+            <span style="flex:none;width:26px;height:26px;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 12px 'IBM Plex Mono'">{{ bo.n }}</span>
+            <span style="flex:1;min-width:0">
+              <span style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">{{ bo.name }}</span>
+              <span style="display:block;font-size:12px;line-height:19px;color:#4A5666">{{ bo.why }}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 14 OPEN -->
+    <section id="s14" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">14 — Open items</div>
+      <h2 style="margin:0 0 8px;font-size:21px;font-weight:600;letter-spacing:-.015em">Not design decisions — do not resolve these in code</h2>
+      <p style="margin:0 0 16px;max-width:68ch;font-size:14px;line-height:22px;color:#4A5666">Everything else in this document is settled. These five need the client, or legal counsel. Build the stated default and leave the alternative reachable.</p>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <sc-for list="{{ opens }}" as="op" hint-placeholder-count="5">
+          <div style="background:#fff;border:1px solid #F6E3BF;border-radius:12px;padding:17px 19px">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+              <span style="font-size:13px;font-weight:600;color:#8A5600">{{ op.name }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">needs {{ op.who }}</span>
+            </div>
+            <div style="font-size:12px;line-height:19px;color:#4A5666;margin-bottom:9px">{{ op.question }}</div>
+            <div style="font-size:12px;line-height:19px;color:#131A22;padding-top:9px;border-top:1px solid #F1F4F8"><b>Build this meanwhile:</b> {{ op.fallback }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- 15 SOURCE -->
+    <section id="s15" style="padding:38px 40px 0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7A8798;margin-bottom:8px">15 — Source files</div>
+      <h2 style="margin:0 0 16px;font-size:21px;font-weight:600;letter-spacing:-.015em">Where each spec came from</h2>
+      <div style="background:#131A22;border-radius:13px;padding:24px;color:#E6EBF1">
+        <div style="font-size:13px;line-height:21px;color:#9AA7B6;margin-bottom:18px">All eight phase files are live and interactive. When this document and a phase file disagree, <b style="color:#fff">the phase file is correct</b> — it is the designed artefact, this is the summary of it.</div>
+        <div style="display:flex;flex-direction:column;gap:1px;background:#2A3540;border-radius:10px;overflow:hidden">
+          <sc-for list="{{ sources }}" as="src" hint-placeholder-count="8">
+            <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;padding:13px 16px;background:#151C24">
+              <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6FA0D8;min-width:64px">{{ src.n }}</span>
+              <span style="flex:1 1 200px;min-width:0;font-size:13px;font-weight:500;color:#fff">{{ src.file }}</span>
+              <span style="flex:1 1 180px;min-width:0;font-size:12px;line-height:18px;color:#9AA7B6">{{ src.covers }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const MONO="'IBM Plex Mono',monospace";
+const PILL={ok:["#E7F4EE","#0F7A54"],warn:["#FDF2DF","#8A5600"],bad:["#FDECEA","#B42318"],info:["#EEF4FB","#16406F"],mute:["#F1F4F8","#4A5666"]};
+const P=(k,label)=>({label,bg:PILL[k][0],fg:PILL[k][1],border:k==="none"?"1px solid #E3E8EF":"1px solid transparent"});
+const NONE={label:"None",bg:"#fff",fg:"#7A8798",border:"1px solid #E3E8EF"};
+
+const CONTENTS=[["01","Ground rules","#s01"],["02","Design tokens","#s02"],["03","Route map & role access","#s03"],
+  ["04","Permissions","#s04"],["05","Screen specifications","#s05"],["06","Component inventory","#s06"],
+  ["07","Navigation","#s07"],["08","Responsive","#s08"],["09","Forms, validation, states","#s09"],
+  ["10","Animation specification","#s10"],["11","Workflows","#s11"],["12","Dashboards by role","#s12"],
+  ["13","Build sequence","#s13"],["14","Open items","#s14"],["15","Source files","#s15"]];
+
+const PRINCIPLES=[
+  ["Verification is the product","Attendance and field-visit proof are why this exists. Every design decision in those flows — consent copy, one-off capture, visible accuracy — is load-bearing. Do not simplify them."],
+  ["Consent-first, never surveillant","Location is read at the moment of the action and never in the background. The copy says so, on screen, every time. There is no background location permission in this product."],
+  ["Nothing is destroyed","Corrections are new records referencing the original. Audit entries are immutable for everyone, including Management. Rejected applicants and returned visits stay visible."],
+  ["Restricted, not hidden","A module a role can't open stays in the sidebar with a lock. Silently removing navigation makes users think the product is broken."],
+  ["Colour is never the only cue","Every status carries colour, a glyph and a word. The system must survive greyscale printing and colour-blind vision."],
+  ["Mobile is not a shrunken desktop","Under 640px tables become cards, filters become sheets, the primary action pins above the nav. No horizontal table scrolling on phones."],
+  ["One primary action per view","If two actions compete for primary, the design is wrong — raise it. Destructive actions are never the default focus."],
+  ["State the consequence","Irreversible actions restate what will happen in the same words everywhere they appear. Publishing payroll and granting roles both do this."]
+];
+
+const RAMPS=[
+  ["Brand · Heron Blue",[["brand-50","#EEF4FB"],["brand-100","#D9E6F5"],["brand-200","#AFC9E7"],["brand-300","#7FA6D3"],["brand-400","#4E80B9"],["brand-500","#2A63A0"],["brand-600","#1B4F8C"],["brand-700","#16406F"],["brand-800","#112F52"]]],
+  ["Neutral · surfaces & ink",[["bg","#FFFFFF"],["surface","#F8F9FB"],["canvas","#F1F4F8"],["border","#E3E8EF"],["border-hi","#CDD5E0"],["text-3","#7A8798"],["text-2","#4A5666"],["text","#131A22"]]]
+];
+const SEMANTICS=[
+  ["Success","●","#E7F4EE","#0F7A54","success-bg #E7F4EE · success-fg #0F7A54","Present, verified, approved, published"],
+  ["Warning","▲","#FDF2DF","#8A5600","warn-bg #FDF2DF · warn-fg #8A5600","Late, in review, restricted, needs attention"],
+  ["Danger","✕","#FDECEA","#B42318","danger-bg #FDECEA · danger-fg #B42318","Absent, rejected, confidential, denied"],
+  ["Info","◇","#EEF4FB","#16406F","info-bg #EEF4FB · info-fg #16406F","Remote, in progress, informational"]
+];
+const DARK=[["dark-bg","#0E1319"],["dark-surface","#151C24"],["dark-raised","#1D262F"],["dark-border","#2A3540"],["dark-brand","#6FA0D8"],["dark-text","#E6EBF1"]];
+
+const TYPE=[
+  ["display / 34·40 / 600 / -.025em","34px","40px","600","-.025em","inherit","Attendance today","Page hero, dashboard headline figure"],
+  ["h1 / 26·32 / 600 / -.02em","26px","32px","600","-.02em","inherit","Payroll — March 2026","Screen title"],
+  ["h2 / 20·28 / 600 / -.015em","20px","28px","600","-.015em","inherit","Field visit verification","Section heading"],
+  ["h3 / 16·24 / 600","16px","24px","600","0","inherit","Pending approvals","Card and panel heading"],
+  ["body / 14·22 / 400","14px","22px","400","0","inherit","Default interface text and table cells.","Body, table cells, labels"],
+  ["small / 13·20 / 400","13px","20px","400","0","inherit","Secondary text and row metadata.","Helper copy, metadata"],
+  ["overline / 11 / 600 / .09em","11px","16px","600",".09em","inherit","SECTION LABEL","Section eyebrow, uppercase"],
+  ["data / mono 13·20 / tabular","13px","20px","400","0",MONO,"₦12,480,900.00 · 6.4312°N · ±8m · 09:04:22","All comparable figures, IDs, coordinates, timestamps"]
+];
+const SPACING=[["4","4px","#AFC9E7","Icon-to-label gaps"],["8","8px","#AFC9E7","Chip gaps, tight stacks"],["12","12px","#7FA6D3","Card internal gaps"],["16","16px","#7FA6D3","Card padding mobile, grid gaps"],["24","24px","#4E80B9","Card padding desktop"],["32","32px","#4E80B9","Section internal spacing"],["48","48px","#2A63A0","Between major sections"],["64","64px","#1B4F8C","Page top spacing"]];
+const RADII=[["4px","radius-sm","Badges on dense rows, inline chips"],["6px","radius-md","Buttons, inputs, selects, menu items"],["10px","radius-lg","Popovers, inner panels, list cards"],["14px","radius-xl","Cards, dialogs, drawers, main panels"],["999px","radius-pill","Status pills, filter chips, avatars"]];
+const SHADOWS=[["e0","none","1px solid #E3E8EF","Flat — inside a bordered container"],
+  ["e1","0 1px 2px rgba(16,24,40,.06)","1px solid #E3E8EF","Resting cards"],
+  ["e2","0 2px 6px -1px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.06)","1px solid #E3E8EF","Card hover"],
+  ["e3","0 8px 24px -6px rgba(16,24,40,.12)","1px solid #E3E8EF","Popovers, menus, dragged cards"],
+  ["e4","0 20px 48px -12px rgba(16,24,40,.2)","none","Dialogs and drawers"]];
+const ICON_RULES=[["Library","Lucide, no substitutions. If an icon doesn't exist in Lucide, use a word instead."],
+  ["Stroke","1.75px at every size. Never filled, never two-tone, never duotone."],
+  ["Sizes","16px inline in text, 18px in nav items and buttons, 22px in headers, 24px+ in empty states only."],
+  ["Colour","Inherits text colour by default. Semantic colour only when the icon is the status indicator."],
+  ["Never alone","An icon-only button needs an aria-label and a tooltip. Icons never replace a status word."]];
+
+const ROUTES=[
+  ["Public site","chfheron.com",[
+    ["/","Company home — what the business does, who it serves","Public"],
+    ["/about","History, leadership, coverage","Public"],
+    ["/services","Distribution, warehousing, trade marketing","Public"],
+    ["/careers","Open roles list","Public"],
+    ["/careers/:slug","Role detail and application form","Public"],
+    ["/contact","Enquiry form, offices, map","Public"],
+    ["/login","Entry into the workspace","Public"]]],
+  ["Auth","app.heron.app/auth",[
+    ["/auth/login","Company code, email, password","Unauthenticated"],
+    ["/auth/forgot","Request a reset link","Unauthenticated"],
+    ["/auth/reset/:token","Set a new password","Unauthenticated"],
+    ["/auth/workspace","Pick a workspace when a user belongs to several","Authenticated, multi-tenant"]]],
+  ["Core workspace","app.heron.app/:org",[
+    ["/dashboard","Role-specific landing view","All roles — content differs"],
+    ["/employees","Directory with filters and bulk actions","HR, Management full · HOD dept only"],
+    ["/employees/:id","Profile: personal, employment, documents, attendance","HR, Management · HOD dept · self"],
+    ["/employees/new","Create an employee record","HR, Management"],
+    ["/departments","Department list, heads, headcount","HR, Management · HOD own"],
+    ["/attendance","Today's attendance with exceptions","HR, Management · HOD dept · Employee own"],
+    ["/attendance/history","Historical records and corrections","HR, Management · HOD dept · Employee own"],
+    ["/attendance/check-in","Location then selfie capture","Employee, all roles for themselves"],
+    ["/tasks","Board and list views","HOD full · Employee own"],
+    ["/tasks/:id","Task detail, proof requirement, activity","HOD · assignee"],
+    ["/tasks/:id/verify","Field visit capture: photo, GPS, report","Assignee only"],
+    ["/leave","Balance and own requests","All roles"],
+    ["/leave/approvals","Approval queue sorted by wait time","HOD, HR"],
+    ["/payroll","Period list and current run status","Accounts, Management"],
+    ["/payroll/:period","Run detail, adjustments, per-employee rows","Accounts, Management"],
+    ["/payslips","Published payslips","Accounts, Management all · Employee own"],
+    ["/payslips/:id","Payslip document, print and PDF","Accounts, Management · owner"],
+    ["/recruitment","Jobs list and pipeline board","HR, Management"],
+    ["/recruitment/applicants/:id","Applicant profile, CV, panel notes","HR, Management"],
+    ["/documents","Library, three sensitivity levels","All roles — scoped by sensitivity"],
+    ["/reports","Six report families","Management, HR, Accounts, HOD scoped"],
+    ["/settings","Company, structure, payroll, security","Management full · HR and Accounts by area"],
+    ["/settings/roles","Role list and permission matrix","Management"],
+    ["/audit","Immutable activity log","Management read-only"]]],
+  ["Platform admin","admin.heron.app",[
+    ["/organisations","Tenant list with status","Platform owner"],
+    ["/organisations/:id","Tenant detail, configuration, status","Platform owner"]]]
+];
+
+const MATRIX=[
+  ["Employees",false,"full","full","read","partial","none"],
+  ["Attendance",false,"full","full","read","partial","own"],
+  ["Tasks",false,"full","read","none","full","own"],
+  ["Leave",false,"approve","approve","read","approve","own"],
+  ["Payroll",true,"full","none","full","none","own"],
+  ["Recruitment",false,"full","full","none","partial","none"],
+  ["Documents",true,"full","full","read","partial","own"],
+  ["Reports",false,"full","read","read","partial","none"],
+  ["Settings",true,"full","area","area","none","none"],
+  ["Audit",true,"read","none","none","none","none"]
+];
+const PERM_LABEL={full:["ok","Full"],approve:["info","Approve"],partial:["info","Dept only"],area:["info","Some areas"],read:["mute","Read"],own:["mute","Own only"],none:["none","None"]};
+const SCOPES=[
+  ["ok","Full","Create, read, update and delete across the whole organisation."],
+  ["info","Approve","Read everything in the module, and advance requests — but not create or delete them."],
+  ["info","Dept only","Everything the role can do, scoped to the department the user heads. Includes their own team's records only."],
+  ["info","Some areas","Scoped by subject rather than department. HR owns departments and leave types; Accounts owns payroll settings and statutory rates; neither can open the other's."],
+  ["mute","Read","See everything in the module, change nothing."],
+  ["mute","Own only","See and act on their own record and nothing else. This is a different scope, not a weaker Read — an Employee sees their own payslip in a module they otherwise have no access to."],
+  ["none","None","No access. The nav item stays visible with a lock glyph and shows the permission state — never a 404, never silently removed."]
+];
+
+const SCREEN_SPECS=[
+  ["Public website","5","02","/ · /about · /services · /careers · /contact",
+   "Establish credibility for an FMCG distributor and feed the hiring pipeline. Read mostly on phones over patchy mobile data.",
+   [["Sections","Hero with one claim, coverage figures, services grid, leadership, client logos, careers teaser, contact form, footer with offices"],
+    ["Components","Nav, button, card, input, footer. No app components — this is a separate surface"],
+    ["Data displayed","Static content, plus live open-role count from /recruitment"],
+    ["Actions","Apply for a role, submit an enquiry, sign in"],
+    ["Responsive","Single column under 768px, hamburger nav, sticky Apply on role pages"],
+    ["Interaction","No parallax, no carousel, no scroll-jacking. Anchor links only"],
+    ["Motion","Section fade-in on first scroll only, 200ms. Nothing on repeat scroll"],
+    ["Special states","Careers empty state when no roles are open — says so plainly and offers a speculative-application address"]]],
+  ["Auth","4","03","/auth/login · /auth/forgot · /auth/reset/:token · /auth/workspace",
+   "Get a known user into the right tenant with the fewest fields. Company code is remembered after first success.",
+   [["Sections","Brand mark, single-column form, one primary action, secondary links below"],
+    ["Components","Input, button, inline error, toast"],
+    ["Data displayed","Nothing before authentication. Workspace picker lists tenant name, role and last activity"],
+    ["Actions","Sign in, request reset, set password, choose workspace"],
+    ["Responsive","Identical single column at all widths, max 400px, vertically centred"],
+    ["Interaction","Validation on blur, never on keystroke. Failed attempts counted with a visible lockout warning at 2"],
+    ["Motion","Field shake is not used. Errors appear with a 140ms fade only"],
+    ["Special states","Locked account after 3 attempts for 15 min · expired reset token · single-workspace users skip the picker entirely"]]],
+  ["Dashboards","5","03","/dashboard",
+   "One route, five layouts. Each leads with what that role opened the app to resolve.",
+   [["Sections","Alert band if anything is blocked, KPI row, then role-specific panels"],
+    ["Components","Stat card, status pill, table, timeline, empty state"],
+    ["Data displayed","See section 12 for the exact KPI set per role"],
+    ["Actions","Jump to the blocked item. Every KPI is a link to its filtered list"],
+    ["Responsive","KPI grid 4→2→1 columns. Alert band always full width and first"],
+    ["Interaction","No configurable widgets, no drag-to-rearrange. The ranking is the design"],
+    ["Motion","Page rise 200ms. Stat cards do not count up"],
+    ["Special states","First-run empty state for a new tenant with no data · Employee dashboard before check-in shows the action, not a summary"]]],
+  ["Employees","4","04","/employees · /employees/:id · /employees/new · /departments",
+   "The people record of truth. Directory, profile, creation, and department structure.",
+   [["Sections","Directory: filters, table, bulk bar. Profile: header, tabs for personal, employment, documents, attendance"],
+    ["Components","Table, slide-over, tabs, badge, avatar, file upload, form"],
+    ["Data displayed","Name, ID, position, department, location, status, start date, manager, salary band (Accounts only)"],
+    ["Actions","Search, filter, sort, bulk export, open profile, edit, deactivate, upload document"],
+    ["Responsive","Table becomes cards under 640px. Profile tabs become a select under 640px"],
+    ["Interaction","Row click opens the slide-over, not a new page — the list stays behind it"],
+    ["Motion","Slide-over 320ms from the right. Bulk bar scales in 140ms on first selection"],
+    ["Special states","Deactivated employees shown greyed with a Reactivate action, never deleted · salary fields absent entirely for roles without Payroll access"]]],
+  ["Attendance","4","04","/attendance · /attendance/history · /attendance/check-in",
+   "The verification core. Capture, review, correct — with location and accuracy visible at every step.",
+   [["Sections","Today: KPI row, exception band, table. Check-in: two-step capture. History: date range, table, corrections"],
+    ["Components","Table, capture panel, evidence viewer, status pill, dialog, toast"],
+    ["Data displayed","Employee, status, mode, check-in/out times, GPS accuracy in metres, distance from office, selfie, static map"],
+    ["Actions","Check in, check out, approve remote day, flag for review, correct a record with a mandatory reason"],
+    ["Responsive","Check-in is phone-first and full-screen. Review table becomes cards under 640px"],
+    ["Interaction","Camera only — no gallery upload, deliberately. Location requested at the action, never before"],
+    ["Motion","Check-in success 420ms — the product's longest, and the only decorative flourish that ships"],
+    ["Special states","Location denied · camera denied · poor GPS accuracy · offline queued · already checked in · check-out missing at midnight (auto-closes and flags, never deletes)"]]],
+  ["Tasks & field visits","5","05","/tasks · /tasks/:id · /tasks/:id/verify",
+   "Assign work, prove it happened. Field visits require photo plus GPS and are reviewed by a person.",
+   [["Sections","Board or list toggle, task detail with proof requirement, capture flow, HOD review queue"],
+    ["Components","Kanban card, table, capture panel, evidence viewer, timeline, dialog"],
+    ["Data displayed","Task ID, title, store, due date, assignee, proof requirement, distance from pin, photo, GPS accuracy, report fields"],
+    ["Actions","Create, assign, start verification, capture, submit, accept proof, return for re-capture with a reason"],
+    ["Responsive","Board scrolls horizontally on desktop, becomes a filtered list under 768px. Capture is phone-only"],
+    ["Interaction","Range checked before the camera opens. Retake unlimited and unpenalised"],
+    ["Motion","Kanban drag lifts and tilts −.4deg. Verification shows a pulse ring while matching, 420ms"],
+    ["Special states","Out of range · no GPS · photo unclear · offline queued with a visible will-sync chip · returned visit shows the original alongside the reason"]]],
+  ["Leave","4","05","/leave · /leave/approvals",
+   "Two-stage approval: HOD for judgement and coverage, HR for policy. Balance shown before the form.",
+   [["Sections","Balance summary, request form with coverage warning, own request timeline, approval queue"],
+    ["Components","Stat card, form, timeline, table, dialog, toast"],
+    ["Data displayed","Balance, accrual rate, dates, days requested, balance after, notice given, coverage percentage, named approver at each stage"],
+    ["Actions","Request, cancel own pending request, approve with a note, decline with a mandatory reason"],
+    ["Responsive","Queue becomes cards under 640px. Request form single column throughout"],
+    ["Interaction","Coverage conflicts surfaced to the requester before submission, not sprung as a rejection later"],
+    ["Motion","Timeline dot pops and the connector fills, 320ms, on each approval"],
+    ["Special states","Insufficient balance blocks submission with the shortfall stated · document required for sick leave over 3 days · coverage below 80% warns the HOD but does not block"]]],
+  ["Payroll","4","06","/payroll · /payroll/:period",
+   "Six-status pipeline with separation of duties. Publishing is irreversible and says so three times.",
+   [["Sections","Period list, run status pipeline, totals, adjustments ledger, per-employee rows"],
+    ["Components","Table, timeline, dialog, stat card, status pill, toast"],
+    ["Data displayed","Gross, PAYE, pension, NHF, other deductions, net, per-employee breakdown, adjustments with author and reason"],
+    ["Actions","Create period, add adjustment, advance status, approve (Management only), publish, close, export bank CSV"],
+    ["Responsive","Desktop-first by nature. Under 640px shows totals and status only — running payroll on a phone is not supported"],
+    ["Interaction","Accounts cannot approve its own run. Figures lock at approval. Statutory rates lock mid-period"],
+    ["Motion","Publishing 420ms — deliberately the slowest confirmation in the product"],
+    ["Special states","No adjustments · locked figures after approval · published (read-only, corrections become next-period adjustments) · closed (fully read-only)"]]],
+  ["Payslips","2","06","/payslips · /payslips/:id",
+   "A document, not a screen. Used as proof of income by banks and landlords, so it must print well.",
+   [["Sections","List with net pay visible per row, then the payslip document itself"],
+    ["Components","Table, document layout, button"],
+    ["Data displayed","Period, publish date, employee details, TIN, PFA, bank last-4, earnings lines, deduction lines, net, YTD"],
+    ["Actions","Open, download PDF, print"],
+    ["Responsive","Document scales to a single column under 640px but retains the A4 print layout"],
+    ["Interaction","Read-only always. No editing after publication, by anyone"],
+    ["Motion","None. A financial document does not animate"],
+    ["Special states","No payslips yet for a new employee · greyscale-safe print layout, one page A4, no colour needed"]]],
+  ["Recruitment","5","06","/recruitment · /recruitment/applicants/:id",
+   "Jobs to hires, with candidate dignity treated as a requirement rather than a nicety.",
+   [["Sections","Jobs table, 8-stage pipeline board, applicant slide-over with profile, CV, notes and timeline, convert-to-employee flow"],
+    ["Components","Table, kanban card, slide-over, tabs, timeline, form, dialog"],
+    ["Data displayed","Role, status, applied count, pipeline count, days open, applicant details, CV, panel notes, stage history"],
+    ["Actions","Publish or unpublish a job, move stage, add a panel note, email applicant, reject, convert to employee"],
+    ["Responsive","Board scrolls horizontally under 1024px. Applicant slide-over full-screen under 640px"],
+    ["Interaction","Rejected and Withdrawn stay on the board. Drag into Hired opens the convert flow rather than silently moving"],
+    ["Motion","Stage chip swap 200ms. Card drag lift and tilt as per Kanban"],
+    ["Special states","No applicants for a role · CV always marked confidential with logged views · applicant record kept and linked after conversion, never deleted"]]],
+  ["Documents","2","06","/documents",
+   "Three sensitivity levels, distinguished by whole-card tint so the level registers peripherally.",
+   [["Sections","Search, category filters, document grid, preview drawer"],
+    ["Components","Card, slide-over, badge, file upload, empty state"],
+    ["Data displayed","Name, description, category, version, size, last change, retention period, who can open it"],
+    ["Actions","Search, filter, open, download, replace version, upload with a mandatory sensitivity level"],
+    ["Responsive","Grid 3→2→1 columns. Preview drawer full-screen under 640px"],
+    ["Interaction","Opening a confidential document writes an audit entry with the viewer's name and shows a this-view-is-logged warning first"],
+    ["Motion","Card hover lift 140ms. Drawer 320ms"],
+    ["Special states","Filtered-to-empty (distinct from no-documents) · Employee sees company-wide plus only their own file · confidential retention 24 months after exit"]]],
+  ["Reports","6","07","/reports",
+   "Six report families. Every chart carries a note interpreting it, and every block on a tab shares one time scope.",
+   [["Sections","Family tabs, date range picker, KPI row, chart with legend and note, breakdown bars, detail table"],
+    ["Components","Stat card, chart, table, select, button"],
+    ["Data displayed","Management, HR, Payroll, Tasks, Recruitment and Attendance families — each with its own KPIs, series and table"],
+    ["Actions","Switch family, change range, export CSV and PDF with identical figures and footnotes"],
+    ["Responsive","KPI grid reflows. Charts keep a minimum 320px width then scroll. Tables become cards under 640px"],
+    ["Interaction","Read-only. Reports never mutate data"],
+    ["Motion","Bars grow from baseline 320ms on first paint only, staggered 30ms. Never on refilter"],
+    ["Special states","Every block on a tab must share one scope and label it — today versus month-to-date, cohort-reached versus current occupancy. Mismatched scopes across KPI, chart, breakdown and table is a defect, not a detail"]]],
+  ["Settings","4","07","/settings",
+   "Company configuration. Some settings are deliberately hard to change, and that is a feature.",
+   [["Sections","Company profile, structure (departments and leave types), payroll rates, security and retention"],
+    ["Components","Form, table, toggle, slider, badge"],
+    ["Data displayed","Registered details, offices with per-office geofence radius, departments, leave types, statutory rates, security policy, retention limits"],
+    ["Actions","Edit and save per section. Add office, department or leave type"],
+    ["Responsive","Two columns above 1024px, single column below. Slider is touch-friendly at 44px"],
+    ["Interaction","Geofence slider warns outside 25–250m. Statutory rates lock mid-period. Accrual changes apply from the next cycle, never retroactively"],
+    ["Motion","Toggle 140ms. Slider feedback updates live with no animation"],
+    ["Special states","Rates locked while a run is in review · retention limits deliberately hard to raise and require a written policy change · geofence out of sensible range warns but permits with justification"]]],
+  ["Roles & audit","2","07","/settings/roles · /audit",
+   "Who can do what, and an immutable record of what was done.",
+   [["Sections","Role cards with risk level, assigned users, 10×5 permission matrix, audit log with detail drawer"],
+    ["Components","Card, table, slide-over, dialog, badge, search"],
+    ["Data displayed","Roles, user counts, risk level, permission matrix, audit entries with actor, action, from/to, entity, truncated IP and device"],
+    ["Actions","Assign role (reason mandatory), revoke, search and filter the audit log, export"],
+    ["Responsive","Matrix scrolls horizontally under 768px — it is never collapsed or summarised. Audit rows become cards under 640px"],
+    ["Interaction","Granting a role with Payroll or Audit access requires a written reason and a second approver"],
+    ["Motion","Drawer 320ms. Matrix cells do not animate"],
+    ["Special states","Audit entries immutable for everyone including Management · a revocation is a new entry, never an edit · empty audit result means nothing happened, never that a record was removed — the empty state says so"]]],
+  ["Platform admin","2","07","admin.heron.app/organisations",
+   "Concept stage only. Multi-tenant management with billing explicitly out of scope.",
+   [["Sections","Organisation list with status, organisation detail with configuration"],
+    ["Components","Table, card, badge, button"],
+    ["Data displayed","Tenant name, slug, user count, status, sector, offices, theme. Never employee-level records"],
+    ["Actions","Open workspace, suspend, reactivate, invite"],
+    ["Responsive","Standard desktop admin layout. Not designed for phones"],
+    ["Interaction","No cross-tenant queries exist, including for platform admins"],
+    ["Motion","Standard page and drawer transitions only"],
+    ["Special states","Active · Trial (countdown in the tenant header, no features withheld) · Setup (exists, no data) · Suspended (read-only with a notice naming who to contact, never a broken screen)"]]]
+];
+
+const COMPONENTS=[
+  ["Button","primary, secondary, ghost, destructive, icon-only · sm 30 / md 38 / lg 44","default, hover, active, focus, disabled, loading","One primary per view. Destructive never the default focus. Icon-only needs an aria-label.","all screens"],
+  ["Input & field","text, textarea, select, date, search, file, checkbox, radio, toggle, slider","default, focus, filled, error, disabled, read-only","Persistent label always — placeholders are examples, never labels. 38px desktop, 44px mobile.","forms, filters"],
+  ["Table","sticky header, sortable column, row select, bulk bar, row action, pagination · 44 comfortable / 36 compact","default, hover, selected, sorted, empty, loading","Becomes cards under 640px. Never horizontally scrolled on a phone.","11 screens"],
+  ["Card","stat, record, kanban, document, role · e1 resting, e2 hover","default, hover, selected, dragging","Sensitivity tint applies to the whole card, not just a badge.","9 screens"],
+  ["Status pill","5 semantic states · pill radius, 11px 600 weight","static","Colour plus glyph plus word, always all three. Never colour alone.","everywhere"],
+  ["Avatar","24 / 32 / 40px · initials or photo, presence dot, stacked group with +n","default, with presence, stacked","Initials fall back to two characters on brand-50 with brand-700 ink.","people surfaces"],
+  ["Slide-over","480px desktop, 80% tablet, full-screen mobile · e4","entering, open, exiting","Esc and scrim close. Focus returns to the trigger row. The list stays visible behind it.","records, applicants, audit"],
+  ["Dialog","confirm, destructive, irreversible · max 460px, e4","entering, open, exiting","Focus traps. Destructive puts the safe action first. Irreversible restates the consequence.","publish, grant, flag"],
+  ["Bottom sheet","filters, actions · max 88% viewport height","entering, open, dragging, exiting","Phone only. Same options in the same order as the desktop toolbar.","mobile screens"],
+  ["Toast","success, info · bottom-right desktop, top mobile","entering, visible, paused, exiting","Auto-dismiss 5s, pauses on hover, stacks to 3 then collapses to a counter. Never for errors needing a decision.","all mutations"],
+  ["Timeline","approval chain, audit trail, run status","done, active, todo","Active node pulses. Shows how long a stage has been waiting.","leave, tasks, payroll, audit"],
+  ["Capture panel","camera stage, location bar, accuracy readout, CTA","requesting, ready, capturing, success, denied, poor accuracy, offline","Camera only, no gallery. Location read at the action. Accuracy always in metres.","check-in, field visits"],
+  ["Evidence viewer","photo tiles, static map with pin and radius, accuracy, timestamps","default, zoomed, missing evidence","Accept or return for re-capture, with a mandatory reason on return.","HR and HOD review"],
+  ["Empty / error / permission","empty, filtered-empty, error, permission-restricted","static","Every one names a cause and offers a recovery action. Never a dead end.","all lists and panels"],
+  ["Nav shell","sidebar (186 / 58 collapsed), topbar, breadcrumb, bottom nav, command palette","expanded, collapsed, mobile","Role-filtered. Restricted items stay visible with a lock. ⌘K everywhere.","app-wide"]
+];
+
+const NAV_DESKTOP=[
+  ["Sidebar","186px expanded, 58px collapsed. Width transitions 320ms; labels cross-fade 140ms so text never squashes."],
+  ["Role filtering","Items a role cannot open remain visible with a lock glyph and muted ink. Clicking one shows the permission state, not a 404."],
+  ["Topbar","Breadcrumb, search, notification bell with count, avatar menu. Org switcher present from day one — this is multi-tenant."],
+  ["Breadcrumb","Two levels maximum. The last segment is the current screen and is not a link."],
+  ["Command palette","⌘K from anywhere. Scoped results: people, screens, actions. Arrows move, Enter runs, Esc closes."],
+  ["Tabs","Within a screen only, never for primary navigation. Underline slides 200ms; content rises 8px."],
+  ["Keyboard","Skip-to-content is the first tab stop. J/K move rows, Enter opens the slide-over, Esc closes and restores focus."]
+];
+const NAV_MOBILE=[
+  ["Bottom nav","Four items maximum: Home, Attendance, Tasks, More. Everything else lives behind More."],
+  ["No sidebar","The sidebar does not exist under 640px. Do not implement a hamburger drawer that recreates it."],
+  ["Primary action","Pinned above the bottom nav, 46px tall, always visible. Check in, Submit, Apply."],
+  ["Filters","Bottom sheet, never a dropdown. Same options in the same order as the desktop toolbar."],
+  ["Records","Slide-overs become full-screen pages with a back arrow, not partial overlays."],
+  ["Touch targets","44px minimum, and nothing important within 16px of a screen edge."],
+  ["Tables","Become stacked cards. One record per card, status as a pill, metadata on its own line."]
+];
+
+const BREAKPOINTS=[
+  ["< 640px","Small and large phone","cards, bottom nav, sheets","Single column. Tables become cards. Bottom nav replaces the sidebar. Filters open as sheets. Primary action pinned. Slide-overs go full-screen. 44px targets."],
+  ["640–1023px","Tablet","icon rail, reduced table","Sidebar collapses to a 58px icon rail with hover labels. Real tables appear but drop to three essential columns — columns are removed, never squeezed. Slide-over covers 80% width."],
+  ["1024–1439px","Laptop","full shell","Full 186px sidebar with labels. All table columns, 44px comfortable rows. Slide-over 480px. Row hover, bulk select and inline row actions become available."],
+  ["≥ 1440px","Desktop","full shell, capped","Content caps at 1440px — line length matters more than filling the glass. Detail panels can dock beside the list rather than covering it. 36px compact row density becomes an option."],
+  ["Print","Payslips and reports","document layout","Payslips print one page A4, greyscale-safe, no colour dependency. Reports print with the same figures and footnotes as the screen. Nav, filters and actions are hidden."]
+];
+
+const FORM_RULES=[
+  ["Labels","Persistent and above the field, always. Placeholders show an example, never the label."],
+  ["Required","Marked with a red asterisk on the label. Optional fields say Optional — never leave the user guessing which is which."],
+  ["Validation timing","On blur, never on keystroke. Re-validate on submit. Never block typing."],
+  ["Errors","Inline below the field, with an icon and specific guidance. Announced via a live region and tied to the field with aria-describedby."],
+  ["Mobile fields","One concern per screen where a flow allows it. Minimum of required fields — every extra mandatory field on a phone costs data quality."],
+  ["Autosave","Long forms autosave as draft. A session timeout preserves the draft and says so on return."],
+  ["Destructive confirm","Any irreversible action needs a dialog that restates the consequence and, where relevant, a typed reason."],
+  ["Reason fields","Mandatory wherever an action affects someone else's record: corrections, rejections, role grants, returned visits."]
+];
+const VALIDATION=[
+  ["Default","#fff","#CDD5E0","#131A22","1px border-hi, 6px radius, 38px tall desktop"],
+  ["Focus","#fff","#1B4F8C","#1B4F8C","Border brand-600 plus a 3px rgba(27,79,140,.16) ring. Focus is never removed, only restyled"],
+  ["Error","#FFFBFA","#B42318","#B42318","Border danger, tinted background, icon in-field, message below with specific guidance"],
+  ["Success","#F4FBF8","#BFE3D3","#0F7A54","Used only where confirmation matters — a verified bank account, a matched geofence"],
+  ["Disabled","#F1F4F8","#E3E8EF","#A6B0BE","Never the only indication that an action is unavailable — pair with helper text explaining why"]
+];
+const UNI_STATES=[
+  ["Empty","#E3E8EF","#131A22","Icon at 26px, a heading naming what's missing, one sentence of context, and an action. Every list ships one.","\"No leave requests yet — when your team submits leave it lands here for approval.\" + View leave policy"],
+  ["Filtered empty","#E3E8EF","#131A22","Distinct from Empty. Says the filter is the reason and offers Clear filters as the primary action.","\"No documents match — try a different search, or widen the category filter.\" + Clear filters"],
+  ["Error","#FADCD9","#B42318","Names the cause, reassures that data is safe, and offers a retry. Never a stack trace, never a raw code.","\"Couldn't load attendance — the request timed out. Your data is safe.\" + Try again"],
+  ["Permission","#E3E8EF","#4A5666","Lock icon, which roles can access it, and how to request it. The nav item stays visible — never a 404.","\"Payroll is restricted — only Accounts and Management can open this.\" + Request access"]
+];
+
+const DURATIONS=[["instant 80ms","hover, press, focus ring"],["fast 140ms","menus, tooltips, toggles, chips"],
+  ["base 200ms","dialogs, tabs, toasts, kanban, stage moves"],["slow 320ms","drawers, sheets, sidebar, timelines"],["confirm 420ms","check-in, verification, payroll publish only"]];
+const MOTIONS=[
+  ["Page transition","200ms","Route change within the app shell.","enter — 8px rise with a fade","Fade only, no translate."],
+  ["Sidebar collapse","320ms","Collapse toggle, or crossing 1024px.","standard on width","Width snaps; labels cross-fade at 1ms."],
+  ["Slide-over drawer","320ms","Row click, or Open record.","standard on transform; scrim fades to 32%","Appears at final position; scrim still fades."],
+  ["Dialog","200ms","Destructive or irreversible action.","enter — scale from .97 with a fade","Fade only. Focus still traps on the safe action."],
+  ["Bottom sheet","320ms","Filters or More under 640px.","standard on translateY","Sheet appears in place; scrim fade remains."],
+  ["Toast","200ms","Any completed background action.","enter — 10px rise, auto-dismiss 5s","No rise. Dismiss extends to 8s so it can be read."],
+  ["Tab change","200ms","Tab click or arrow key.","standard on transform; content rises 8px","Underline jumps, content fades. No horizontal motion."],
+  ["Kanban drag","200ms","Pointer drag on a pipeline or task card.","standard — lift, −.4deg tilt, e3 shadow","No tilt or lift. Target column highlights on hover."],
+  ["Task completion","200ms","Checkbox on a task row.","standard — check pops, label strikes through","Check appears filled; strike-through instant."],
+  ["Check-in success","420ms","Successful selfie and location submission.","standard — full-panel wash, check scales from .4","Green panel and text appear at once. Success is never implied by motion alone."],
+  ["Check-out success","320ms","Check out, or the 17:00 banner action.","standard — duration counts up, bar fills once","Final figure shown immediately, no count-up."],
+  ["Field verification","420ms","Submitting a visit with photo and GPS.","standard — pulse ring while matching, bar fills","Ring drops; static Matching label with a determinate bar."],
+  ["Leave approval","320ms","HOD or HR approving a request.","standard — dot pops, connector fills to next stage","Dot and connector drawn in final state."],
+  ["Payroll publishing","420ms","Confirming Publish payslips.","standard — final step fills, then the count appears","Both appear at once, after the confirm dialog."],
+  ["Recruitment stage move","200ms","Stage chip, or a drag into a column.","standard — old chip mutes, new chip scales in","Chips swap instantly. The audit note still logs the move."],
+  ["Skeleton loading","1.4s loop","Any request still pending after 200ms.","linear shimmer, infinite until resolved","Static grey blocks, no shimmer."]
+];
+
+const WORKFLOWS=[
+  ["Attendance check-in","Daily verified attendance with location and a live selfie. The product's core loop.",
+   [["mute","Not checked in"],["info","Location confirmed"],["info","Selfie captured"],["ok","Checked in"],["ok","Checked out"],["warn","Auto-closed"]],
+   [["Advanced by","The employee, for themselves only. HR can correct with a mandatory reason."],
+    ["Irreversible","Nothing. Corrections are new records referencing the original."],
+    ["Audit","Every check-in, check-out, correction and auto-close, with GPS accuracy and distance."],
+    ["Exceptions","Location or camera denied, poor accuracy, offline, already checked in, no check-out by midnight — each has a recovery path and none auto-penalise."]]],
+  ["Field visit verification","Prove a store visit happened, at the right place, with the shelf photographed.",
+   [["mute","Assigned"],["info","In range"],["info","Photo captured"],["info","Submitted"],["ok","Verified"],["warn","Returned"]],
+   [["Advanced by","Assignee submits. HOD accepts or returns. HR sees flagged cases."],
+    ["Irreversible","Nothing. A returned visit keeps the original alongside the reason."],
+    ["Audit","Submission with photo, coordinates and accuracy; every accept and return with its reason."],
+    ["Exceptions","Out of range blocks capture. No GPS or no photo is always reviewed by a person, never auto-rejected."]]],
+  ["Leave request","Two-stage approval: HOD for coverage judgement, HR for policy compliance.",
+   [["mute","Draft"],["info","Awaiting HOD"],["info","Awaiting HR"],["ok","Approved"],["bad","Declined"],["mute","Cancelled"]],
+   [["Advanced by","Employee submits. HOD approves with a note. HR gives final approval. Payroll notified automatically."],
+    ["Irreversible","Approval. A cancellation after approval is a new request, not an edit."],
+    ["Audit","Submission, each approval with its note, decline reasons, and the payroll notification."],
+    ["Exceptions","Insufficient balance blocks submission. Coverage under 80% warns the HOD but does not block. Sick leave over 3 days requires a document."]]],
+  ["Payroll run","Six statuses, separation of duties, and one irreversible step.",
+   [["mute","Draft"],["info","Processing"],["warn","In review"],["info","Approved"],["ok","Published"],["mute","Closed"]],
+   [["Advanced by","Accounts advances to Approved. Management approves — Accounts cannot approve its own run. Accounts then publishes."],
+    ["Irreversible","Publishing. Corrections become a new adjustment in the next period, never an edit."],
+    ["Audit","Every status change, every adjustment with author and reason, every export, and the publish with both approvers."],
+    ["Exceptions","Figures lock at approval. Statutory rates lock mid-period. A closed period needs Management approval to reopen."]]],
+  ["Recruitment pipeline","Eight stages from application to hire, with rejected and withdrawn kept visible.",
+   [["mute","Applied"],["info","Screening"],["info","Shortlisted"],["warn","Interview"],["ok","Offered"],["ok","Hired"],["bad","Rejected"],["mute","Withdrawn"]],
+   [["Advanced by","HR moves stages. HOD contributes panel notes. Management sees the funnel."],
+    ["Irreversible","Conversion to employee. The applicant record is kept and linked, never deleted."],
+    ["Audit","Every stage move, every note, the offer, and the conversion with the created employee ID."],
+    ["Exceptions","Dragging into Hired opens the convert flow rather than silently moving. Rejected candidates stay searchable for 12 months."]]],
+  ["Document handling","Three sensitivity levels with access scoped by role and subject.",
+   [["mute","Company-wide"],["warn","Restricted"],["bad","Confidential"]],
+   [["Advanced by","Uploader sets sensitivity — it is mandatory, with no default. HR can change it."],
+    ["Irreversible","Nothing. Replacing a version keeps the prior one."],
+    ["Audit","Every view of a confidential document, with viewer name and timestamp. Uploads, replacements and sensitivity changes."],
+    ["Exceptions","Confidential retention is 24 months after exit. Employees see company-wide documents plus their own file only."]]],
+  ["Role and permission changes","High-risk grants need a reason and a second approver.",
+   [["mute","Requested"],["warn","Awaiting second approver"],["ok","Active"],["bad","Revoked"]],
+   [["Advanced by","Management requests. A second approver — HR for Accounts and Management grants — confirms."],
+    ["Irreversible","Nothing, but a revocation is a new entry rather than an edit."],
+    ["Audit","The request with its mandatory reason, the second approval, activation, and any revocation."],
+    ["Exceptions","Payroll, Documents, Settings and Audit are flagged modules. A grant touching any of them cannot be completed by one person."]]],
+  ["Audit log","An immutable record. The one part of the system nobody can edit.",
+   [["ok","Written"]],
+   [["Advanced by","Nobody. Entries are written by the system at the moment of the action."],
+    ["Irreversible","Everything. No entry can be edited or deleted by any role, including Management."],
+    ["Audit","Itself. Reads of the audit log by Management are themselves logged."],
+    ["Exceptions","Retained 7 years. IP and device are truncated — enough to spot an anomaly, not enough to track a person's movements."]]]
+];
+
+const DASHBOARDS=[
+  ["Management","/dashboard","Anything only this person can unblock — a payroll run awaiting approval outranks every chart on the screen.",
+   [["Present today","128 / 142"],["Overdue tasks","7"],["March payroll","₦48.2m"],["Open roles","5"]],
+   "Below the KPI row: pending approvals grouped by type, exceptions grouped by person rather than by store, then department summary. Charts come last."],
+  ["HR","/dashboard","Today's exceptions and the approval queue — the two things that stall if nobody looks.",
+   [["Attendance rate","90.1%"],["Open exceptions","6"],["Pending leave","9"],["Open roles","4"]],
+   "Below: exception list with owner and recovery action, leave queue sorted by wait time, contract expiries within 60 days, then hiring funnel."],
+  ["Accounts","/dashboard","The current run's status and what blocks it, with the bank cut-off stated as a deadline.",
+   [["Gross · March","₦61.41m"],["Deductions","₦13.21m"],["Net payable","₦48.20m"],["Status","In review"]],
+   "Below: run status pipeline, adjustments added since last review with authors, then period history. No employee-level data unless a period is open."],
+  ["Head of Department","/dashboard","The department's day: who is in, what is overdue, what needs their approval.",
+   [["Dept staff","24"],["Present","21"],["Open tasks","12"],["Unverified visits","3"]],
+   "Below: unverified visits with distance and reason, leave awaiting their approval, overdue tasks by assignee, then the team's attendance for the week."],
+  ["Employee","/dashboard","One thing at 09:00 — the check-in button. Everything else waits below it.",
+   [["Status","Not checked in"],["My tasks","5"],["Leave left","11 days"],["Last payslip","₦358,650"]],
+   "Below: today's tasks with proof requirements marked, leave balance and pending requests, latest payslip, then documents that concern them. No company-wide statistics."]
+];
+
+const BUILD_ORDER=[
+  ["1","Auth, tenancy and the app shell","Everything else mounts inside it. Get org scoping, role resolution and the role-filtered sidebar right before building any module — retrofitting multi-tenancy is the most expensive mistake available here."],
+  ["2","Attendance and check-in","The verification loop is the product's reason to exist. Build it early so real field data is arriving while the rest is still being written. Includes the capture panel and all six exception states."],
+  ["3","Employees and departments","The people record everything else references. Needed before tasks can be assigned or payroll calculated."],
+  ["4","Tasks and field visit verification","Reuses the capture panel from step 2. The HOD review queue and the evidence viewer land here."],
+  ["5","Leave","First multi-stage approval workflow. Establishes the timeline component and the approval-queue pattern that recruitment and payroll reuse."],
+  ["6","Payroll and payslips","Depends on employees, attendance and leave. Highest correctness risk in the product — the six-status pipeline and separation of duties are not optional."],
+  ["7","Recruitment, documents, reports, settings, roles, audit","Independent of each other and safely parallelisable once the shell and the people record are stable. Audit log writes should be added alongside each module rather than retrofitted at the end."]
+];
+
+const OPENS=[
+  ["Biometric check-in","client","Offered on second sign-in, or required by policy? Affects whether a rep can ever share a device, and whether a forgotten phone blocks attendance entirely.",
+   "Offer biometric enrolment on the second successful sign-in, never the first. Password fallback always available."],
+  ["Same-period payroll reversal","client","Currently a correction is a new adjustment in the next period. A same-period reversal would need a second approval path and a reason field.",
+   "Build next-period adjustment only. Leave the data model able to represent a reversal without shipping the UI."],
+  ["Retention limits","legal counsel","24 months for photos and 12 for coordinates were design assumptions. These need checking against the Nigeria Data Protection Act and any client policy.",
+   "Implement 24 and 12 months as configurable values, defaulting as designed, with changes requiring a written policy note."],
+  ["Dark mode","client","The ramp is defined and carried through all eight phases, but per-screen dark treatments were never designed.",
+   "Ship light mode only. Do not invent dark treatments — schedule it as a design phase."],
+  ["Offline depth","client","Check-in and visit capture queue offline by design. Whether tasks and leave should too is a scope decision, not a design one.",
+   "Queue check-in and visit capture only. Everything else requires connectivity and says so plainly."]
+];
+
+const SOURCES=[
+  ["Phase 1","Phase 1 - Design System.dc.html","Tokens, controls, data display, overlays, verification UI, states, mobile patterns, accessibility"],
+  ["Phase 2","Phase 2 - Public Website.dc.html","Public site, careers, role detail, application form, contact"],
+  ["Phase 3","Phase 3 - Auth and App Shell.dc.html","Auth screens, app shell, navigation, five role dashboards"],
+  ["Phase 4","Phase 4 - Employees, Departments, Attendance.dc.html","Directory, profile, departments, attendance, check-in capture"],
+  ["Phase 5","Phase 5 - Tasks, Field Visits, Leave.dc.html","Task board, task detail, field verification, leave request and approvals"],
+  ["Phase 6","Phase 6 - Payroll, Recruitment, Documents.dc.html","Payroll run, payslips, recruitment pipeline, convert to employee, documents"],
+  ["Phase 7","Phase 7 - Reports, Settings, Admin.dc.html","Six report families, settings, role matrix, audit log, platform admin"],
+  ["Phase 8","Phase 8 - Motion, Responsive, Prototype.dc.html","16 live animations, 5 breakpoints, 12 clickable flows, final review inventories"]
+];
+
+class Component extends DCLogic {
+  renderVals(){
+    const cell=k=>{const [t,l]=PERM_LABEL[k];return t==="none"?{...NONE,label:l}:P(t,l);};
+    return {
+      contents:CONTENTS.map(c=>({n:c[0],label:c[1],href:c[2]})),
+      tallies:[["58","screens designed"],["15","components"],["24","routes"],["8","workflows"],["16","animations"],["5","breakpoints"]]
+        .map(t=>({n:t[0],label:t[1]})),
+      principles:PRINCIPLES.map(p=>({k:p[0],v:p[1]})),
+      ramps:RAMPS.map(r=>({name:r[0],steps:r[1].map(s=>({token:s[0],hex:s[1]}))})),
+      semantics:SEMANTICS.map(s=>({name:s[0],glyph:s[1],bg:s[2],fg:s[3],tokens:s[4],use:s[5]})),
+      darkRamp:DARK.map(d=>({token:d[0],hex:d[1]})),
+      typeScale:TYPE.map(t=>({spec:t[0],size:t[1],lh:t[2],weight:t[3],ls:t[4],font:t[5],sample:t[6],use:t[7]})),
+      spacing:SPACING.map(s=>({n:s[0],w:s[1],bg:s[2],use:s[3]})),
+      radii:RADII.map(r=>({r:r[0],token:r[1],use:r[2]})),
+      shadows:SHADOWS.map(s=>({token:s[0],css:s[1],border:s[2],use:s[3]})),
+      iconRules:ICON_RULES.map(i=>({k:i[0],v:i[1]})),
+      routeGroups:ROUTES.map(g=>({name:g[0],base:g[1],routes:g[2].map(r=>({path:r[0],purpose:r[1],roles:r[2]}))})),
+      matrix:MATRIX.map(m=>({module:m[0],flag:m[1]?"▲ ":"",
+        m:cell(m[2]),hr:cell(m[3]),ac:cell(m[4]),hd:cell(m[5]),em:cell(m[6])})),
+      scopes:SCOPES.map(s=>{const c=s[0]==="none"?NONE:P(s[0],s[1]);
+        return {...c,label:s[1],def:s[2]};}),
+      screenSpecs:SCREEN_SPECS.map(s=>({name:s[0],count:s[1],phase:s[2],route:s[3],purpose:s[4],
+        fields:s[5].map(f=>({k:f[0],v:f[1]}))})),
+      components:COMPONENTS.map(c=>({name:c[0],variants:c[1],states:c[2],rules:c[3],used:c[4]})),
+      navDesktop:NAV_DESKTOP.map(n=>({k:n[0],v:n[1]})),
+      navMobile:NAV_MOBILE.map(n=>({k:n[0],v:n[1]})),
+      breakpoints:BREAKPOINTS.map(b=>({range:b[0],name:b[1],mode:b[2],rules:b[3]})),
+      formRules:FORM_RULES.map(f=>({k:f[0],v:f[1]})),
+      validation:VALIDATION.map(v=>({name:v[0],bg:v[1],border:v[2],fg:v[3],spec:v[4]})),
+      uniStates:UNI_STATES.map(u=>({name:u[0],border:u[1],fg:u[2],spec:u[3],copy:u[4]})),
+      durations:DURATIONS.map(d=>({name:d[0],use:d[1]})),
+      motions:MOTIONS.map(m=>({name:m[0],dur:m[1],trigger:m[2],easing:m[3],reduced:m[4]})),
+      workflows:WORKFLOWS.map(w=>({name:w[0],purpose:w[1],
+        states:w[2].map(s=>({label:s[1],bg:PILL[s[0]][0],fg:PILL[s[0]][1]})),
+        fields:w[3].map(f=>({k:f[0],v:f[1]}))})),
+      dashboards:DASHBOARDS.map(d=>({role:d[0],route:d[1],leads:d[2],
+        kpis:d[3].map(k=>({k:k[0],v:k[1]})),below:d[4]})),
+      buildOrder:BUILD_ORDER.map(b=>({n:b[0],name:b[1],why:b[2]})),
+      opens:OPENS.map(o=>({name:o[0],who:o[1],question:o[2],fallback:o[3]})),
+      sources:SOURCES.map(s=>({n:s[0],file:s[1],covers:s[2]}))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

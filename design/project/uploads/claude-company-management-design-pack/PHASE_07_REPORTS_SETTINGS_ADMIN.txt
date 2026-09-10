@@ -1,0 +1,66 @@
+PHASE 7
+REPORTS, SETTINGS, ROLES, AUDIT, PLATFORM READINESS
+
+REPORTS
+Design:
+- management reports
+- HR reports
+- payroll reports
+- departmental reports
+- attendance reports
+- task reports
+- leave reports
+- recruitment reports
+
+Use:
+- KPI cards
+- charts
+- tables
+- filters
+- date ranges
+- export action
+
+SETTINGS
+Design:
+- company profile
+- logo
+- company details
+- office locations
+- attendance radius
+- departments
+- positions
+- leave types
+- payroll settings
+- notifications
+- security
+
+ROLES AND PERMISSIONS
+Design:
+- roles list
+- role detail
+- permission matrix
+- assign users
+- multiple roles
+- warning for high-risk permissions
+- confirmation for sensitive changes
+
+AUDIT LOGS
+Design:
+- timeline/table
+- actor
+- action
+- entity
+- date/time
+- metadata detail
+- search
+- filters
+
+PLATFORM READINESS
+Design concept only:
+- platform super admin
+- organization list
+- organization status
+- organization detail
+- workspace identity
+
+Do not design billing yet.

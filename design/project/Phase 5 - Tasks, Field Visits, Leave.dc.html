@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  input[type="range"] { accent-color: #1B4F8C; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes checkPop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(27,79,140,.3); } 70% { box-shadow: 0 0 0 16px rgba(27,79,140,0); } 100% { box-shadow: 0 0 0 0 rgba(27,79,140,0); } }
+  @keyframes radar { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 05 · Tasks, field visits, leave</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">viewing as <b style="color:#fff">{{ viewerLabel }}</b></span>
+  </div>
+
+  <div style="display:flex;min-height:900px">
+    <div style="width:214px;flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:16px">
+        <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+        <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CHF Heron Nigeria</span><span style="display:block;font-size:10px;color:#7A8798">Lagos HQ workspace</span></span>
+      </div>
+      <sc-for list="{{ sections }}" as="nav" hint-placeholder-count="4">
+        <div onClick="{{ nav.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ nav.bg }};color:{{ nav.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+          <span data-icon="{{ nav.icon }}" style="font-size:18px;flex:none"></span>
+          <span style="flex:1;font-size:13px;font-weight:500;white-space:nowrap">{{ nav.label }}</span>
+          <sc-if value="{{ nav.badge }}" hint-placeholder-val="{{ false }}">
+            <span style="flex:none;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#FDECEA;color:#B42318;font:600 10px 'IBM Plex Sans';display:grid;place-items:center">{{ nav.count }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:11px;line-height:17px;color:#4A5666">Verification proves a visit happened. It never tracks anyone between visits.</div>
+    </div>
+
+    <div style="flex:1;min-width:0">
+
+      <!-- TASKS -->
+      <sc-if value="{{ isTasks }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Tasks</h1>
+              <div style="font-size:14px;color:#4A5666">{{ taskScopeLabel }}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;padding:3px;border-radius:9px;background:#E9EDF3">
+                <sc-for list="{{ taskViews }}" as="tv" hint-placeholder-count="2">
+                  <button onClick="{{ tv.pick }}" style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border:none;border-radius:7px;background:{{ tv.bg }};color:{{ tv.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms"><span data-icon="{{ tv.icon }}" style="font-size:15px"></span>{{ tv.label }}</button>
+                </sc-for>
+              </div>
+              <button onClick="{{ openCreate }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F"><span data-icon="plus" style="font-size:15px"></span>New task</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">
+            <div style="display:flex;padding:3px;border-radius:9px;background:#fff;border:1px solid #E3E8EF">
+              <sc-for list="{{ taskScopes }}" as="sco" hint-placeholder-count="3">
+                <button onClick="{{ sco.pick }}" style="height:30px;padding:0 13px;border:none;border-radius:7px;background:{{ sco.bg }};color:{{ sco.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ sco.label }}</button>
+              </sc-for>
+            </div>
+            <div style="flex:1 1 190px;min-width:170px;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff">
+              <span data-icon="search" style="font-size:16px;color:#7A8798"></span>
+              <input value="{{ taskQuery }}" onInput="{{ onTaskQuery }}" placeholder="Search tasks…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 14px 'IBM Plex Sans'" />
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ taskFilters }}" as="tfl" hint-placeholder-count="5">
+                <button onClick="{{ tfl.pick }}" style="height:36px;padding:0 12px;border:1px solid {{ tfl.border }};border-radius:999px;background:{{ tfl.bg }};color:{{ tfl.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ tfl.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ listView }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;animation:fadeIn 200ms">
+              <sc-if value="{{ hasTasks }}" hint-placeholder-val="{{ true }}">
+                <div style="overflow-x:auto">
+                  <table style="width:100%;border-collapse:collapse;min-width:900px">
+                    <thead>
+                      <tr style="background:#F8F9FB">
+                        <th style="padding:11px 18px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Task</th>
+                        <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Assignees</th>
+                        <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Priority</th>
+                        <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Status</th>
+                        <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Verify</th>
+                        <th onClick="{{ sortDue }}" style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666;cursor:pointer;white-space:nowrap">Due ↕</th>
+                        <th style="padding:11px 18px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <sc-for list="{{ tasks }}" as="trow" hint-placeholder-count="7">
+                        <tr onClick="{{ trow.open }}" style="border-top:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                          <td style="padding:12px 18px">
+                            <div style="display:flex;gap:11px;align-items:flex-start">
+                              <span style="width:8px;height:8px;flex:none;border-radius:50%;background:{{ trow.dot }};margin-top:6px"></span>
+                              <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:500;line-height:19px">{{ trow.title }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ trow.id }} · {{ trow.dept }}</span></span>
+                            </div>
+                          </td>
+                          <td style="padding:12px 12px">
+                            <div style="display:flex;padding-left:7px">
+                              <sc-for list="{{ trow.people }}" as="av" hint-placeholder-count="2">
+                                <span style="width:26px;height:26px;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans';border:2px solid #fff;margin-left:-7px">{{ av.i }}</span>
+                              </sc-for>
+                            </div>
+                          </td>
+                          <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ trow.priBg }};color:{{ trow.priFg }};font-size:11px;font-weight:600">{{ trow.priGlyph }} {{ trow.priority }}</span></td>
+                          <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ trow.stBg }};color:{{ trow.stFg }};font-size:11px;font-weight:600">{{ trow.status }}</span></td>
+                          <td style="padding:12px 12px"><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#4A5666"><span data-icon="{{ trow.verifyIcon }}" style="font-size:14px;color:{{ trow.verifyFg }}"></span>{{ trow.verifyShort }}</span></td>
+                          <td style="padding:12px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ trow.dueFg }}">{{ trow.due }}</td>
+                          <td style="padding:12px 18px;text-align:right"><span style="font-size:12px;font-weight:500;color:#1B4F8C">Open</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noTasks }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:56px 24px;text-align:center;animation:fadeIn 200ms">
+                  <span data-icon="clipboard-check" style="font-size:28px;color:#7FA6D3;display:inline-flex;margin-bottom:12px"></span>
+                  <div style="font-size:17px;font-weight:600;margin-bottom:7px">Nothing matches those filters</div>
+                  <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:42ch;margin:0 auto 16px">Either the work is genuinely done, or the filter is too narrow.</div>
+                  <button onClick="{{ clearTaskFilters }}" style="height:38px;padding:0 16px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Clear filters</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ kanbanView }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:8px">
+                <sc-for list="{{ columns }}" as="col" hint-placeholder-count="4">
+                  <div style="flex:0 0 272px;background:#E9EDF3;border-radius:14px;padding:12px;min-height:420px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 6px 12px">
+                      <span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:{{ col.dot }}"></span>{{ col.label }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;background:#fff;border-radius:999px;padding:2px 8px">{{ col.count }}</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <sc-for list="{{ col.cards }}" as="card" hint-placeholder-count="2">
+                        <div onClick="{{ card.open }}" style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:14px;cursor:grab;transition:box-shadow 140ms,transform 140ms" style-hover="box-shadow:0 8px 24px -6px rgba(16,24,40,.14);transform:translateY(-2px) rotate(-.35deg)">
+                          <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:9px">
+                            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ card.id }}</span>
+                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:{{ card.priBg }};color:{{ card.priFg }};font-size:10px;font-weight:600">{{ card.priGlyph }} {{ card.priority }}</span>
+                          </div>
+                          <div style="font-size:13px;font-weight:500;line-height:19px;margin-bottom:11px">{{ card.title }}</div>
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:{{ card.verifyFg }};background:{{ card.verifyBg }};padding:3px 8px;border-radius:999px"><span data-icon="{{ card.verifyIcon }}" style="font-size:12px"></span>{{ card.verifyShort }}</span>
+                            <span style="display:flex;padding-left:6px">
+                              <sc-for list="{{ card.people }}" as="cav" hint-placeholder-count="1">
+                                <span style="width:24px;height:24px;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans';border:2px solid #fff;margin-left:-6px">{{ cav.i }}</span>
+                              </sc-for>
+                            </span>
+                          </div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ card.dueFg }};margin-top:10px">due {{ card.due }}</div>
+                        </div>
+                      </sc-for>
+                      <div style="border:1.5px dashed #CDD5E0;border-radius:12px;padding:14px;text-align:center;font-size:12px;color:#7A8798">Drop here</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin-top:14px;padding:14px 18px;background:#fff;border:1px solid #E3E8EF;border-radius:12px;font-size:13px;line-height:21px;color:#4A5666;max-width:80ch">Cards lift 2px and tilt 0.35° on grab — enough to read as detached without becoming playful. Dropping into <b>Verified</b> is impossible by drag: that column is only reachable when evidence passes review, so the workflow can't be faked with a mouse.</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- FIELD VISIT -->
+      <sc-if value="{{ isVisit }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Field visit verification</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:66ch">Task to verified record. Play it through, or jump to any state — including every failure — with the chips.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+            <div style="flex:0 0 auto;width:330px;max-width:100%;background:#131A22;border-radius:28px;padding:10px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3)">
+              <div style="background:#fff;border-radius:20px;overflow:hidden;min-height:640px;display:flex;flex-direction:column">
+                <div style="display:flex;justify-content:space-between;padding:9px 18px 5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798"><span>13:41</span><span>▮▮▮ ⌁</span></div>
+                <div style="padding:8px 18px 20px;flex:1;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+                    <span data-icon="arrow-left" style="font-size:18px;color:#4A5666"></span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:600;letter-spacing:-.01em">{{ fv.title }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ fv.step }}</span></span>
+                  </div>
+
+                  <sc-if value="{{ fv.showTaskCard }}" hint-placeholder-val="{{ true }}">
+                    <div style="animation:fadeIn 200ms">
+                      <div style="padding:15px;border:1px solid #E3E8EF;border-radius:14px;margin-bottom:11px">
+                        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:9px">
+                          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">TSK-2041</span>
+                          <span style="padding:2px 8px;border-radius:999px;background:#FDF2DF;color:#8A5600;font-size:10px;font-weight:600">▲ Due today</span>
+                        </div>
+                        <div style="font-size:14px;font-weight:600;line-height:20px;margin-bottom:10px">Stock audit — Shoprite Lekki, Vileda display</div>
+                        <div style="font-size:12px;line-height:19px;color:#4A5666">Count facings, photograph the display, note pricing errors. Report required.</div>
+                      </div>
+                      <div style="padding:15px;border:1px solid #D9E6F5;border-radius:14px;background:#F7FAFD;margin-bottom:11px">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#16406F;margin-bottom:8px">Expected destination</div>
+                        <div style="display:flex;gap:10px;align-items:flex-start">
+                          <span data-icon="store" style="font-size:19px;color:#1B4F8C;margin-top:1px"></span>
+                          <span><span style="display:block;font-size:14px;font-weight:600">Shoprite Lekki Phase 1</span><span style="display:block;font-size:12px;color:#4A5666;line-height:18px;margin-top:3px">Admiralty Way, Lekki, Lagos</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:5px">6.4412°N, 3.4698°E · accept within 200m</span></span>
+                        </div>
+                      </div>
+                      <div style="display:flex;gap:8px;padding:12px 14px;border-radius:12px;background:#F8F9FB;border:1px solid #E3E8EF">
+                        <span data-icon="shield-check" style="font-size:17px;color:#4A5666"></span>
+                        <span style="font-size:12px;line-height:18px;color:#4A5666">Needs <b>photo, location and a report</b>. All three are captured now, at the store.</span>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ fv.showStage }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:relative;flex:1;min-height:{{ fv.stageMin }};border-radius:16px;overflow:hidden;background:{{ fv.stageBg }};display:grid;place-items:center;transition:background 200ms">
+                      <sc-if value="{{ fv.showRadar }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:relative;display:grid;place-items:center">
+                          <span style="position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(27,79,140,.22);animation:radar 1.8s ease-out infinite"></span>
+                          <span style="position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(27,79,140,.22);animation:radar 1.8s ease-out .9s infinite"></span>
+                          <span style="position:relative;width:56px;height:56px;border-radius:50%;background:#1B4F8C;color:#fff;display:grid;place-items:center"><span data-icon="map-pin" style="font-size:24px"></span></span>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showPins }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#EEF4FB 0 11px,#E2EDF8 11px 22px)">
+                          <span style="position:absolute;left:26%;top:44%;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:2px dashed #1B4F8C;background:rgba(27,79,140,.08)"></span>
+                          <span style="position:absolute;left:26%;top:44%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#1B4F8C;border:3px solid #fff;box-shadow:0 2px 6px rgba(16,24,40,.3)"></span>
+                          <span style="position:absolute;left:{{ fv.meX }};top:38%;width:16px;height:16px;border-radius:50%;background:{{ fv.meColor }};border:3px solid #fff;box-shadow:0 2px 8px rgba(16,24,40,.35);animation:pulseRing 2.4s ease-out infinite;transition:left 320ms cubic-bezier(.2,.8,.2,1),background 200ms"></span>
+                          <span style="position:absolute;left:12px;bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#16406F;background:rgba(255,255,255,.88);border-radius:6px;padding:4px 8px">store pin · 200m accept radius</span>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showCamera }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#F1F4F8 0 9px,#E7ECF3 9px 18px);display:grid;place-items:center">
+                          <div style="text-align:center;padding:0 22px">
+                            <div style="width:200px;height:150px;border:2px dashed #7FA6D3;border-radius:10px;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;margin:0 auto">{{ fv.cameraLabel }}</div>
+                            <div style="font-size:11px;color:#4A5666;margin-top:12px">Frame the whole display, not one shelf</div>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showDenied }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;background:#FFFBFA;display:grid;place-items:center;padding:26px;text-align:center;animation:fadeIn 200ms">
+                          <div>
+                            <span data-icon="{{ fv.deniedIcon }}" style="font-size:30px;color:#B42318;display:inline-flex;margin-bottom:12px"></span>
+                            <div style="font-size:15px;font-weight:600;color:#B42318;margin-bottom:8px">{{ fv.deniedTitle }}</div>
+                            <div style="font-size:13px;line-height:20px;color:#4A5666">{{ fv.deniedBody }}</div>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showWorking }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;background:#F8F9FB;display:grid;place-items:center">
+                          <div style="text-align:center;padding:0 24px;width:100%">
+                            <div style="width:44px;height:44px;margin:0 auto 14px;border-radius:50%;border:3px solid #E3E8EF;border-top-color:#1B4F8C;animation:spin 900ms linear infinite"></div>
+                            <div style="font-size:14px;font-weight:600;margin-bottom:12px">{{ fv.workingLabel }}</div>
+                            <div style="height:5px;border-radius:3px;background:#E3E8EF;overflow:hidden"><span style="display:block;height:100%;width:{{ fv.progress }};background:#1B4F8C;border-radius:3px;transition:width 200ms linear"></span></div>
+                            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:7px">{{ fv.progress }} · photo 2.1 MB</div>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showSuccess }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;background:{{ fv.successBg }};display:grid;place-items:center;animation:fadeIn 200ms">
+                          <div style="text-align:center;padding:0 22px">
+                            <div style="width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:{{ fv.successFg }};color:#fff;display:grid;place-items:center;font-size:32px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">{{ fv.successGlyph }}</div>
+                            <div style="font-size:17px;font-weight:600;color:{{ fv.successFg }}">{{ fv.successTitle }}</div>
+                            <div style="font-size:12px;line-height:19px;color:#4A5666;margin-top:8px">{{ fv.successSub }}</div>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ fv.showReport }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute;inset:0;padding:10px 4px 12px;background:#fff;overflow:auto">
+                          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:7px">Facings counted</label>
+                          <div style="display:flex;gap:8px;margin-bottom:14px">
+                            <input value="14" style="flex:1;min-width:0;height:42px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+                            <div style="flex:1;min-width:0;height:42px;padding:0 12px;border:1px solid #E3E8EF;border-radius:8px;background:#F8F9FB;display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A8798">of 16 expected</div>
+                          </div>
+                          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:7px">Shelf condition</label>
+                          <div style="display:flex;gap:7px;margin-bottom:14px">
+                            <span style="flex:1;padding:9px;border-radius:8px;border:1px solid #0F7A54;background:#F4FBF8;color:#0F7A54;font-size:12px;font-weight:600;text-align:center">Good</span>
+                            <span style="flex:1;padding:9px;border-radius:8px;border:1px solid #CDD5E0;font-size:12px;text-align:center;color:#4A5666">Fair</span>
+                            <span style="flex:1;padding:9px;border-radius:8px;border:1px solid #CDD5E0;font-size:12px;text-align:center;color:#4A5666">Poor</span>
+                          </div>
+                          <label style="display:block;font-size:12px;font-weight:600;margin-bottom:7px">Visit notes <span style="color:#B42318">*</span></label>
+                          <textarea rows="4" placeholder="Two facings short on Vileda mops. Manager confirms delivery Thursday. No pricing errors." style="width:100%;padding:11px 12px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+                          <div style="font-size:11px;color:#7A8798;margin-top:6px">Your photo and location are already attached.</div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ fv.hasStatus }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;background:{{ fv.statusBg }};margin-top:11px;transition:background 200ms">
+                      <span data-icon="{{ fv.statusIcon }}" style="font-size:18px;color:{{ fv.statusFg }}"></span>
+                      <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;font-weight:600;color:{{ fv.statusFg }}">{{ fv.statusTitle }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ fv.statusFg }};margin-top:2px">{{ fv.statusSub }}</span></span>
+                    </div>
+                  </sc-if>
+
+                  <div style="flex:1"></div>
+                  <sc-if value="{{ fv.hasSecondary }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ fv.secondaryAct }}" style="width:100%;height:44px;margin-top:11px;border:1px solid #CDD5E0;border-radius:10px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer" style-hover="background:#F8F9FB">{{ fv.secondary }}</button>
+                  </sc-if>
+                  <button onClick="{{ fv.act }}" style="width:100%;height:50px;margin-top:10px;border:none;border-radius:12px;background:{{ fv.ctaBg }};color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:opacity 140ms" style-hover="opacity:.92">{{ fv.cta }}</button>
+                  <div style="font-size:11px;line-height:17px;color:#7A8798;margin-top:9px;text-align:center">{{ fv.privacy }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1 1 320px;min-width:290px;display:flex;flex-direction:column;gap:16px">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Jump to a state</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ fvStates }}" as="fst" hint-placeholder-count="11">
+                    <button onClick="{{ fst.pick }}" style="height:32px;padding:0 12px;border:1px solid {{ fst.border }};border-radius:999px;background:{{ fst.bg }};color:{{ fst.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ fst.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid #F1F4F8">
+                  <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Verification modes a task can require</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px">
+                    <span style="padding:5px 10px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:11px;font-weight:600">None</span>
+                    <span style="padding:5px 10px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:11px;font-weight:600">Photo</span>
+                    <span style="padding:5px 10px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:11px;font-weight:600">Location</span>
+                    <span style="padding:5px 10px;border-radius:999px;background:#EEF4FB;color:#16406F;font-size:11px;font-weight:600">Photo + location</span>
+                    <span style="padding:5px 10px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:11px;font-weight:600">Photo + location + report</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px">{{ fv.noteTitle }}</div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666">{{ fv.noteBody }}</div>
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F1F4F8;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:19px;color:#4A5666">{{ fv.noteMotion }}</div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+                  <span style="font-size:12px;font-weight:600;color:#4A5666">Distance simulator</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ fv.meColor }}">{{ fv.distLabel }}</span>
+                </div>
+                <input type="range" min="0" max="100" step="1" value="{{ fvDist }}" onInput="{{ onFvDist }}" style="width:100%" />
+                <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:5px"><span>at the door</span><span>200m accept</span><span>1.4km</span></div>
+                <div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:{{ fv.distBg }};font-size:12px;line-height:19px;color:#4A5666">{{ fv.distNote }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- HOD REVIEW -->
+      <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Visit evidence review</h1>
+              <div style="font-size:14px;color:#4A5666">3 submissions waiting on you · Sales, Lagos</div>
+            </div>
+            <button onClick="{{ toast }}" style="height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Approve all in range</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:1 1 250px;min-width:240px;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ submissions }}" as="sub" hint-placeholder-count="3">
+                <div onClick="{{ sub.pick }}" style="background:#fff;border:1px solid {{ sub.border }};border-radius:14px;padding:16px;cursor:pointer;transition:border-color 140ms,transform 140ms" style-hover="transform:translateY(-1px)">
+                  <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px">
+                    <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ sub.initials }}</span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">{{ sub.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ sub.time }}</span></span>
+                    <span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:{{ sub.bg }};color:{{ sub.fg }};font-size:11px;font-weight:600">{{ sub.flag }}</span>
+                  </div>
+                  <div style="font-size:12px;line-height:18px;color:#4A5666">{{ sub.store }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 420px;min-width:320px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:20px;border-bottom:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between">
+                <div style="min-width:0">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-bottom:5px">{{ sm.taskId }} · submitted {{ sm.time }}</div>
+                  <h2 style="margin:0 0 5px;font-size:19px;font-weight:600;letter-spacing:-.015em">{{ sm.store }}</h2>
+                  <div style="font-size:13px;color:#4A5666">{{ sm.name }} · {{ sm.role }}</div>
+                </div>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;background:{{ sm.bg }};color:{{ sm.fg }};font-size:12px;font-weight:600">{{ sm.flag }}</span>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:#E3E8EF">
+                <div style="background:#fff;padding:15px"><div style="font-size:11px;color:#7A8798">Distance to store</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px;color:{{ sm.distFg }}">{{ sm.distance }}</div></div>
+                <div style="background:#fff;padding:15px"><div style="font-size:11px;color:#7A8798">GPS accuracy</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px;color:{{ sm.accFg }}">{{ sm.accuracy }}</div></div>
+                <div style="background:#fff;padding:15px"><div style="font-size:11px;color:#7A8798">Photo taken</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ sm.photoTime }}</div></div>
+                <div style="background:#fff;padding:15px"><div style="font-size:11px;color:#7A8798">Time on site</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ sm.dwell }}</div></div>
+              </div>
+
+              <div style="padding:20px;border-top:1px solid #E3E8EF">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Evidence</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+                  <div><div style="height:170px;border-radius:12px;background:repeating-linear-gradient(135deg,#F1F4F8 0 9px,#E7ECF3 9px 18px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;text-align:center;padding:8px">shelf photo</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:6px">rear camera · 2.1 MB</div></div>
+                  <div><div style="height:170px;border-radius:12px;background:repeating-linear-gradient(135deg,#EEF4FB 0 9px,#E2EDF8 9px 18px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#16406F;text-align:center;padding:8px">static map<br />store pin + capture pin</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:6px">{{ sm.coords }}</div></div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin:16px 0 9px">Visit report</div>
+                <div style="padding:15px;border-radius:12px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666">{{ sm.report }}</div>
+                <sc-if value="{{ sm.hasWarning }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;margin-top:14px;padding:14px;border-radius:12px;background:#FFFDF7;border:1px solid #F6E3BF">
+                    <span data-icon="alert-triangle" style="font-size:18px;color:#8A5600"></span>
+                    <span style="font-size:13px;line-height:20px;color:#4A5666"><b style="color:#8A5600">Why this is flagged.</b> {{ sm.warning }}</span>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="display:flex;flex-wrap:wrap;gap:10px;padding:16px 20px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+                <button onClick="{{ approveVisit }}" style="flex:1 1 130px;height:42px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Approve visit</button>
+                <button onClick="{{ flagVisit }}" style="flex:1 1 130px;height:42px;border:1px solid #8A5600;border-radius:8px;background:#fff;color:#8A5600;font:500 14px 'IBM Plex Sans';cursor:pointer">Flag for HR</button>
+                <button onClick="{{ toastRecapture }}" style="flex:1 1 130px;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Ask to re-capture</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- LEAVE -->
+      <sc-if value="{{ isLeave }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Leave</h1>
+              <div style="font-size:14px;color:#4A5666">Employee → Head of Department → HR</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;padding:3px;border-radius:9px;background:#E9EDF3">
+                <sc-for list="{{ leaveViews }}" as="lvw" hint-placeholder-count="3">
+                  <button onClick="{{ lvw.pick }}" style="height:30px;padding:0 13px;border:none;border-radius:7px;background:{{ lvw.bg }};color:{{ lvw.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ lvw.label }}</button>
+                </sc-for>
+              </div>
+              <button onClick="{{ openRequest }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="plus" style="font-size:15px"></span>Request leave</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ leaveMine }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px">
+                <sc-for list="{{ balances }}" as="bal" hint-placeholder-count="4">
+                  <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:18px 20px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px"><span style="font-size:13px;color:#4A5666">{{ bal.label }}</span><span data-icon="{{ bal.icon }}" style="font-size:16px;color:{{ bal.fg }}"></span></div>
+                    <div style="font-size:28px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ bal.left }}<span style="font-size:14px;color:#7A8798;font-weight:400"> / {{ bal.total }} days</span></div>
+                    <div style="height:6px;border-radius:3px;background:#F1F4F8;margin-top:12px;overflow:hidden"><span style="display:block;height:100%;width:{{ bal.pct }};background:{{ bal.fg }};border-radius:3px"></span></div>
+                    <div style="font-size:12px;color:#7A8798;margin-top:8px">{{ bal.note }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+                  <span style="font-size:15px;font-weight:600">My requests</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">2026</span>
+                </div>
+                <sc-for list="{{ myLeave }}" as="req" hint-placeholder-count="5">
+                  <div onClick="{{ req.open }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                    <span style="flex:0 0 34px;height:34px;border-radius:9px;background:{{ req.bg }};color:{{ req.fg }};display:grid;place-items:center"><span data-icon="{{ req.icon }}" style="font-size:17px"></span></span>
+                    <span style="flex:1 1 180px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ req.type }} · {{ req.days }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ req.dates }}</span></span>
+                    <span style="flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:{{ req.bg }};color:{{ req.fg }};font-size:11px;font-weight:600">{{ req.status }}</span>
+                    <span style="flex:0 0 auto;font-size:12px;color:#7A8798;min-width:112px">{{ req.stage }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ leaveApprovals }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+              <div style="flex:1 1 290px;min-width:270px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">Waiting on you · 4</div>
+                <sc-for list="{{ approvals }}" as="apr" hint-placeholder-count="4">
+                  <div onClick="{{ apr.pick }}" style="display:flex;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid #F1F4F8;cursor:pointer;background:{{ apr.rowBg }};transition:background 80ms" style-hover="background:#F8FAFD">
+                    <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ apr.initials }}</span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ apr.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ apr.dates }} · {{ apr.days }}</span></span>
+                    <span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:{{ apr.bg }};color:{{ apr.fg }};font-size:11px;font-weight:600">{{ apr.type }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="display:flex;gap:13px;align-items:center;margin-bottom:18px">
+                  <span style="width:44px;height:44px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 15px 'IBM Plex Sans'">{{ ap1.initials }}</span>
+                  <span style="min-width:0"><span style="display:block;font-size:17px;font-weight:600">{{ ap1.name }}</span><span style="display:block;font-size:13px;color:#4A5666">{{ ap1.role }}</span></span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:18px">
+                  <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Type</div><div style="font-size:13px;font-weight:600;margin-top:4px">{{ ap1.type }}</div></div>
+                  <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Dates</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px">{{ ap1.dates }}</div></div>
+                  <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Working days</div><div style="font-size:13px;font-weight:600;margin-top:4px">{{ ap1.days }}</div></div>
+                  <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Balance after</div><div style="font-size:13px;font-weight:600;margin-top:4px">{{ ap1.after }}</div></div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:9px">Reason</div>
+                <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666;margin-bottom:16px">{{ ap1.reason }}</div>
+                <sc-if value="{{ ap1.hasAttachment }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #E3E8EF;border-radius:10px;margin-bottom:16px">
+                    <span data-icon="file-text" style="font-size:18px;color:#B42318"></span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ ap1.attachment }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">required for sick leave over 2 days</span></span>
+                    <span style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">View</span>
+                  </div>
+                </sc-if>
+                <div style="display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border-radius:10px;background:{{ ap1.clashBg }};border:1px solid {{ ap1.clashBorder }};margin-bottom:18px">
+                  <span data-icon="{{ ap1.clashIcon }}" style="font-size:17px;color:{{ ap1.clashFg }}"></span>
+                  <span style="font-size:12px;line-height:19px;color:#4A5666">{{ ap1.clash }}</span>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Approval chain</div>
+                <div style="display:flex;flex-direction:column;margin-bottom:18px">
+                  <sc-for list="{{ ap1.chain }}" as="chain" hint-placeholder-count="3">
+                    <div style="display:flex;gap:12px">
+                      <span style="display:flex;flex-direction:column;align-items:center;flex:none">
+                        <span style="width:11px;height:11px;border-radius:50%;background:{{ chain.dotBg }};border:2px solid {{ chain.dotBorder }};margin-top:3px"></span>
+                        <span style="flex:1;width:2px;background:#E3E8EF;margin-top:3px"></span>
+                      </span>
+                      <span style="padding-bottom:15px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ chain.label }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ chain.meta }}</span></span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <button onClick="{{ approveLeave }}" style="flex:1 1 130px;height:44px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Approve</button>
+                  <button onClick="{{ declineLeave }}" style="flex:1 1 130px;height:44px;border:1px solid #B42318;border-radius:8px;background:#fff;color:#B42318;font:500 14px 'IBM Plex Sans';cursor:pointer">Decline</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ leaveCalendar }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px">
+                <span style="font-size:15px;font-weight:600">Sales department · March 2026</span>
+                <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#4A5666">
+                  <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#1B4F8C"></span>Annual</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#8A5600"></span>Sick</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#AFC9E7"></span>Pending</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#F1F4F8;border:1px solid #CDD5E0"></span>Weekend</span>
+                </div>
+              </div>
+              <div style="overflow-x:auto">
+                <div style="min-width:780px">
+                  <div style="display:grid;grid-template-columns:150px repeat(31,1fr);gap:2px;margin-bottom:5px">
+                    <span></span>
+                    <sc-for list="{{ calDays }}" as="cday" hint-placeholder-count="31">
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:{{ cday.fg }};text-align:center">{{ cday.n }}</span>
+                    </sc-for>
+                  </div>
+                  <sc-for list="{{ calRows }}" as="crow" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:150px repeat(31,1fr);gap:2px;margin-bottom:3px;align-items:center">
+                      <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:22px;height:22px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 9px 'IBM Plex Sans'">{{ crow.initials }}</span><span style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ crow.name }}</span></span>
+                      <sc-for list="{{ crow.cells }}" as="cell" hint-placeholder-count="31">
+                        <span style="height:22px;border-radius:4px;background:{{ cell.bg }};transition:background 140ms" style-hover="outline:1px solid #7A8798"></span>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="margin-top:18px;padding:14px;border-radius:10px;background:#FFFDF7;border:1px solid #F6E3BF;font-size:13px;line-height:21px;color:#4A5666"><b style="color:#8A5600">Coverage warning.</b> On 17–19 March, 4 of 14 Lagos sales reps are away at once — above the 20% threshold the department sets for a normal trading week.</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- TASK DETAIL -->
+  <sc-if value="{{ taskOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(560px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="padding:20px 22px 0;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+            <div style="min-width:0">
+              <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:10px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ td.id }}</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:{{ td.priBg }};color:{{ td.priFg }};font-size:11px;font-weight:600">{{ td.priGlyph }} {{ td.priority }}</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:{{ td.stBg }};color:{{ td.stFg }};font-size:11px;font-weight:600">{{ td.status }}</span>
+              </div>
+              <h2 style="margin:0;font-size:19px;font-weight:600;letter-spacing:-.015em;line-height:26px">{{ td.title }}</h2>
+            </div>
+            <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+          </div>
+          <div style="display:flex;gap:2px;overflow-x:auto">
+            <sc-for list="{{ taskTabs }}" as="ttab" hint-placeholder-count="3">
+              <button onClick="{{ ttab.pick }}" style="position:relative;padding:11px 12px;border:none;background:transparent;font:500 13px 'IBM Plex Sans';color:{{ ttab.fg }};cursor:pointer;white-space:nowrap">{{ ttab.label }}<span style="position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px;background:{{ ttab.underline }};transition:background 200ms"></span></button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <sc-if value="{{ tdDetails }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-bottom:18px">
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Due</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px;color:{{ td.dueFg }}">{{ td.due }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Created by</div><div style="font-size:13px;font-weight:500;margin-top:4px">{{ td.creator }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Department</div><div style="font-size:13px;font-weight:500;margin-top:4px">{{ td.dept }}</div></div>
+                <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Verification</div><div style="font-size:13px;font-weight:500;margin-top:4px">{{ td.verifyShort }}</div></div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:9px">Description</div>
+              <div style="font-size:14px;line-height:23px;color:#4A5666;margin-bottom:18px">{{ td.description }}</div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Assignees</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+                <sc-for list="{{ td.assignees }}" as="asg" hint-placeholder-count="2">
+                  <span style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:#F1F4F8"><span style="width:24px;height:24px;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">{{ asg.i }}</span><span style="font-size:12px;font-weight:500">{{ asg.n }}</span></span>
+                </sc-for>
+              </div>
+              <sc-if value="{{ td.needsVerify }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:16px;border-radius:12px;background:#F7FAFD;border:1px solid #D9E6F5;margin-bottom:18px">
+                  <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
+                    <span data-icon="map-pin" style="font-size:18px;color:#1B4F8C;margin-top:1px"></span>
+                    <span><span style="display:block;font-size:13px;font-weight:600">Field verification required</span><span style="display:block;font-size:12px;line-height:19px;color:#4A5666;margin-top:3px">{{ td.verifyLong }}</span></span>
+                  </div>
+                  <button onClick="{{ goVisit }}" style="width:100%;height:42px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Open the verification flow</button>
+                </div>
+              </sc-if>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Attachments</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #E3E8EF;border-radius:10px">
+                  <span data-icon="image" style="font-size:18px;color:#1B4F8C"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">planogram-vileda-q1.png</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">840 KB · added by Tunde Bello</span></span>
+                </div>
+                <div style="border:1.5px dashed #AFC9E7;border-radius:10px;padding:18px;text-align:center;background:#F8FAFD;font-size:13px;color:#4A5666">Drop a file, or click to browse</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tdComments }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <sc-for list="{{ comments }}" as="cmt" hint-placeholder-count="3">
+                <div style="display:flex;gap:11px;margin-bottom:18px">
+                  <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ cmt.i }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline"><span style="font-size:13px;font-weight:600">{{ cmt.who }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ cmt.when }}</span></span>
+                    <span style="display:block;font-size:13px;line-height:21px;color:#4A5666;margin-top:5px">{{ cmt.text }}</span>
+                  </span>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding-top:6px">
+                <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#D9E6F5;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">TB</span>
+                <div style="flex:1;min-width:0">
+                  <textarea value="{{ draft }}" onInput="{{ onDraft }}" rows="3" placeholder="Write a comment… use @ to notify someone" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:10px;font:400 13px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+                  <div style="display:flex;justify-content:flex-end;margin-top:8px"><button onClick="{{ postComment }}" style="height:36px;padding:0 15px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Comment</button></div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tdActivity }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;display:flex;flex-direction:column">
+              <sc-for list="{{ activity }}" as="act" hint-placeholder-count="6">
+                <div style="display:flex;gap:12px">
+                  <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:{{ act.dot }};margin-top:5px"></span><span style="flex:1;width:2px;background:#F1F4F8;margin-top:4px"></span></span>
+                  <span style="padding-bottom:16px;min-width:0"><span style="display:block;font-size:13px;line-height:20px">{{ act.text }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:3px">{{ act.when }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ toast }}" style="flex:1 1 120px;height:42px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">{{ td.primaryAction }}</button>
+          <button onClick="{{ toast }}" style="flex:0 1 120px;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Edit task</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CREATE TASK -->
+  <sc-if value="{{ createOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;display:flex;justify-content:center;align-items:flex-start;overflow:auto">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(650px,100%);min-height:100%;background:#fff;animation:rise 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#fff;padding:20px 26px 14px;border-bottom:1px solid #E3E8EF;display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+          <div><div style="font-size:19px;font-weight:600;letter-spacing:-.015em">New task</div><div style="font-size:13px;color:#7A8798;margin-top:3px">Assignees are notified immediately</div></div>
+          <button onClick="{{ closeAll }}" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:17px"></span></button>
+        </div>
+        <div style="flex:1;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Task title <span style="color:#B42318">*</span></label>
+            <input placeholder="Stock audit — Shoprite Lekki" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 15px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Description</label>
+            <textarea rows="4" placeholder="What needs doing, and what counts as done…" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Department</label><input value="Sales" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Due date</label><input value="09 / 03 / 2026" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Assign to</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ assignPool }}" as="cand" hint-placeholder-count="5">
+                <button onClick="{{ cand.pick }}" style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border:1px solid {{ cand.border }};border-radius:999px;background:{{ cand.bg }};cursor:pointer;transition:background 140ms"><span style="width:24px;height:24px;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 10px 'IBM Plex Sans'">{{ cand.i }}</span><span style="font:500 12px 'IBM Plex Sans';color:{{ cand.fg }}">{{ cand.n }}</span></button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#7A8798;margin-top:8px">{{ assignedLabel }}</div>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Priority</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ priorityOptions }}" as="pri" hint-placeholder-count="4">
+                <button onClick="{{ pri.pick }}" style="height:38px;padding:0 15px;border:1px solid {{ pri.border }};border-radius:999px;background:{{ pri.bg }};color:{{ pri.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ pri.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Verification required</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ verifyOptions }}" as="vopt" hint-placeholder-count="5">
+                <div onClick="{{ vopt.pick }}" style="display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border:1px solid {{ vopt.border }};border-radius:10px;background:{{ vopt.bg }};cursor:pointer;transition:border-color 140ms,background 140ms">
+                  <span style="width:18px;height:18px;flex:none;margin-top:1px;border-radius:50%;border:{{ vopt.dotBorder }};background:#fff"></span>
+                  <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600">{{ vopt.label }}</span><span style="display:block;font-size:12px;line-height:18px;color:#4A5666;margin-top:2px">{{ vopt.note }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="position:sticky;bottom:0;display:flex;gap:10px;justify-content:flex-end;padding:16px 26px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ closeAll }}" style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ saveTask }}" style="height:44px;padding:0 22px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Create task</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- LEAVE REQUEST -->
+  <sc-if value="{{ requestOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;display:flex;justify-content:center;align-items:flex-start;overflow:auto">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(600px,100%);min-height:100%;background:#fff;animation:rise 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#fff;padding:20px 26px 14px;border-bottom:1px solid #E3E8EF;display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+          <div><div style="font-size:19px;font-weight:600;letter-spacing:-.015em">Request leave</div><div style="font-size:13px;color:#7A8798;margin-top:3px">Goes to Tunde Bello, then HR</div></div>
+          <button onClick="{{ closeAll }}" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:17px"></span></button>
+        </div>
+        <div style="flex:1;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Leave type</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ leaveTypes }}" as="ltyp" hint-placeholder-count="4">
+                <button onClick="{{ ltyp.pick }}" style="height:38px;padding:0 15px;border:1px solid {{ ltyp.border }};border-radius:999px;background:{{ ltyp.bg }};color:{{ ltyp.fg }};font:500 13px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ ltyp.label }}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#7A8798;margin-top:9px">{{ leaveTypeNote }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px">
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">First day</label><input value="17 / 03 / 2026" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Last day</label><input value="{{ lastDay }}" style="width:100%;height:44px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:10px">How many days<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B4F8C">{{ reqDays }} calendar</span></label>
+            <input type="range" min="1" max="21" step="1" value="{{ reqDays }}" onInput="{{ onReqDays }}" style="width:100%" />
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:#E3E8EF;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;margin-top:14px">
+              <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Calendar days</div><div style="font-size:17px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums">{{ reqDays }}</div></div>
+              <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Weekend days</div><div style="font-size:17px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;color:#7A8798">{{ weekendDays }}</div></div>
+              <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Working days</div><div style="font-size:17px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;color:#1B4F8C">{{ workingDays }}</div></div>
+              <div style="background:#fff;padding:14px"><div style="font-size:11px;color:#7A8798">Balance after</div><div style="font-size:17px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;color:{{ balanceFg }}">{{ balanceAfter }}</div></div>
+            </div>
+            <sc-if value="{{ overBalance }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:10px;margin-top:12px;padding:13px 14px;border-radius:10px;background:#FFFBFA;border:1px solid #FADCD9;animation:fadeIn 140ms">
+                <span data-icon="alert-circle" style="font-size:17px;color:#B42318"></span>
+                <span style="font-size:12px;line-height:19px;color:#4A5666">That's {{ overBy }} working days more than your balance. You can still submit — HR decides whether to allow unpaid days.</span>
+              </div>
+            </sc-if>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reason</label>
+            <textarea rows="3" placeholder="Enough detail for your HOD to plan cover…" style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+          </div>
+          <sc-if value="{{ needsDoc }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Supporting document <span style="color:#B42318">*</span></label>
+              <div style="border:1.5px dashed #AFC9E7;border-radius:12px;padding:22px;text-align:center;background:#F8FAFD;font-size:13px;color:#4A5666">Medical certificate · required for sick leave over 2 days</div>
+            </div>
+          </sc-if>
+          <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF">
+            <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Who sees this next</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px;color:#4A5666">
+              <span style="display:inline-flex;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid #E3E8EF">You · submitted</span>
+              <span data-icon="arrow-right" style="font-size:14px;color:#7A8798"></span>
+              <span style="display:inline-flex;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid #E3E8EF">Tunde Bello · HOD</span>
+              <span data-icon="arrow-right" style="font-size:14px;color:#7A8798"></span>
+              <span style="display:inline-flex;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid #E3E8EF">HR · final</span>
+            </div>
+          </div>
+        </div>
+        <div style="position:sticky;bottom:0;display:flex;gap:10px;justify-content:flex-end;padding:16px 26px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ closeAll }}" style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ submitRequest }}" style="height:44px;padding:0 22px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Submit request</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- LEAVE DETAIL -->
+  <sc-if value="{{ leaveDetailOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(500px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px;border-bottom:1px solid #E3E8EF">
+          <div style="min-width:0">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:{{ ld.bg }};color:{{ ld.fg }};font-size:11px;font-weight:600;margin-bottom:10px">{{ ld.status }}</span>
+            <h2 style="margin:0 0 4px;font-size:19px;font-weight:600;letter-spacing:-.015em">{{ ld.type }} · {{ ld.days }}</h2>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ ld.dates }}</div>
+          </div>
+          <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+        </div>
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:9px">Reason</div>
+          <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666;margin-bottom:20px">{{ ld.reason }}</div>
+          <sc-if value="{{ ld.hasRejection }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:11px;padding:15px;border-radius:12px;background:#FFFBFA;border:1px solid #FADCD9;margin-bottom:20px">
+              <span data-icon="x-circle" style="font-size:19px;color:#B42318"></span>
+              <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#B42318;margin-bottom:5px">Declined by {{ ld.rejectedBy }}</span><span style="display:block;font-size:13px;line-height:21px;color:#4A5666">{{ ld.rejection }}</span></span>
+            </div>
+          </sc-if>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Approval timeline</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ ld.timeline }}" as="tline" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px">
+                <span style="display:flex;flex-direction:column;align-items:center;flex:none"><span style="width:11px;height:11px;border-radius:50%;background:{{ tline.dotBg }};border:2px solid {{ tline.dotBorder }};margin-top:4px"></span><span style="flex:1;width:2px;background:#E3E8EF;margin-top:3px"></span></span>
+                <span style="padding-bottom:16px;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ tline.label }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:3px">{{ tline.meta }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ ld.cancellable }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+            <button onClick="{{ cancelLeave }}" style="width:100%;height:42px;border:1px solid #B42318;border-radius:8px;background:#fff;color:#B42318;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel this request</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:270px;max-width:350px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ tst.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ tst.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const N="#4A5666",B="#1B4F8C",G="#0F7A54",W="#8A5600",R="#B42318";
+const PILL={ok:["#E7F4EE","#0F7A54"],warn:["#FDF2DF","#8A5600"],bad:["#FDECEA","#B42318"],info:["#EEF4FB","#16406F"],mute:["#F1F4F8","#4A5666"]};
+const PRI={Urgent:["#FDECEA","#B42318","▲",R],High:["#FDF2DF","#8A5600","▲",W],Normal:["#EEF4FB","#16406F","●",B],Low:["#F1F4F8","#4A5666","—",N]};
+const VER={none:["No proof","shield-off",N,"#F1F4F8","Marked done by the assignee. Trust-based, for desk work."],
+  photo:["Photo","camera",B,"#EEF4FB","One photo taken at the moment of completion."],
+  loc:["Location","map-pin",B,"#EEF4FB","A single position reading when the task is closed."],
+  both:["Photo + GPS","map-pin",B,"#EEF4FB","Photo and position captured together, at the site."],
+  full:["Photo + GPS + report","clipboard-check",B,"#EEF4FB","Photo, position and a written report. For audits and stock counts."]};
+const TASKS=[
+  ["TSK-2041","Stock audit — Shoprite Lekki, Vileda display","Sales","Urgent","In progress",["CU"],"full","Today 17:00",1,"Tunde Bello","Count every Vileda facing against the Q1 planogram, photograph the full display, and note any pricing errors you find. The store manager is expecting you before 15:00.","Verify at Shoprite Lekki Phase 1 · within 200m"],
+  ["TSK-2043","Restock check — Ebeano VI","Sales","High","Overdue",["CU","AO"],"both","Yesterday 17:00",2,"Tunde Bello","Confirm the Sebamed range was restocked after Friday's delivery shortfall.","Verify at Ebeano Supermarket, Victoria Island · within 200m"],
+  ["TSK-2044","Weekly route report","Sales","Normal","In progress",["CU"],"none","Fri 13 Mar",0,"Tunde Bello","Summarise the week: outlets visited, orders taken, and anything blocking sell-out.",""],
+  ["TSK-2038","Collect signed POD — Justrite Ikeja","Logistics","Normal","Verified",["IS"],"photo","Mon 02 Mar",0,"Emeka Nwosu","Photograph the signed proof of delivery and attach it to the dispatch record.","Photo required at the point of delivery"],
+  ["TSK-2049","Cycle count — Aisle 4, Ikeja depot","Warehouse","High","To do",["MY","GE"],"both","Tomorrow 12:00",0,"Kunle Ade","Full count of Aisle 4. Two counters, independent tallies, reconcile before submitting.","Verify inside the Ikeja depot geofence"],
+  ["TSK-2050","Brief field team on Q2 planogram","Sales","Normal","To do",["TB"],"none","Thu 26 Mar",0,"Tunde Bello","Run the Q2 planogram briefing with all 16 field reps before the new cycle starts.",""],
+  ["TSK-2035","NAFDAC file — Badia culinary range","Compliance","Urgent","Awaiting review",["TA"],"none","Wed 11 Mar",1,"Yusuf Lawal","Compile the renewal file and submit for internal review before it goes to NAFDAC.",""],
+  ["TSK-2051","Photograph new Sebamed end-cap — Shoprite Ikeja","Sales","Low","Awaiting review",["JE"],"photo","Fri 13 Mar",0,"Tunde Bello","One clear photo of the new end-cap once the merchandiser has finished building it.","Photo required"]
+];
+const FV={
+  task:{title:"Stock audit",step:"Task detail",showTaskCard:true,cta:"Start verified visit",ctaBg:"#1B4F8C",
+    privacy:"Nothing is captured until you tap Start.",
+    noteTitle:"Before the visit",noteBody:"The employee sees exactly what will be required — photo, location, report — and the destination, before any permission is requested. No surprises at the shelf.",
+    noteMotion:"static screen\nno permission prompts yet"},
+  locating:{title:"Confirming you're on site",step:"Step 1 of 4",showStage:true,showRadar:true,stageBg:"#F7FAFD",hasStatus:true,
+    statusBg:"#EEF4FB",statusFg:"#16406F",statusIcon:"loader",statusTitle:"Reading GPS…",statusSub:"comparing against the store pin",
+    cta:"Cancel",ctaBg:"#7A8798",privacy:"One position reading, taken now.",
+    noteTitle:"Locating",noteBody:"Same radar pulse as attendance check-in — one visual vocabulary for 'sensing position' across the whole product.",
+    noteMotion:"radar · 1.8s ease-out, 2 rings offset 900ms"},
+  onsite:{title:"You're at the store",step:"Step 1 of 4",showStage:true,showPins:true,stageBg:"#F4FBF8",hasStatus:true,
+    statusBg:"#E7F4EE",statusFg:"#0F7A54",statusIcon:"check-circle-2",statusTitle:"On site · 34m from the store pin",statusSub:"Shoprite Lekki Phase 1 · ±9m",
+    cta:"Photograph the display",ctaBg:"#1B4F8C",privacy:"Position confirmed. Nothing more is read until you submit.",
+    noteTitle:"On site",noteBody:"Distance and accuracy shown as plain numbers, not a verdict. The employee can see what the reviewer will see.",
+    noteMotion:"pin · pulseRing 2.4s\nstatus cross-fade 200ms"},
+  toofar:{title:"You're not at the store",step:"Step 1 of 4",showStage:true,showPins:true,stageBg:"#FFFDF7",hasStatus:true,
+    statusBg:"#FDF2DF",statusFg:"#8A5600",statusIcon:"alert-triangle",statusTitle:"1.4km from the store pin",statusSub:"accept radius is 200m · ±11m",
+    cta:"Continue anyway",ctaBg:"#8A5600",secondary:"Recheck my location",hasSecondary:true,
+    privacy:"Submitting from here flags the visit for your HOD, it doesn't block it.",
+    noteTitle:"Too far from site",noteBody:"Never blocked outright — a rep may legitimately be at a second entrance, or the store pin may simply be wrong. The distance travels with the record and a human decides.",
+    noteMotion:"amber wash 200ms\nrecheck offered above the CTA"},
+  denied:{title:"Location is blocked",step:"Step 1 of 4",showStage:true,showDenied:true,stageBg:"#FFFBFA",deniedIcon:"shield-alert",
+    deniedTitle:"Location permission denied",deniedBody:"A verified visit needs one position reading to prove you were at the store.",hasStatus:true,
+    statusBg:"#FDECEA",statusFg:"#B42318",statusIcon:"shield-alert",statusTitle:"No coordinates captured",statusSub:"visit will need manual confirmation",
+    cta:"Enable location",ctaBg:"#1B4F8C",secondary:"Continue with photo only",hasSecondary:true,
+    privacy:"A photo-only visit still counts — your HOD confirms it by phone.",
+    noteTitle:"Location denied",noteBody:"The reason precedes the ask. The fallback is real: a photo-only visit with a manual confirmation beats a rep who stops logging visits at all.",
+    noteMotion:"no shake, no alarm\nfade in 200ms"},
+  camera:{title:"Photograph the display",step:"Step 2 of 4",showStage:true,showCamera:true,stageBg:"#F1F4F8",cameraLabel:"live camera feed",hasStatus:true,
+    statusBg:"#EEF4FB",statusFg:"#16406F",statusIcon:"camera",statusTitle:"Rear camera · on site",statusSub:"34m from store pin · ±9m",
+    cta:"Capture",ctaBg:"#1B4F8C",privacy:"Taken now, from the camera. Gallery uploads aren't accepted.",
+    noteTitle:"Photo capture",noteBody:"Rear camera, framed guide, captured live. The guidance line under the frame is doing real work — reps default to photographing one shelf, which is useless for an audit.",
+    noteMotion:"capture · 120ms white flash, then freeze"},
+  cameraDenied:{title:"Camera is blocked",step:"Step 2 of 4",showStage:true,showDenied:true,stageBg:"#FFFBFA",deniedIcon:"camera-off",
+    deniedTitle:"Camera permission denied",deniedBody:"The photo is the evidence your HOD reviews. Without it there's nothing to approve.",hasStatus:true,
+    statusBg:"#FDECEA",statusFg:"#B42318",statusIcon:"camera-off",statusTitle:"No photo captured",statusSub:"location was recorded successfully",
+    cta:"Enable camera",ctaBg:"#1B4F8C",secondary:"Submit report without a photo",hasSecondary:true,
+    privacy:"Your location and report still submit — only the photo is missing.",
+    noteTitle:"Camera denied",noteBody:"Partial success is stated explicitly, so losing the camera doesn't cost the rep their confirmed position or their written report.",
+    noteMotion:"same pattern as location denied"},
+  review:{title:"Check the photo",step:"Step 2 of 4",showStage:true,showCamera:true,stageBg:"#F1F4F8",cameraLabel:"captured photo",hasStatus:true,
+    statusBg:"#EEF4FB",statusFg:"#16406F",statusIcon:"check-circle-2",statusTitle:"Photo attached",statusSub:"13:41:08 · 2.1 MB · rear camera",
+    cta:"Continue to report",ctaBg:"#1B4F8C",secondary:"Retake photo",hasSecondary:true,
+    privacy:"Only your HOD and HR can view this photo.",
+    noteTitle:"Photo review",noteBody:"One retake tap, always. A blurred shelf photo becomes a rejected visit and a wasted return trip.",
+    noteMotion:"retake · reverse of capture, 140ms"},
+  report:{title:"Visit report",step:"Step 3 of 4",showStage:true,showReport:true,stageBg:"#fff",
+    cta:"Submit visit",ctaBg:"#1B4F8C",privacy:"Photo and location are already attached to this report.",
+    noteTitle:"The report",noteBody:"Structured fields first — a count against expectation, a condition rating — then free text. Structure is what makes 40 visits comparable at the end of a week.",
+    noteMotion:"keyboard-aware, CTA stays visible"},
+  submitting:{title:"Submitting visit",step:"Step 4 of 4",showStage:true,showWorking:true,stageBg:"#F8F9FB",workingLabel:"Uploading photo…",hasStatus:true,
+    statusBg:"#F1F4F8",statusFg:"#4A5666",statusIcon:"upload",statusTitle:"Saving your visit",statusSub:"queues offline if the network drops",
+    cta:"Please wait",ctaBg:"#7A8798",privacy:"If signal drops now, the visit is stored on your phone and syncs later.",
+    noteTitle:"Submitting",noteBody:"A real progress bar here, unlike attendance — a 2MB photo on a Lagos 3G cell takes long enough that an indeterminate spinner feels broken.",
+    noteMotion:"progress bar, linear 200ms steps"},
+  submitted:{title:"Visit submitted",step:"Done",showStage:true,showSuccess:true,stageBg:"#EEF4FB",successBg:"#EEF4FB",successFg:"#16406F",successGlyph:"↑",
+    successTitle:"Sent for review",successSub:"Tunde Bello reviews visits twice a day. You'll get a notification either way.",hasStatus:true,
+    statusBg:"#EEF4FB",statusFg:"#16406F",statusIcon:"clock",statusTitle:"Awaiting HOD review",statusSub:"submitted 13:44 · typically within 4h",
+    cta:"Back to my tasks",ctaBg:"#1B4F8C",privacy:"The task stays In progress until the visit is approved.",
+    noteTitle:"Submitted, not done",noteBody:"Deliberately blue, not green, and the glyph is an arrow rather than a tick. Submitting is not completing — pretending otherwise is how reps end up surprised by a rejection.",
+    noteMotion:"checkPop 420ms on the arrow"},
+  approved:{title:"Visit verified",step:"Complete",showStage:true,showSuccess:true,stageBg:"#E7F4EE",successBg:"#E7F4EE",successFg:"#0F7A54",successGlyph:"✓",
+    successTitle:"Verified by Tunde Bello",successSub:"Task TSK-2041 is now closed. 14 of 16 facings recorded against the Q1 planogram.",hasStatus:true,
+    statusBg:"#E7F4EE",statusFg:"#0F7A54",statusIcon:"check-circle-2",statusTitle:"Approved · 15:12",statusSub:"1h 28m after submission",
+    cta:"Back to my tasks",ctaBg:"#0F7A54",privacy:"Evidence is retained for 24 months, then deleted.",
+    noteTitle:"Verified",noteBody:"Green is reserved for this moment — the only point where the loop is genuinely closed. The reviewer is named, because accountability runs both ways.",
+    noteMotion:"checkPop 420ms\nreduced motion: opacity only"},
+  rejected:{title:"Re-capture needed",step:"Returned",showStage:true,showSuccess:true,stageBg:"#FFFDF7",successBg:"#FFFDF7",successFg:"#8A5600",successGlyph:"↺",
+    successTitle:"Sent back by Tunde Bello",successSub:"\"Photo only shows the top shelf — I need the whole end-cap to count facings.\"",hasStatus:true,
+    statusBg:"#FDF2DF",statusFg:"#8A5600",statusIcon:"rotate-ccw",statusTitle:"Returned · 15:20",statusSub:"your location and report were kept",
+    cta:"Retake the photo",ctaBg:"#8A5600",secondary:"Ask a question",hasSecondary:true,
+    privacy:"Only the photo needs redoing — nothing else is lost.",
+    noteTitle:"Rejection",noteBody:"The reviewer's own words, verbatim, plus exactly which part needs redoing. A rejection without a reason is how field teams learn to resent the tool.",
+    noteMotion:"amber, not red — this is a redo, not a failure"}
+};
+const FV_NEXT={task:"locating",locating:"onsite",onsite:"camera",toofar:"camera",denied:"camera",camera:"review",cameraDenied:"submitting",review:"report",report:"submitting",submitting:"submitted",submitted:"approved",approved:"task",rejected:"camera"};
+const FV_CHIPS=[["task","Task"],["locating","Locating"],["onsite","On site"],["toofar","Too far"],["denied","GPS denied"],["camera","Camera"],["cameraDenied","No camera"],["review","Photo review"],["report","Report"],["submitting","Submitting"],["submitted","Submitted"],["approved","Verified"],["rejected","Sent back"]];
+const SUBS=[
+  {initials:"CU",name:"Chidi Uzo",role:"Field Sales Representative",time:"13:44",store:"Shoprite Lekki Phase 1 · Vileda stock audit",flag:"Clean",fk:"ok",taskId:"TSK-2041",
+   distance:"34 m",accuracy:"±9 m",photoTime:"13:41:08",dwell:"22 min",coords:"6.4412°N, 3.4698°E",
+   report:"14 of 16 Vileda facings present. Two mop heads short — store manager confirmed a delivery is due Thursday. No pricing errors. End-cap clean and fully faced.",hasWarning:false,
+   distFg:"#0F7A54",accFg:"#4A5666"},
+  {initials:"SK",name:"Sade Kalu",role:"Merchandiser",time:"11:20",store:"Ebeano VI · Sebamed restock check",flag:"Far from site",fk:"warn",taskId:"TSK-2043",
+   distance:"1.4 km",accuracy:"±11 m",photoTime:"11:18:42",dwell:"6 min",coords:"6.4302°N, 3.4488°E",
+   report:"Sebamed range restocked. Photographed from the service entrance on Adeola Odeku — the main aisle was blocked by a delivery.",hasWarning:true,
+   warning:"The capture point is 1.4km from the store pin, well outside the 200m accept radius, and the visit lasted only 6 minutes. Either the store pin is wrong or the photo wasn't taken at this outlet.",
+   distFg:"#8A5600",accFg:"#4A5666"},
+  {initials:"JE",name:"Joy Edet",role:"Sales Representative",time:"09:52",store:"Shoprite Ikeja · Sebamed end-cap photo",flag:"Weak GPS",fk:"warn",taskId:"TSK-2051",
+   distance:"unconfirmed",accuracy:"±180 m",photoTime:"09:50:14",dwell:"31 min",coords:"6.6018°N, 3.3515°E",
+   report:"End-cap built and fully faced. Photo taken once the merchandiser finished.",hasWarning:true,
+   warning:"GPS accuracy of ±180m can't confirm which side of the accept radius this was taken from. The photo timestamp and 31-minute dwell are both consistent with a real visit.",
+   distFg:"#8A5600",accFg:"#8A5600"}
+];
+const MY_LEAVE=[
+  ["Annual leave","5 days","17–21 Mar 2026","Pending","warn","clock","With Tunde Bello","Family wedding in Enugu. Adaeze has agreed to cover my route for the week.",false,
+   [["Submitted","09 Mar · 08:12","done"],["Tunde Bello · HOD","awaiting review","current"],["HR · final approval","not started","idle"]],true],
+  ["Sick leave","2 days","02–03 Mar 2026","Approved","ok","check-circle-2","Fully approved","Malaria — treated at Reddington Clinic.",false,
+   [["Submitted","02 Mar · 06:40","done"],["Tunde Bello · HOD","approved 02 Mar · 07:15","done"],["HR · final","approved 02 Mar · 09:02","done"]],false],
+  ["Annual leave","3 days","12–14 Feb 2026","Declined","bad","x-circle","Declined by HOD","Short break before the Q1 push.",true,
+   [["Submitted","28 Jan · 14:20","done"],["Tunde Bello · HOD","declined 29 Jan · 10:05","bad"]],false,
+   "Tunde Bello","Valentine's week is our second-heaviest trading period and two reps were already booked off. Happy to approve the same dates in March."],
+  ["Compassionate","1 day","08 Jan 2026","Approved","ok","check-circle-2","Fully approved","Bereavement in the family.",false,
+   [["Submitted","07 Jan · 19:30","done"],["Tunde Bello · HOD","approved 07 Jan · 20:02","done"],["HR · final","approved 08 Jan · 08:15","done"]],false],
+  ["Annual leave","10 days","22 Dec – 02 Jan","Approved","ok","check-circle-2","Fully approved","Christmas with family in Owerri.",false,
+   [["Submitted","01 Dec · 11:00","done"],["Tunde Bello · HOD","approved 02 Dec","done"],["HR · final","approved 03 Dec","done"]],false]
+];
+const APPROVALS=[
+  {initials:"CU",name:"Chidi Uzo",role:"Field Sales Representative",type:"Annual",tk:"info",dates:"17–21 Mar",days:"5 working days",after:"6 days",
+   reason:"Family wedding in Enugu. Adaeze Okonkwo has agreed to cover my Lekki route for the week.",hasAttachment:false,
+   clash:"Adaeze Okonkwo is also booked off 18–19 March. That leaves the Lekki route uncovered for two days.",clashKind:"warn",
+   chain:[["Submitted by Chidi Uzo","09 Mar · 08:12","done"],["You · Head of Sales","deciding now","current"],["HR · final approval","after your decision","idle"]]},
+  {initials:"MY",name:"Musa Yakubu",role:"Warehouse Assistant",type:"Sick",tk:"warn",dates:"09–12 Mar",days:"4 working days",after:"2 days",
+   reason:"Typhoid, currently on treatment. Certificate attached.",hasAttachment:true,attachment:"medical-certificate-yakubu.pdf",
+   clash:"No coverage conflict — Aisle 4 cycle count can move to Grace Etim.",clashKind:"ok",
+   chain:[["Submitted by Musa Yakubu","09 Mar · 06:02","done"],["You · Head of Sales","deciding now","current"],["HR · final approval","after your decision","idle"]]},
+  {initials:"JE",name:"Joy Edet",role:"Sales Representative",type:"Annual",tk:"info",dates:"24–26 Mar",days:"3 working days",after:"9 days",
+   reason:"Personal — moving house in Port Harcourt.",hasAttachment:false,
+   clash:"Clear week. Port Harcourt has two other reps on the road.",clashKind:"ok",
+   chain:[["Submitted by Joy Edet","08 Mar · 17:44","done"],["You · Head of Sales","deciding now","current"],["HR · final approval","after your decision","idle"]]},
+  {initials:"BO",name:"Bola Ogun",role:"Merchandiser",type:"Unpaid",tk:"mute",dates:"30 Mar – 10 Apr",days:"10 working days",after:"0 days · 6 unpaid",
+   reason:"Extended trip to see family abroad. I understand the extra days are unpaid.",hasAttachment:false,
+   clash:"Exceeds the balance by 6 days, and overlaps the Q2 planogram reset on 1 April.",clashKind:"bad",
+   chain:[["Submitted by Bola Ogun","06 Mar · 09:15","done"],["You · Head of Sales","deciding now","current"],["HR · final approval","unpaid days need HR sign-off","idle"]]}
+];
+const CAL=[
+  ["Chidi Uzo","CU",[[17,21,"pending"]]],
+  ["Adaeze Okonkwo","AO",[[18,19,"annual"]]],
+  ["Tunde Bello","TB",[[30,31,"annual"]]],
+  ["Joy Edet","JE",[[24,26,"pending"]]],
+  ["Bola Ogun","BO",[[2,13,"annual"]]],
+  ["Sade Kalu","SK",[[17,18,"sick"]]]
+];
+const CAL_COLORS={annual:"#1B4F8C",sick:"#8A5600",pending:"#AFC9E7"};
+const POOL=[["Chidi Uzo","CU"],["Adaeze Okonkwo","AO"],["Sade Kalu","SK"],["Joy Edet","JE"],["Musa Yakubu","MY"]];
+const COMMENTS=[
+  {i:"TB",who:"Tunde Bello",when:"09 Mar · 07:40",text:"Chidi — the planogram changed last week, use the Q1 version attached here, not the printout in your folder."},
+  {i:"CU",who:"Chidi Uzo",when:"09 Mar · 08:02",text:"Got it. Heading there after the Ebeano stop, should be on site around 13:30."},
+  {i:"AO",who:"Adaeze Okonkwo",when:"09 Mar · 09:15",text:"Worth checking the second end-cap by the tills too — they moved stock there on Friday."}
+];
+const ACTIVITY=[
+  ["Task created by Tunde Bello","09 Mar · 07:38",B],
+  ["Assigned to Chidi Uzo","09 Mar · 07:38",B],
+  ["Planogram attached by Tunde Bello","09 Mar · 07:40",N],
+  ["Marked In progress by Chidi Uzo","09 Mar · 13:38",B],
+  ["Location verified · 34m from store pin","09 Mar · 13:40",G],
+  ["Photo captured · 2.1 MB","09 Mar · 13:41",G],
+  ["Visit submitted for review","09 Mar · 13:44",B]
+];
+
+class Component extends DCLogic {
+  state={section:"tasks",taskView:"list",taskScope:"Department",taskQuery:"",taskFilter:"All",sortAsc:true,
+    taskOpen:false,taskIdx:0,taskTab:"Details",draft:"",createOpen:false,assigned:["Chidi Uzo"],priority:"Normal",verify:"both",
+    fvStep:"task",fvDist:12,subIdx:0,
+    leaveView:"Mine",leaveIdx:0,apIdx:0,requestOpen:false,leaveDetailOpen:false,leaveType:"Annual",reqDays:5,toasts:[]};
+  componentDidMount(){this._icons();}
+  componentDidUpdate(){this._icons();}
+  _icons(){
+    const L=window.lucide; if(!L) return;
+    let need=false;
+    document.querySelectorAll("[data-icon]").forEach(el=>{
+      const n=el.getAttribute("data-icon"); if(!n) return;
+      const svg=el.querySelector("svg");
+      if(svg&&svg.classList.contains("lucide-"+n)) return;
+      el.innerHTML='<i data-lucide="'+n+'"></i>'; need=true;
+    });
+    if(need){try{L.createIcons();}catch(e){}}
+  }
+  toast(title,body){
+    const id=Date.now()+Math.random();
+    this.setState(s=>({toasts:[...s.toasts,{id,title,body}]}));
+    setTimeout(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})),3800);
+  }
+  fvGo(){
+    const cur=this.state.fvStep,next=FV_NEXT[cur];
+    if(cur==="locating"){return this.setState({fvStep:"task"});}
+    if(cur==="submitting"){return;}
+    this.setState({fvStep:next});
+    if(next==="locating")setTimeout(()=>this.setState(s=>s.fvStep==="locating"?{fvStep:s.fvDist<=40?"onsite":"toofar"}:{}),1800);
+    if(next==="submitting")setTimeout(()=>this.setState({fvStep:"submitted"}),1900);
+  }
+
+  renderVals(){
+    const s=this.state;
+    const chip=on=>({bg:on?"#1B4F8C":"#fff",fg:on?"#fff":"#4A5666",border:on?"#1B4F8C":"#CDD5E0"});
+    const seg=on=>({bg:on?"#fff":"transparent",fg:on?"#131A22":"#4A5666"});
+    const q=s.taskQuery.trim().toLowerCase();
+
+    let rows=TASKS.filter(t=>{
+      if(s.taskScope==="Mine"&&!t[5].includes("CU"))return false;
+      if(s.taskScope==="Created by me"&&t[9]!=="Tunde Bello")return false;
+      if(s.taskFilter==="Overdue"&&t[4]!=="Overdue")return false;
+      if(s.taskFilter==="Due today"&&t[7].indexOf("Today")!==0)return false;
+      if(s.taskFilter==="Needs verification"&&t[6]==="none")return false;
+      if(s.taskFilter==="Awaiting review"&&t[4]!=="Awaiting review")return false;
+      if(q&&!(t[1]+t[0]+t[2]).toLowerCase().includes(q))return false;
+      return true;
+    });
+    rows=rows.slice().sort((a,b)=>(a[8]-b[8])*(s.sortAsc?-1:1));
+
+    const mk=t=>{
+      const p=PRI[t[3]],v=VER[t[6]],st=t[4]==="Verified"?PILL.ok:t[4]==="Overdue"?PILL.bad:t[4]==="Awaiting review"?PILL.warn:t[4]==="In progress"?PILL.info:PILL.mute;
+      return {id:t[0],title:t[1],dept:t[2],priority:t[3],priBg:p[0],priFg:p[1],priGlyph:p[2],dot:p[3],
+        status:t[4],stBg:st[0],stFg:st[1],people:t[5].map(i=>({i})),
+        verifyShort:v[0],verifyIcon:v[1],verifyFg:v[2],verifyBg:v[3],
+        due:t[7],dueFg:t[4]==="Overdue"?R:t[7].indexOf("Today")===0?W:N,
+        open:()=>this.setState({taskOpen:true,taskIdx:TASKS.indexOf(t),taskTab:"Details"})};
+    };
+    const cols=[["To do","#7A8798"],["In progress","#1B4F8C"],["Awaiting review","#8A5600"],["Verified","#0F7A54"]]
+      .map(c=>{const cards=rows.filter(t=>t[4]===c[0]||(c[0]==="To do"&&t[4]==="Overdue"));
+        return {label:c[0],dot:c[1],count:cards.length,cards:cards.map(mk)};});
+
+    const t=TASKS[s.taskIdx],tp=PRI[t[3]],tv=VER[t[6]];
+    const tst=t[4]==="Verified"?PILL.ok:t[4]==="Overdue"?PILL.bad:t[4]==="Awaiting review"?PILL.warn:t[4]==="In progress"?PILL.info:PILL.mute;
+
+    const fv=FV[s.fvStep];
+    const d=s.fvDist,onSite=d<=40;
+    const sub=SUBS[s.subIdx],sf=PILL[sub.fk];
+
+    const lv=MY_LEAVE[s.leaveIdx],lp=PILL[lv[4]];
+    const ap=APPROVALS[s.apIdx],ck=PILL[ap.clashKind];
+    const dot=k=>k==="done"?{dotBg:"#0F7A54",dotBorder:"#0F7A54"}:k==="current"?{dotBg:"#fff",dotBorder:"#8A5600"}:k==="bad"?{dotBg:"#B42318",dotBorder:"#B42318"}:{dotBg:"#fff",dotBorder:"#CDD5E0"};
+
+    const weekend=Math.floor(s.reqDays/7)*2+(s.reqDays%7>5?1:0);
+    const working=s.reqDays-weekend;
+    const bal=11-working;
+    const needsDoc=s.leaveType==="Sick"&&s.reqDays>2;
+
+    return {
+      viewerLabel:s.section==="visit"?"Chidi Uzo · Employee":s.section==="review"?"Tunde Bello · HOD":s.section==="leave"&&s.leaveView!=="Mine"?"Tunde Bello · HOD":"Tunde Bello · HOD",
+      sections:[["tasks","Tasks","clipboard-list",0],["visit","Field visit flow","smartphone",0],["review","Evidence review","shield-check",3],["leave","Leave","plane",4]]
+        .map(x=>({label:x[1],icon:x[2],badge:!!x[3],count:x[3],pick:()=>this.setState({section:x[0]}),
+          bg:s.section===x[0]?"#EEF4FB":"transparent",fg:s.section===x[0]?"#16406F":"#4A5666"})),
+      isTasks:s.section==="tasks",isVisit:s.section==="visit",isReview:s.section==="review",isLeave:s.section==="leave",
+
+      taskViews:[["list","List","list"],["kanban","Board","columns-3"]].map(v=>({label:v[1],icon:v[2],pick:()=>this.setState({taskView:v[0]}),...seg(s.taskView===v[0])})),
+      listView:s.taskView==="list",kanbanView:s.taskView==="kanban",
+      taskScopes:["Mine","Department","Created by me"].map(x=>({label:x,pick:()=>this.setState({taskScope:x}),...seg(s.taskScope===x)})),
+      taskScopeLabel:s.taskScope==="Mine"?"Assigned to me · "+rows.length+" open":s.taskScope==="Created by me"?"Created by me · "+rows.length:"Sales department · "+rows.length+" tasks",
+      taskQuery:s.taskQuery,onTaskQuery:ev=>this.setState({taskQuery:ev.target.value}),
+      taskFilters:["All","Overdue","Due today","Needs verification","Awaiting review"].map(f=>({label:f,pick:()=>this.setState({taskFilter:f}),...chip(s.taskFilter===f)})),
+      clearTaskFilters:()=>this.setState({taskFilter:"All",taskQuery:"",taskScope:"Department"}),
+      sortDue:()=>this.setState(x=>({sortAsc:!x.sortAsc})),
+      hasTasks:rows.length>0,noTasks:rows.length===0,
+      tasks:rows.map(mk),columns:cols,
+
+      taskOpen:s.taskOpen,
+      closeAll:()=>this.setState({taskOpen:false,createOpen:false,requestOpen:false,leaveDetailOpen:false}),
+      taskTabs:["Details","Comments","Activity"].map(x=>({label:x,pick:()=>this.setState({taskTab:x}),
+        fg:s.taskTab===x?"#1B4F8C":"#7A8798",underline:s.taskTab===x?"#1B4F8C":"transparent"})),
+      tdDetails:s.taskTab==="Details",tdComments:s.taskTab==="Comments",tdActivity:s.taskTab==="Activity",
+      td:{id:t[0],title:t[1],dept:t[2],priority:t[3],priBg:tp[0],priFg:tp[1],priGlyph:tp[2],
+        status:t[4],stBg:tst[0],stFg:tst[1],due:t[7],dueFg:t[4]==="Overdue"?R:N,creator:t[9],
+        description:t[10],verifyShort:tv[0],verifyLong:t[11]||tv[4],needsVerify:t[6]!=="none",
+        assignees:t[5].map(i=>({i,n:(POOL.find(p=>p[1]===i)||["Ibrahim Sule",i])[0]})),
+        primaryAction:t[4]==="Awaiting review"?"Review evidence":t[4]==="Verified"?"Reopen task":"Mark in progress"},
+      comments:COMMENTS,
+      activity:ACTIVITY.map(a=>({text:a[0],when:a[1],dot:a[2]})),
+      draft:s.draft,onDraft:ev=>this.setState({draft:ev.target.value}),
+      postComment:()=>{this.setState({draft:""});this.toast("Comment posted","Chidi Uzo notified");},
+      goVisit:()=>this.setState({taskOpen:false,section:"visit",fvStep:"task"}),
+
+      openCreate:()=>this.setState({createOpen:true}),createOpen:s.createOpen,
+      assignPool:POOL.map(p=>{const on=s.assigned.includes(p[0]);
+        return {n:p[0],i:p[1],bg:on?"#EEF4FB":"#fff",fg:on?"#16406F":"#4A5666",border:on?"#1B4F8C":"#CDD5E0",
+          pick:()=>this.setState(x=>({assigned:on?x.assigned.filter(a=>a!==p[0]):[...x.assigned,p[0]]}))};}),
+      assignedLabel:s.assigned.length?s.assigned.length+" assigned · "+s.assigned.join(", "):"Nobody assigned yet — the task will sit unowned",
+      priorityOptions:["Urgent","High","Normal","Low"].map(p=>({label:p,pick:()=>this.setState({priority:p}),...chip(s.priority===p)})),
+      verifyOptions:[["none","No verification"],["photo","Photo only"],["loc","Location only"],["both","Photo + location"],["full","Photo + location + report"]]
+        .map(v=>({label:v[1],note:VER[v[0]][4],pick:()=>this.setState({verify:v[0]}),
+          border:s.verify===v[0]?"#1B4F8C":"#E3E8EF",bg:s.verify===v[0]?"#F7FAFD":"#fff",
+          dotBorder:s.verify===v[0]?"5px solid #1B4F8C":"1px solid #CDD5E0"})),
+      saveTask:()=>{this.setState({createOpen:false});this.toast("Task created",s.assigned.length+" assignee notified");},
+
+      fv:{...fv,showTaskCard:!!fv.showTaskCard,showStage:!!fv.showStage,showRadar:!!fv.showRadar,showPins:!!fv.showPins,
+        showCamera:!!fv.showCamera,showDenied:!!fv.showDenied,showWorking:!!fv.showWorking,showSuccess:!!fv.showSuccess,showReport:!!fv.showReport,
+        hasStatus:!!fv.hasStatus,hasSecondary:!!fv.hasSecondary,secondary:fv.secondary||"",
+        stageBg:fv.stageBg||"#F8F9FB",stageMin:fv.showReport?"400px":"280px",cameraLabel:fv.cameraLabel||"",workingLabel:fv.workingLabel||"",progress:"68%",
+        deniedIcon:fv.deniedIcon||"shield-alert",deniedTitle:fv.deniedTitle||"",deniedBody:fv.deniedBody||"",
+        successBg:fv.successBg||"#E7F4EE",successFg:fv.successFg||"#0F7A54",successGlyph:fv.successGlyph||"✓",
+        successTitle:fv.successTitle||"",successSub:fv.successSub||"",
+        statusBg:fv.statusBg||"#F1F4F8",statusFg:fv.statusFg||"#4A5666",statusIcon:fv.statusIcon||"info",
+        statusTitle:fv.statusTitle||"",statusSub:fv.statusSub||"",
+        meX:(10+d*0.78)+"%",meColor:onSite?"#0F7A54":"#8A5600",
+        distLabel:onSite?Math.round(6+d*2.4)+" m":(1.4*d/100).toFixed(1)+" km",
+        distBg:onSite?"#F4FBF8":"#FFFDF7",
+        distNote:onSite?"Inside the 200m accept radius. The visit submits clean, with the distance recorded.":"Outside the accept radius. The visit still submits, flagged, with the distance shown to the reviewer.",
+        act:()=>this.fvGo(),
+        secondaryAct:()=>{
+          if(s.fvStep==="toofar")return this.setState({fvStep:"locating"},()=>setTimeout(()=>this.setState(x=>x.fvStep==="locating"?{fvStep:x.fvDist<=40?"onsite":"toofar"}:{}),1600));
+          if(s.fvStep==="denied")return this.setState({fvStep:"camera"});
+          if(s.fvStep==="cameraDenied")return this.setState({fvStep:"report"});
+          if(s.fvStep==="review")return this.setState({fvStep:"camera"});
+          if(s.fvStep==="rejected")return this.toast("Question sent","Tunde Bello notified");
+          return this.setState({fvStep:"task"});
+        }},
+      fvStates:FV_CHIPS.map(c=>({label:c[1],pick:()=>this.setState({fvStep:c[0]}),...chip(s.fvStep===c[0])})),
+      fvDist:d,onFvDist:ev=>this.setState({fvDist:Number(ev.target.value)}),
+
+      submissions:SUBS.map((x,i)=>{const f=PILL[x.fk];
+        return {initials:x.initials,name:x.name,time:x.time,store:x.store,flag:x.flag,bg:f[0],fg:f[1],
+          border:i===s.subIdx?"#1B4F8C":"#E3E8EF",pick:()=>this.setState({subIdx:i})};}),
+      sm:{...sub,bg:sf[0],fg:sf[1]},
+      approveVisit:()=>this.toast("Visit approved","TSK-"+sub.taskId.slice(4)+" closed · "+sub.name+" notified"),
+      flagVisit:()=>this.toast("Flagged for HR","Amaka Duru will review the evidence"),
+      toastRecapture:()=>this.toast("Re-capture requested",sub.name+" notified with your reason"),
+
+      leaveViews:["Mine","Approvals","Team calendar"].map(v=>({label:v,pick:()=>this.setState({leaveView:v}),...seg(s.leaveView===v)})),
+      leaveMine:s.leaveView==="Mine",leaveApprovals:s.leaveView==="Approvals",leaveCalendar:s.leaveView==="Team calendar",
+      balances:[["Annual leave",11,20,"plane",B,"Accrues 1.67 days a month"],["Sick leave",8,10,"activity",W,"2 taken this year"],
+        ["Compassionate",4,5,"heart",B,"1 taken in January"],["Unpaid taken",0,0,"minus-circle",N,"None this year"]]
+        .map(b=>({label:b[0],left:b[1],total:b[2]||"—",icon:b[3],fg:b[4],note:b[5],pct:b[2]?Math.round(b[1]/b[2]*100)+"%":"0%"})),
+      myLeave:MY_LEAVE.map((l,i)=>{const p=PILL[l[4]];
+        return {type:l[0],days:l[1],dates:l[2],status:l[3],bg:p[0],fg:p[1],icon:l[5],stage:l[6],
+          open:()=>this.setState({leaveDetailOpen:true,leaveIdx:i})};}),
+      leaveDetailOpen:s.leaveDetailOpen,
+      ld:{type:lv[0],days:lv[1],dates:lv[2],status:lv[3],bg:lp[0],fg:lp[1],reason:lv[7],
+        hasRejection:!!lv[8],rejectedBy:lv[11]||"",rejection:lv[12]||"",cancellable:!!lv[10],
+        timeline:(lv[9]||[]).map(c=>({label:c[0],meta:c[1],...dot(c[2])}))},
+      cancelLeave:()=>{this.setState({leaveDetailOpen:false});this.toast("Request cancelled","Tunde Bello notified");},
+
+      approvals:APPROVALS.map((a,i)=>{const p=PILL[a.tk];
+        return {initials:a.initials,name:a.name,type:a.type,bg:p[0],fg:p[1],dates:a.dates,days:a.days,
+          rowBg:i===s.apIdx?"#F7FAFD":"transparent",pick:()=>this.setState({apIdx:i})};}),
+      ap1:{initials:ap.initials,name:ap.name,role:ap.role,type:ap.type,dates:ap.dates,days:ap.days,after:ap.after,
+        reason:ap.reason,hasAttachment:!!ap.hasAttachment,attachment:ap.attachment||"",
+        clash:ap.clash,clashBg:ap.clashKind==="ok"?"#F4FBF8":ap.clashKind==="bad"?"#FFFBFA":"#FFFDF7",
+        clashBorder:ap.clashKind==="ok"?"#BFE3D3":ap.clashKind==="bad"?"#FADCD9":"#F6E3BF",
+        clashFg:ap.clashKind==="ok"?G:ap.clashKind==="bad"?R:W,
+        clashIcon:ap.clashKind==="ok"?"check-circle-2":ap.clashKind==="bad"?"alert-circle":"alert-triangle",
+        chain:ap.chain.map(c=>({label:c[0],meta:c[1],...dot(c[2])}))},
+      approveLeave:()=>this.toast("Leave approved",ap.name+" · sent to HR for final sign-off"),
+      declineLeave:()=>this.toast("Leave declined",ap.name+" notified with your reason"),
+
+      calDays:Array.from({length:31},(_,i)=>i+1).map(n=>{const dow=(n+6)%7;
+        return {n,fg:dow===5||dow===6?"#CDD5E0":"#7A8798"};}),
+      calRows:CAL.map(r=>({name:r[0],initials:r[1],
+        cells:Array.from({length:31},(_,i)=>{const day=i+1,dow=(day+6)%7;
+          const hit=r[2].find(b=>day>=b[0]&&day<=b[1]);
+          return {bg:hit?CAL_COLORS[hit[2]]:(dow===5||dow===6?"#F1F4F8":"#F8F9FB")};})})),
+
+      openRequest:()=>this.setState({requestOpen:true}),requestOpen:s.requestOpen,
+      leaveTypes:["Annual","Sick","Compassionate","Unpaid"].map(x=>({label:x,pick:()=>this.setState({leaveType:x}),...chip(s.leaveType===x)})),
+      leaveTypeNote:{Annual:"Deducted from your 11 remaining annual days.",Sick:"Up to 2 days without a certificate; 3 or more needs one.",
+        Compassionate:"4 days remaining. HR may ask for context.",Unpaid:"Needs HR sign-off as well as your HOD."}[s.leaveType],
+      needsDoc:needsDoc,
+      reqDays:s.reqDays,onReqDays:ev=>this.setState({reqDays:Number(ev.target.value)}),
+      lastDay:(16+s.reqDays)+" / 03 / 2026",
+      weekendDays:weekend,workingDays:working,
+      balanceAfter:bal>=0?bal+" days":Math.abs(bal)+" over",
+      balanceFg:bal<0?R:bal<=2?W:G,
+      overBalance:bal<0,overBy:Math.abs(bal),
+      submitRequest:()=>{this.setState({requestOpen:false});this.toast("Request submitted","Sent to Tunde Bello · you'll hear within 2 working days");},
+
+      toast:()=>this.toast("Saved","Change written to the audit log"),
+      toasts:s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

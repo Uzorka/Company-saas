@@ -1,0 +1,52 @@
+DESIGN TO CODEX HANDOFF
+
+Once the interface is approved, prepare a developer handoff package.
+
+The handoff must contain:
+1. Final screen inventory
+2. Route map
+3. User-role screen matrix
+4. Component inventory
+5. Design tokens
+6. Typography
+7. Spacing
+8. Colors
+9. Radius
+10. Shadows
+11. Icon rules
+12. Desktop navigation rules
+13. Mobile navigation rules
+14. Responsive breakpoints and behavior
+15. Form behavior
+16. Validation states
+17. Empty states
+18. Loading states
+19. Error states
+20. Permission-restricted states
+21. Animation specifications
+22. Attendance flow
+23. Field visit verification flow
+24. Leave workflow
+25. Payroll workflow
+26. Recruitment workflow
+27. File/document behavior
+28. Role and permission UX
+29. Audit log UX
+30. Dashboard layouts by role
+
+For every screen provide:
+- route
+- role access
+- purpose
+- sections
+- components
+- data displayed
+- actions
+- responsive behavior
+- interaction behavior
+- motion behavior
+- special states
+
+Do not leave visual decisions for Codex if they were already approved during design.
+
+The developer should implement the approved system, not reinterpret the product design.

@@ -1,0 +1,66 @@
+PHASE 2
+PUBLIC COMPANY WEBSITE AND CAREERS EXPERIENCE
+
+Use the approved design system.
+
+Design the public-facing company website.
+
+Pages:
+- Home
+- About
+- Services
+- Leadership
+- Careers
+- Job Detail
+- Contact
+- Login entry point
+
+Home:
+- hero
+- company summary
+- services
+- statistics
+- leadership preview
+- careers preview
+- call to action
+- footer
+
+Careers:
+- searchable job list
+- filters
+- job cards
+- empty state
+- mobile presentation
+
+Job detail:
+- role
+- department
+- location
+- employment type
+- description
+- responsibilities
+- requirements
+- deadline
+- apply action
+
+Application flow:
+- applicant information
+- CV upload
+- supporting documents
+- cover letter
+- validation
+- success state
+
+Design desktop and mobile.
+
+Also define:
+- hover states
+- form validation
+- upload progress
+- submission loading
+- success confirmation
+- failed submission
+- job closed state
+- application deadline passed state
+
+Keep the visual connection between the public website and the secure app.

@@ -1,0 +1,377 @@
+MASTER DESIGN ARCHITECTURE
+Company Management SaaS
+
+ROLE
+You are a senior product designer, UX architect, design systems specialist, and SaaS interaction designer.
+
+Your job is to design the complete interface and user experience for a modern multi-tenant Company Management SaaS.
+
+Do not write production application code in this stage.
+Focus on product design, user flows, screens, states, interactions, motion, accessibility, and developer handoff.
+
+PRODUCT SUMMARY
+The platform contains two major experiences:
+1. Public company website
+2. Secure internal company management application
+
+The system will initially serve one company, but the product must look and behave like a SaaS product designed for multiple companies later.
+
+Each company has its own isolated workspace.
+
+CORE MODULES
+- Management dashboard
+- HR dashboard
+- Accounts dashboard
+- HOD dashboard
+- Employee dashboard
+- Staff management
+- Departments
+- Positions
+- Attendance
+- Office geofencing
+- Remote work check-in
+- Check-in selfie verification
+- Task management
+- Field visit verification
+- Leave management
+- Payroll
+- Payslips
+- Recruitment
+- Careers website
+- Company documents
+- Notifications
+- Announcements
+- Reports
+- Audit logs
+- Roles and permissions
+- Company settings
+- Platform admin readiness
+- Public company website
+
+KEY ROLES
+- Platform Super Admin
+- Company Management
+- HR
+- Accounts
+- Head of Department
+- Employee
+
+The same user may hold more than one role later.
+
+DESIGN DIRECTION
+Create a premium, modern SaaS interface.
+
+The experience should feel clean, calm, professional, fast, modern, easy to learn, app-like, and suitable for desktop and mobile.
+
+Avoid cluttered ERP interfaces, excessive tables everywhere, oversized cards with little information, unnecessary gradients, excessive animation, overly playful styling, and generic admin-template appearance.
+
+Use strong information hierarchy, generous but efficient spacing, clear typography, responsive data presentation, contextual actions, slide-over panels where useful, modal dialogs only where appropriate, progressive disclosure, meaningful empty states, skeleton loading, clear status colors, restrained motion, and compact mobile patterns.
+
+DESIGN SYSTEM EXPECTATIONS
+Define:
+- typography
+- spacing scale
+- border radius
+- shadows
+- elevation
+- color tokens
+- semantic colors
+- light mode
+- dark mode
+- icon style
+- buttons
+- inputs
+- selects
+- date pickers
+- tables
+- cards
+- badges
+- tabs
+- drawers
+- dialogs
+- dropdowns
+- breadcrumbs
+- search
+- command palette
+- toasts
+- charts
+- Kanban cards
+- timeline components
+- avatar patterns
+- profile cards
+- file upload components
+- camera capture UI
+- location verification UI
+- mobile navigation
+- desktop sidebar
+
+PRIMARY NAVIGATION
+
+Public:
+- Home
+- About
+- Services
+- Leadership
+- Careers
+- Contact
+- Login
+
+Secure app:
+- Dashboard
+- Employees
+- Departments
+- Attendance
+- Tasks
+- Leave
+- Payroll
+- Recruitment
+- Documents
+- Reports
+- Notifications
+- Settings
+- Audit
+
+Navigation must change based on role.
+
+ATTENDANCE UX
+Employee check-in flow:
+1. Employee opens dashboard
+2. Taps Check In
+3. System requests location
+4. System shows current location status
+5. Employee takes a live selfie
+6. System records time, coordinates, location accuracy, office/remote classification, and selfie
+7. Employee sees successful check-in state
+
+Office attendance:
+If the employee is within the company's configured office geofence, mark as Worked in Office.
+
+Remote attendance:
+If outside the configured geofence, mark as Worked Remotely.
+
+The product must not imply continuous tracking.
+Location is captured only during explicit verification actions.
+
+Design exception states:
+- location denied
+- camera denied
+- poor GPS accuracy
+- no internet
+- selfie failed
+- outside expected location
+- manual HR review
+- already checked in
+- check-out required
+
+HR attendance view must show:
+- employee
+- status
+- office/remote
+- check-in time
+- check-out time
+- work duration
+- selfie
+- location
+- GPS accuracy
+- exception flag
+- review state
+
+FIELD VISIT VERIFICATION
+Some tasks require proof that the employee visited a location.
+
+Task verification modes:
+- none
+- photo only
+- location only
+- photo + location
+- photo + location + report
+
+For a verified field task:
+1. Employee opens task
+2. Taps Verify Visit or Complete Visit
+3. App requests fresh location
+4. App compares current position with target location
+5. Employee takes a live photo or selfie
+6. Employee adds visit report
+7. System records location, timestamp, GPS accuracy, photo, distance from expected location, and report
+8. Task becomes verified or flagged for review
+
+Design:
+- target location card
+- current location status
+- distance indicator
+- verification badge
+- evidence viewer
+- exception state
+- manager review state
+
+LEAVE UX
+Employee:
+- leave balance
+- request leave
+- leave history
+- current requests
+
+Approval:
+Employee -> HOD -> HR
+
+If no HOD:
+Employee -> HR
+
+Design approval timeline and status clearly.
+
+PAYROLL UX
+Accounts:
+- payroll period
+- draft
+- processing
+- review
+- approved
+- published
+- closed
+
+Show gross payroll, deductions, net payroll, employee count, status, adjustments, and approvals.
+
+Employee:
+- payslip list
+- payslip detail
+- printable/downloadable presentation
+
+Do not design bank-transfer or government filing flows for MVP.
+
+RECRUITMENT UX
+Public:
+Careers -> Job Detail -> Apply
+
+Backend pipeline:
+- Applied
+- Screening
+- Shortlisted
+- Interview
+- Offered
+- Hired
+- Rejected
+- Withdrawn
+
+HR needs:
+- applicant list
+- applicant profile
+- CV viewer
+- notes
+- stage changes
+- convert to employee
+
+MULTI-TENANT UX
+The product should be visually ready for multiple organizations.
+
+Design:
+- organization identity in sidebar/header
+- company logo
+- company name
+- organization switcher pattern for future use
+- platform admin concept
+- isolated workspace feel
+
+Do not design billing yet.
+
+DASHBOARD REQUIREMENTS
+Management:
+- total staff
+- departments
+- attendance today
+- office vs remote
+- active tasks
+- overdue tasks
+- pending leave
+- payroll summary
+- recruitment pipeline
+- organization activity
+
+HR:
+- headcount
+- attendance today
+- late/missing check-ins
+- office vs remote
+- pending leave
+- recruitment
+- recent hires
+- staff documents
+
+Accounts:
+- current payroll
+- gross
+- deductions
+- net
+- payroll status
+- payslip publication
+
+HOD:
+- department staff
+- attendance today
+- open tasks
+- overdue tasks
+- pending leave
+- field visit verification
+- department performance
+
+Employee:
+- check-in status
+- today's attendance
+- assigned tasks
+- upcoming deadlines
+- leave balance
+- recent payslips
+- notifications
+- announcements
+
+RESPONSIVE REQUIREMENTS
+Design desktop and mobile for every critical flow.
+Do not simply shrink desktop tables on mobile.
+Use cards, stacked rows, bottom sheets, mobile filters, sticky primary actions, compact navigation, and full-screen mobile forms where useful.
+
+MOTION
+Use motion to improve understanding.
+
+Examples:
+- sidebar transitions
+- drawer opening
+- tab transitions
+- Kanban movement
+- notification arrival
+- success states
+- check-in confirmation
+- task completion
+- pipeline stage movement
+
+Avoid decorative motion.
+Respect reduced-motion preferences.
+
+ACCESSIBILITY
+Design for:
+- keyboard navigation
+- readable contrast
+- visible focus
+- accessible forms
+- clear errors
+- screen-reader-friendly labels
+- non-color-only status communication
+- reduced motion
+
+DESIGN OUTPUT RULE
+For every screen or flow, provide:
+1. screen purpose
+2. user role
+3. desktop layout
+4. mobile layout
+5. primary actions
+6. secondary actions
+7. components used
+8. data shown
+9. empty state
+10. loading state
+11. error state
+12. permission state
+13. interaction notes
+14. animation notes
+
+Maintain one consistent design system across all phases.

@@ -1,0 +1,78 @@
+PHASE 1
+DESIGN SYSTEM AND PRODUCT FOUNDATION
+
+Use MASTER_DESIGN_ARCHITECTURE.txt.
+
+Do not design full business modules yet.
+
+Create the complete visual foundation.
+
+Design:
+- brand-neutral SaaS visual language
+- light mode
+- dark mode
+- typography scale
+- spacing system
+- color tokens
+- semantic status colors
+- borders
+- radius
+- shadows
+- icons
+- avatars
+- buttons
+- form controls
+- selects
+- date controls
+- search
+- command palette
+- cards
+- KPI cards
+- tables
+- list rows
+- tabs
+- badges
+- tooltips
+- dropdowns
+- dialogs
+- drawers
+- sheets
+- toasts
+- breadcrumbs
+- file uploads
+- empty states
+- loading states
+- error states
+- pagination
+- filters
+- charts
+- Kanban cards
+- timelines
+- camera capture component
+- geolocation verification component
+- evidence card
+- notification item
+- audit log row
+
+Also design:
+Desktop app shell
+Mobile app shell
+Collapsible sidebar
+Top bar
+Mobile navigation
+Profile menu
+Organization identity area
+Notification panel
+Command/search experience
+
+Deliver:
+- design tokens
+- component inventory
+- responsive rules
+- interaction rules
+- motion rules
+- accessibility rules
+- example dashboard shell desktop
+- example dashboard shell mobile
+
+Do not proceed to Phase 2 until this system is approved.

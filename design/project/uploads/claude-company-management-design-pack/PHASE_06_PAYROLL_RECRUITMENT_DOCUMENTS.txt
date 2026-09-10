@@ -1,0 +1,73 @@
+PHASE 6
+PAYROLL, RECRUITMENT BACKEND, DOCUMENTS
+
+PAYROLL
+Design:
+- payroll dashboard
+- payroll periods
+- create period
+- payroll detail
+- employee payroll rows
+- adjustments
+- gross
+- deductions
+- net
+- approval
+- publish
+- CSV export
+- payslip list
+- payslip detail
+- print-friendly payslip
+
+Statuses:
+- draft
+- processing
+- review
+- approved
+- published
+- closed
+
+Employee:
+- own payslips only
+
+RECRUITMENT BACKEND
+Design:
+- jobs list
+- create job
+- edit job
+- publish/unpublish
+- applicants list
+- applicant detail
+- CV/document viewer
+- pipeline board
+- filters
+- notes
+- stage change
+- reject
+- mark hired
+- Convert to Employee
+
+Pipeline:
+- Applied
+- Screening
+- Shortlisted
+- Interview
+- Offered
+- Hired
+- Rejected
+- Withdrawn
+
+DOCUMENTS
+Design:
+- company documents
+- employee documents
+- applicant documents
+- upload
+- search
+- categories
+- preview
+- permissions
+- empty states
+- version/date metadata
+
+Keep sensitive documents visually differentiated from public files.

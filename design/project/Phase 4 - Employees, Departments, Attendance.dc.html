@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #F1F4F8; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; color: #131A22; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4F8C; text-decoration: none; }
+  a:hover { color: #16406F; text-decoration: underline; }
+  [data-icon] svg { width: 1em; height: 1em; stroke-width: 1.75; display: block; }
+  input[type="range"] { accent-color: #1B4F8C; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes scaleIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes drawerIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes checkPop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(27,79,140,.3); } 70% { box-shadow: 0 0 0 16px rgba(27,79,140,0); } 100% { box-shadow: 0 0 0 0 rgba(27,79,140,0); } }
+  @keyframes radar { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</helmet>
+
+<div style="max-width:1560px;margin:0 auto;background:#F1F4F8;min-height:100vh">
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 20px;background:#131A22;color:#9AA7B6">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase">Phase 04 · Employees, departments, attendance</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">viewing as <b style="color:#fff">{{ viewerLabel }}</b></span>
+  </div>
+
+  <div style="display:flex;min-height:900px">
+    <div style="width:212px;flex:none;background:#fff;border-right:1px solid #E3E8EF;padding:16px 12px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;margin-bottom:16px">
+        <span style="width:30px;height:30px;flex:none;border-radius:8px;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">H</span>
+        <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">CHF Heron Nigeria</span><span style="display:block;font-size:10px;color:#7A8798">Lagos HQ workspace</span></span>
+      </div>
+      <sc-for list="{{ sections }}" as="n" hint-placeholder-count="6">
+        <div onClick="{{ n.pick }}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;margin-bottom:2px;cursor:pointer;background:{{ n.bg }};color:{{ n.fg }};transition:background 140ms" style-hover="background:#F1F4F8">
+          <span data-icon="{{ n.icon }}" style="font-size:18px;flex:none"></span>
+          <span style="font-size:13px;font-weight:500;white-space:nowrap">{{ n.label }}</span>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="padding:12px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:11px;line-height:17px;color:#4A5666">Location is only read during an explicit check-in or visit verification. No background tracking anywhere in this product.</div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+      <!-- EMPLOYEES -->
+      <sc-if value="{{ isEmployees }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Employees</h1>
+              <div style="font-size:14px;color:#4A5666">{{ dirCountLabel }} · Lagos, Abuja and Port Harcourt</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#F8F9FB"><span data-icon="download" style="font-size:15px"></span>Export</button>
+              <button onClick="{{ openCreate }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer" style-hover="background:#16406F"><span data-icon="user-plus" style="font-size:15px"></span>Add employee</button>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid #E3E8EF">
+              <div style="flex:1 1 240px;min-width:200px;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff">
+                <span data-icon="search" style="font-size:16px;color:#7A8798"></span>
+                <input value="{{ dirQuery }}" onInput="{{ onDirQuery }}" placeholder="Search name, ID, position…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 14px 'IBM Plex Sans'" />
+              </div>
+              <div style="position:relative">
+                <button onClick="{{ toggleDept }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">{{ deptLabel }}<span data-icon="chevron-down" style="font-size:15px;color:#7A8798"></span></button>
+                <sc-if value="{{ deptOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;z-index:20;top:42px;left:0;width:210px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.16);animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+                    <sc-for list="{{ deptOptions }}" as="d" hint-placeholder-count="7">
+                      <div onClick="{{ d.pick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer;background:{{ d.bg }}" style-hover="background:#F1F4F8">{{ d.label }}<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ d.count }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="position:relative">
+                <button onClick="{{ togglePos }}" style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">{{ posLabel }}<span data-icon="chevron-down" style="font-size:15px;color:#7A8798"></span></button>
+                <sc-if value="{{ posOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;z-index:20;top:42px;left:0;width:230px;padding:6px;border:1px solid #E3E8EF;border-radius:10px;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.16);animation:scaleIn 140ms cubic-bezier(0,.6,.25,1)">
+                    <sc-for list="{{ posOptions }}" as="p" hint-placeholder-count="6">
+                      <div onClick="{{ p.pick }}" style="padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer;background:{{ p.bg }}" style-hover="background:#F1F4F8">{{ p.label }}</div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ statusChips }}" as="c" hint-placeholder-count="4">
+                  <button onClick="{{ c.pick }}" style="height:36px;padding:0 12px;border:1px solid {{ c.border }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ c.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <sc-if value="{{ hasStaff }}" hint-placeholder-val="{{ true }}">
+              <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;min-width:840px">
+                  <thead>
+                    <tr style="background:#F8F9FB">
+                      <th onClick="{{ sortName }}" style="padding:11px 18px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666;cursor:pointer;white-space:nowrap">Employee ↕</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Position</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Department</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Location</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Status</th>
+                      <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Started</th>
+                      <th style="padding:11px 18px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ staff }}" as="emp" hint-placeholder-count="8">
+                      <tr onClick="{{ emp.open }}" style="border-top:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                        <td style="padding:11px 18px">
+                          <div style="display:flex;align-items:center;gap:11px">
+                            <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 12px 'IBM Plex Sans'">{{ emp.initials }}</span>
+                            <span><span style="display:block;font-size:13px;font-weight:500">{{ emp.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ emp.id }}</span></span>
+                          </div>
+                        </td>
+                        <td style="padding:11px 12px;font-size:13px;color:#4A5666">{{ emp.position }}</td>
+                        <td style="padding:11px 12px;font-size:13px;color:#4A5666">{{ emp.dept }}</td>
+                        <td style="padding:11px 12px;font-size:13px;color:#4A5666">{{ emp.location }}</td>
+                        <td style="padding:11px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ emp.pillBg }};color:{{ emp.pillFg }};font-size:11px;font-weight:600">{{ emp.pillGlyph }} {{ emp.status }}</span></td>
+                        <td style="padding:11px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ emp.started }}</td>
+                        <td style="padding:11px 18px;text-align:right"><span style="font-size:12px;font-weight:500;color:#1B4F8C">Open</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:56px 24px;text-align:center;animation:fadeIn 200ms">
+                <span data-icon="search-x" style="font-size:28px;color:#7FA6D3;display:inline-flex;margin-bottom:12px"></span>
+                <div style="font-size:17px;font-weight:600;margin-bottom:7px">No employees match those filters</div>
+                <div style="font-size:14px;line-height:22px;color:#4A5666;max-width:40ch;margin:0 auto 16px">Try a broader search, or clear the department and status filters.</div>
+                <button onClick="{{ clearFilters }}" style="height:38px;padding:0 16px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Clear filters</button>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+              <span style="font-size:12px;color:#7A8798">{{ dirCountLabel }} · page 1 of 18</span>
+              <div style="display:flex;gap:6px">
+                <button style="height:28px;padding:0 10px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 12px 'IBM Plex Sans';cursor:pointer">Prev</button>
+                <button style="height:28px;width:28px;border:1px solid #1B4F8C;border-radius:6px;background:#1B4F8C;color:#fff;font:500 12px 'IBM Plex Sans';cursor:pointer">1</button>
+                <button style="height:28px;width:28px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 12px 'IBM Plex Sans';cursor:pointer">2</button>
+                <button style="height:28px;padding:0 10px;border:1px solid #CDD5E0;border-radius:6px;background:#fff;font:500 12px 'IBM Plex Sans';cursor:pointer">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;align-items:flex-start">
+            <div style="flex:0 0 auto;width:300px;max-width:100%;border:1px solid #E3E8EF;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.12)">
+              <div style="padding:12px 16px;border-bottom:1px solid #E3E8EF;display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:600">Employees</span><span data-icon="sliders-horizontal" style="font-size:17px;color:#1B4F8C"></span></div>
+              <div style="padding:12px 16px;display:flex;gap:7px;overflow-x:auto;border-bottom:1px solid #E3E8EF">
+                <span style="flex:none;padding:6px 12px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:12px;font-weight:500">All 142</span>
+                <span style="flex:none;padding:6px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px">Sales</span>
+                <span style="flex:none;padding:6px 12px;border-radius:999px;border:1px solid #CDD5E0;font-size:12px">Logistics</span>
+              </div>
+              <div style="padding:12px 16px;background:#F8F9FB;display:flex;flex-direction:column;gap:10px">
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center">
+                  <span style="width:36px;height:36px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">AO</span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">Adaeze Okonkwo</span><span style="display:block;font-size:11px;color:#7A8798">Sales Rep · Sales · Lagos</span></span>
+                  <span style="padding:2px 8px;border-radius:999px;background:#E7F4EE;color:#0F7A54;font-size:10px;font-weight:600">Active</span>
+                </div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center">
+                  <span style="width:36px;height:36px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">CU</span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">Chidi Uzo</span><span style="display:block;font-size:11px;color:#7A8798">Field Sales · Sales · Lagos</span></span>
+                  <span style="padding:2px 8px;border-radius:999px;background:#E7F4EE;color:#0F7A54;font-size:10px;font-weight:600">Active</span>
+                </div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center">
+                  <span style="width:36px;height:36px;flex:none;border-radius:50%;background:#F1F4F8;color:#7A8798;display:grid;place-items:center;font:600 13px 'IBM Plex Sans'">BO</span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">Bola Ogun</span><span style="display:block;font-size:11px;color:#7A8798">Merchandiser · Sales · Lagos</span></span>
+                  <span style="padding:2px 8px;border-radius:999px;background:#F1F4F8;color:#4A5666;font-size:10px;font-weight:600">On leave</span>
+                </div>
+              </div>
+              <div style="padding:10px 16px;border-top:1px solid #E3E8EF"><button style="width:100%;height:46px;border:none;border-radius:10px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans'">Add employee</button></div>
+            </div>
+            <div style="flex:1 1 280px;min-width:260px;padding:20px;background:#fff;border:1px solid #E3E8EF;border-radius:14px">
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Directory rules</div>
+              <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:20px;color:#4A5666">
+                <div>Desktop is a table because HR compares rows. Mobile is cards, because a phone can't compare seven columns — the same filters apply through a bottom sheet.</div>
+                <div>Row click opens a slide-over, not a page — HR keeps their filtered list behind it.</div>
+                <div>Salary is never in the directory. Compensation lives one permission level deeper, on the profile.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- DEPARTMENTS -->
+      <sc-if value="{{ isDepartments }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Departments</h1>
+              <div style="font-size:14px;color:#4A5666">7 departments · 24 positions · 142 people</div>
+            </div>
+            <button onClick="{{ toast }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="plus" style="font-size:15px"></span>New department</button>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:1 1 300px;min-width:280px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-content:start">
+              <sc-for list="{{ departments }}" as="d" hint-placeholder-count="7">
+                <div onClick="{{ d.pick }}" style="background:#fff;border:1px solid {{ d.border }};border-radius:14px;padding:18px;cursor:pointer;transition:border-color 140ms,box-shadow 140ms,transform 140ms" style-hover="border-color:#AFC9E7;box-shadow:0 8px 24px -6px rgba(16,24,40,.1);transform:translateY(-2px)">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+                    <span data-icon="{{ d.icon }}" style="font-size:20px;color:#1B4F8C"></span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ d.code }}</span>
+                  </div>
+                  <div style="font-size:16px;font-weight:600;letter-spacing:-.01em">{{ d.name }}</div>
+                  <div style="font-size:12px;color:#7A8798;margin-top:4px">Head: {{ d.head }}</div>
+                  <div style="display:flex;gap:14px;margin-top:14px;font-size:12px;color:#4A5666">
+                    <span><b style="font-size:15px;color:#131A22">{{ d.staff }}</b> staff</span>
+                    <span><b style="font-size:15px;color:#131A22">{{ d.positions }}</b> roles</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+              <div style="padding:20px;border-bottom:1px solid #E3E8EF">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between">
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-bottom:5px">{{ dept.code }}</div>
+                    <h2 style="margin:0 0 4px;font-size:20px;font-weight:600;letter-spacing:-.015em">{{ dept.name }}</h2>
+                    <div style="font-size:13px;color:#4A5666">{{ dept.blurb }}</div>
+                  </div>
+                  <button onClick="{{ toast }}" style="height:34px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer">Edit</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;margin-top:18px;padding:14px;border-radius:12px;background:#F7FAFD;border:1px solid #D9E6F5">
+                  <span style="width:40px;height:40px;flex:none;border-radius:50%;background:#1B4F8C;color:#fff;display:grid;place-items:center;font:600 14px 'IBM Plex Sans'">{{ dept.headInitials }}</span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:11px;color:#16406F;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Head of department</span><span style="display:block;font-size:15px;font-weight:600;margin-top:2px">{{ dept.head }}</span></span>
+                  <button onClick="{{ toast }}" style="height:32px;padding:0 12px;border:1px solid #AFC9E7;border-radius:8px;background:#fff;font:500 12px 'IBM Plex Sans';cursor:pointer">Change</button>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:#E3E8EF">
+                <sc-for list="{{ dept.metrics }}" as="m" hint-placeholder-count="4">
+                  <div style="background:#fff;padding:16px"><div style="font-size:11px;color:#7A8798">{{ m.label }}</div><div style="font-size:19px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;color:{{ m.fg }}">{{ m.value }}</div></div>
+                </sc-for>
+              </div>
+              <div style="padding:18px 20px;border-top:1px solid #E3E8EF">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Positions in this department</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ dept.roles }}" as="r" hint-placeholder-count="4">
+                    <span style="padding:6px 12px;border-radius:999px;background:#F1F4F8;font-size:12px;font-weight:500;color:#4A5666">{{ r.name }} · {{ r.count }}</span>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="border-top:1px solid #E3E8EF">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px"><span style="font-size:12px;font-weight:600;color:#4A5666">Staff</span><span style="font-size:12px;font-weight:500;color:#1B4F8C;cursor:pointer">View all {{ dept.staff }}</span></div>
+                <sc-for list="{{ dept.people }}" as="p" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:11px;padding:11px 20px;border-top:1px solid #F1F4F8;transition:background 80ms" style-hover="background:#F8FAFD">
+                    <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ p.initials }}</span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ p.name }}</span><span style="display:block;font-size:11px;color:#7A8798">{{ p.role }}</span></span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:11px;font-weight:600">{{ p.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- CHECK-IN FLOW -->
+      <sc-if value="{{ isCheckin }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Employee check-in</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:64ch">The whole flow is live — tap through it. Or jump to any state, including the exceptions, with the chips on the right.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+            <div style="flex:0 0 auto;width:330px;max-width:100%;background:#131A22;border-radius:28px;padding:10px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3)">
+              <div style="background:#fff;border-radius:20px;overflow:hidden;min-height:620px;display:flex;flex-direction:column">
+                <div style="display:flex;justify-content:space-between;padding:9px 18px 5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798"><span>09:04</span><span>▮▮▮ ⌁</span></div>
+                <div style="padding:10px 18px 20px;flex:1;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                    <span style="font-size:17px;font-weight:600;letter-spacing:-.015em">{{ ci.title }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798">{{ ci.step }}</span>
+                  </div>
+
+                  <div style="position:relative;flex:1;min-height:300px;border-radius:16px;overflow:hidden;background:{{ ci.stageBg }};display:grid;place-items:center;transition:background 200ms">
+                    <sc-if value="{{ ci.showMap }}" hint-placeholder-val="{{ true }}">
+                      <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#EEF4FB 0 11px,#E2EDF8 11px 22px)"></div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showRadar }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:relative;display:grid;place-items:center">
+                        <span style="position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(27,79,140,.22);animation:radar 1.8s ease-out infinite"></span>
+                        <span style="position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(27,79,140,.22);animation:radar 1.8s ease-out .9s infinite"></span>
+                        <span style="position:relative;width:56px;height:56px;border-radius:50%;background:#1B4F8C;color:#fff;display:grid;place-items:center"><span data-icon="map-pin" style="font-size:24px"></span></span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showPin }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:relative;display:grid;place-items:center;text-align:center">
+                        <span style="width:20px;height:20px;border-radius:50%;background:{{ ci.accent }};border:3px solid #fff;box-shadow:0 2px 6px rgba(16,24,40,.3);animation:pulseRing 2.4s ease-out infinite"></span>
+                        <span style="position:absolute;width:150px;height:150px;border-radius:50%;border:2px dashed {{ ci.accent }};opacity:.5"></span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showCamera }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#F1F4F8 0 9px,#E7ECF3 9px 18px);display:grid;place-items:center">
+                        <div style="position:relative;width:140px;height:184px;display:grid;place-items:center">
+                          <div style="position:absolute;inset:0;border:2px dashed #7FA6D3;border-radius:50% 50% 46% 46%"></div>
+                          <div style="position:relative;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666;text-align:center">{{ ci.cameraLabel }}</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showDenied }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:#FFFBFA;display:grid;place-items:center;padding:26px;text-align:center;animation:fadeIn 200ms">
+                        <div>
+                          <span data-icon="{{ ci.deniedIcon }}" style="font-size:30px;color:#B42318;display:inline-flex;margin-bottom:12px"></span>
+                          <div style="font-size:15px;font-weight:600;color:#B42318;margin-bottom:8px">{{ ci.deniedTitle }}</div>
+                          <div style="font-size:13px;line-height:20px;color:#4A5666">{{ ci.deniedBody }}</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showSuccess }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:#E7F4EE;display:grid;place-items:center;animation:fadeIn 200ms">
+                        <div style="text-align:center">
+                          <div style="width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:#0F7A54;color:#fff;display:grid;place-items:center;font-size:34px;animation:checkPop 420ms cubic-bezier(.2,.8,.2,1)">✓</div>
+                          <div style="font-size:17px;font-weight:600;color:#0F7A54">{{ ci.successTitle }}</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0F7A54;margin-top:6px">{{ ci.successSub }}</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ci.showWorking }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:#F8F9FB;display:grid;place-items:center">
+                        <div style="text-align:center">
+                          <div style="width:44px;height:44px;margin:0 auto 14px;border-radius:50%;border:3px solid #E3E8EF;border-top-color:#1B4F8C;animation:spin 900ms linear infinite"></div>
+                          <div style="font-size:14px;font-weight:600">{{ ci.workingLabel }}</div>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;background:{{ ci.statusBg }};margin-top:12px;transition:background 200ms">
+                    <span data-icon="{{ ci.statusIcon }}" style="font-size:18px;color:{{ ci.statusFg }}"></span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;font-weight:600;color:{{ ci.statusFg }}">{{ ci.statusTitle }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ ci.statusFg }};margin-top:2px">{{ ci.statusSub }}</span></span>
+                  </div>
+
+                  <sc-if value="{{ ci.hasSecondary }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ ci.secondaryAct }}" style="width:100%;height:44px;margin-top:10px;border:1px solid #CDD5E0;border-radius:10px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">{{ ci.secondary }}</button>
+                  </sc-if>
+                  <button onClick="{{ ci.act }}" style="width:100%;height:50px;margin-top:10px;border:none;border-radius:12px;background:{{ ci.ctaBg }};color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer;transition:background 140ms" style-hover="opacity:.92">{{ ci.cta }}</button>
+                  <div style="font-size:11px;line-height:17px;color:#7A8798;margin-top:10px;text-align:center">{{ ci.privacy }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1 1 320px;min-width:290px;display:flex;flex-direction:column;gap:16px">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Jump to a state</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ ciStates }}" as="cs" hint-placeholder-count="10">
+                    <button onClick="{{ cs.pick }}" style="height:32px;padding:0 12px;border:1px solid {{ cs.border }};border-radius:999px;background:{{ cs.bg }};color:{{ cs.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer;transition:background 140ms,color 140ms">{{ cs.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px">{{ ci.noteTitle }}</div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666">{{ ci.noteBody }}</div>
+                <div style="margin-top:14px;padding-top:14px;border-top:1px solid #F1F4F8;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:19px;color:#4A5666">{{ ci.noteMotion }}</div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+                <div style="padding:16px 20px;border-bottom:1px solid #E3E8EF;font-size:15px;font-weight:600">My attendance history</div>
+                <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+                  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid #F1F4F8">
+                    <span style="flex:0 0 76px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ h.date }}</span>
+                    <span style="flex:1 1 120px;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ h.times }}</span>
+                    <span style="flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ h.duration }}</span>
+                    <span style="flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};font-size:11px;font-weight:600">{{ h.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- HR ATTENDANCE -->
+      <sc-if value="{{ isAttendance }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Attendance · today</h1>
+              <div style="font-size:14px;color:#4A5666">Monday 9 March · updated 09:41</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="calendar" style="font-size:15px"></span>9 Mar 2026</button>
+              <button onClick="{{ toast }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 13px 'IBM Plex Sans';cursor:pointer"><span data-icon="download" style="font-size:15px"></span>Export day</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">
+            <sc-for list="{{ attTiles }}" as="t" hint-placeholder-count="6">
+              <div onClick="{{ t.pick }}" style="background:#fff;border:1px solid {{ t.border }};border-radius:14px;padding:16px 18px;cursor:pointer;transition:border-color 140ms,transform 140ms" style-hover="transform:translateY(-1px)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:12px;color:#4A5666">{{ t.label }}</span><span data-icon="{{ t.icon }}" style="font-size:16px;color:{{ t.fg }}"></span></div>
+                <div style="font-size:26px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums;color:{{ t.fg }}">{{ t.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #E3E8EF">
+              <div style="display:flex;flex-wrap:wrap;gap:7px">
+                <sc-for list="{{ attFilters }}" as="f" hint-placeholder-count="6">
+                  <button onClick="{{ f.pick }}" style="height:32px;padding:0 12px;border:1px solid {{ f.border }};border-radius:999px;background:{{ f.bg }};color:{{ f.fg }};font:500 12px 'IBM Plex Sans';cursor:pointer">{{ f.label }}</button>
+                </sc-for>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ attCount }}</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:880px">
+                <thead>
+                  <tr style="background:#F8F9FB">
+                    <th style="padding:11px 18px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Employee</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Status</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Mode</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">In</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Out</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Duration</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Accuracy</th>
+                    <th style="padding:11px 12px;text-align:left;font:600 12px 'IBM Plex Sans';color:#4A5666">Proof</th>
+                    <th style="padding:11px 18px;text-align:right;font:600 12px 'IBM Plex Sans';color:#4A5666"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{ attRows }}" as="r" hint-placeholder-count="6">
+                    <tr onClick="{{ r.open }}" style="border-top:1px solid #F1F4F8;cursor:pointer;transition:background 80ms" style-hover="background:#F8FAFD">
+                      <td style="padding:11px 18px">
+                        <div style="display:flex;align-items:center;gap:11px">
+                          <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 11px 'IBM Plex Sans'">{{ r.initials }}</span>
+                          <span><span style="display:block;font-size:13px;font-weight:500">{{ r.name }}</span><span style="display:block;font-size:11px;color:#7A8798">{{ r.dept }}</span></span>
+                        </div>
+                      </td>
+                      <td style="padding:11px 12px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};font-size:11px;font-weight:600">{{ r.glyph }} {{ r.status }}</span></td>
+                      <td style="padding:11px 12px;font-size:13px;color:#4A5666">{{ r.mode }}</td>
+                      <td style="padding:11px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ r.in }}</td>
+                      <td style="padding:11px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ r.out }}</td>
+                      <td style="padding:11px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ r.duration }}</td>
+                      <td style="padding:11px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ r.accFg }}">{{ r.acc }}</td>
+                      <td style="padding:11px 12px"><span style="display:inline-flex;gap:5px;align-items:center;font-size:12px;color:#4A5666"><span data-icon="{{ r.proofIcon }}" style="font-size:14px;color:{{ r.proofFg }}"></span>{{ r.proof }}</span></td>
+                      <td style="padding:11px 18px;text-align:right"><span style="font-size:12px;font-weight:500;color:#1B4F8C">Review</span></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- LOCATION SETTINGS -->
+      <sc-if value="{{ isLocation }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:24px;animation:fadeIn 200ms">
+          <div style="margin-bottom:18px">
+            <h1 style="margin:0 0 5px;font-size:24px;font-weight:600;letter-spacing:-.02em">Company locations</h1>
+            <div style="font-size:14px;color:#4A5666;max-width:66ch">Each office defines a geofence. Anyone checking in inside it is recorded as working in the office — outside it, as working remotely. Neither is an error state.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+            <div style="flex:1 1 340px;min-width:300px;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:16px">Office details</div>
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Office name</label>
+              <input value="Head Office — Victoria Island" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+              <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Address</label>
+              <input value="Plot 1C Akin Ogunlewe Street, Lagos" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;margin-bottom:14px" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" />
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Latitude</label><input value="6.431200" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+                <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Longitude</label><input value="3.421900" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 13px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              </div>
+              <label style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:10px">Geofence radius<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B4F8C">{{ radiusLabel }}</span></label>
+              <input type="range" min="10" max="300" step="5" value="{{ radius }}" onInput="{{ onRadius }}" style="width:100%;margin-bottom:6px" />
+              <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-bottom:12px"><span>10m default</span><span>300m</span></div>
+              <div style="padding:12px 14px;border-radius:10px;background:{{ radiusHintBg }};border:1px solid {{ radiusHintBorder }};font-size:12px;line-height:19px;color:#4A5666">{{ radiusHint }}</div>
+              <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+                <button onClick="{{ toast }}" style="height:40px;padding:0 18px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Save location</button>
+                <button style="height:40px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Add another office</button>
+              </div>
+            </div>
+
+            <div style="flex:1 1 340px;min-width:300px;display:flex;flex-direction:column;gap:16px">
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:22px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:12px;font-weight:600;color:#4A5666">Geofence preview</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">drag the test pin</span></div>
+                <div style="position:relative;height:300px;border-radius:12px;overflow:hidden;background:repeating-linear-gradient(135deg,#EEF4FB 0 12px,#E2EDF8 12px 24px);display:grid;place-items:center">
+                  <div style="position:relative;display:grid;place-items:center">
+                    <span style="position:absolute;width:{{ fenceSize }};height:{{ fenceSize }};border-radius:50%;background:rgba(27,79,140,.1);border:2px dashed #1B4F8C;transition:width 200ms cubic-bezier(.2,.8,.2,1),height 200ms cubic-bezier(.2,.8,.2,1)"></span>
+                    <span style="position:relative;width:14px;height:14px;border-radius:50%;background:#1B4F8C;border:3px solid #fff;box-shadow:0 2px 6px rgba(16,24,40,.3)"></span>
+                  </div>
+                  <span style="position:absolute;left:{{ testX }};top:38%;width:16px;height:16px;border-radius:50%;background:{{ testColor }};border:3px solid #fff;box-shadow:0 2px 8px rgba(16,24,40,.35);transition:left 200ms cubic-bezier(.2,.8,.2,1),background 200ms"></span>
+                  <span style="position:absolute;left:14px;bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#16406F;background:rgba(255,255,255,.86);border-radius:6px;padding:4px 8px">office pin · geofence {{ radiusLabel }}</span>
+                </div>
+                <input type="range" min="0" max="100" step="1" value="{{ testPos }}" onInput="{{ onTestPos }}" style="width:100%;margin-top:14px" />
+                <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;background:{{ testBg }};margin-top:12px;transition:background 200ms">
+                  <span data-icon="{{ testIcon }}" style="font-size:18px;color:{{ testColor }}"></span>
+                  <span><span style="display:block;font-size:13px;font-weight:600;color:{{ testColor }}">{{ testTitle }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5666;margin-top:2px">{{ testSub }}</span></span>
+                </div>
+              </div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:20px">
+                <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Why 10m is only a default</div>
+                <div style="font-size:13px;line-height:21px;color:#4A5666">Phone GPS in dense Lagos streets typically lands within 8–25m. A 10m fence will classify honest office staff as remote on a bad signal day, so the setting warns above and below sensible bounds and always records the raw accuracy next to the classification — HR judges, the system doesn't accuse.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- EMPLOYEE PROFILE SLIDE-OVER -->
+  <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(560px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="padding:20px 22px 0;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+            <div style="display:flex;gap:14px;align-items:center;min-width:0">
+              <span style="width:52px;height:52px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 18px 'IBM Plex Sans'">{{ person.initials }}</span>
+              <span style="min-width:0">
+                <span style="display:block;font-size:19px;font-weight:600;letter-spacing:-.015em">{{ person.name }}</span>
+                <span style="display:block;font-size:13px;color:#4A5666;margin-top:2px">{{ person.position }} · {{ person.dept }}</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:3px 9px;border-radius:999px;background:{{ person.pillBg }};color:{{ person.pillFg }};font-size:11px;font-weight:600">{{ person.pillGlyph }} {{ person.status }}</span>
+              </span>
+            </div>
+            <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+          </div>
+          <div style="display:flex;gap:2px;overflow-x:auto">
+            <sc-for list="{{ profileTabs }}" as="t" hint-placeholder-count="5">
+              <button onClick="{{ t.pick }}" style="position:relative;padding:11px 12px;border:none;background:transparent;font:500 13px 'IBM Plex Sans';color:{{ t.fg }};cursor:pointer;white-space:nowrap;transition:color 140ms">{{ t.label }}<span style="position:absolute;left:8px;right:8px;bottom:-1px;height:2px;border-radius:2px;background:{{ t.underline }};transition:background 200ms"></span></button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">
+                <div style="padding:14px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Employee ID</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ person.id }}</div></div>
+                <div style="padding:14px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Attendance (30d)</div><div style="font-size:14px;font-weight:600;margin-top:4px">{{ person.attendance }}</div></div>
+                <div style="padding:14px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Leave balance</div><div style="font-size:14px;font-weight:600;margin-top:4px">{{ person.leave }}</div></div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Contact</div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span data-icon="mail" style="font-size:16px;color:#7A8798"></span>{{ person.email }}</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span data-icon="phone" style="font-size:16px;color:#7A8798"></span>{{ person.phone }}</div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span data-icon="map-pin" style="font-size:16px;color:#7A8798"></span>{{ person.location }}</div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Emergency contact</div>
+              <div style="padding:16px;border:1px solid #E3E8EF;border-radius:12px;background:#F8F9FB">
+                <div style="font-size:14px;font-weight:600">{{ person.ecName }}</div>
+                <div style="font-size:13px;color:#4A5666;margin-top:3px">{{ person.ecRel }} · {{ person.ecPhone }}</div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tabEmployment }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;display:flex;flex-direction:column;gap:1px;background:#F1F4F8;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+              <sc-for list="{{ person.employment }}" as="row" hint-placeholder-count="7">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:13px 16px;background:#fff"><span style="font-size:13px;color:#4A5666">{{ row.k }}</span><span style="font-size:13px;font-weight:500">{{ row.v }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tabPay }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:14px;border-radius:10px;background:#F7FAFD;border:1px solid #D9E6F5;margin-bottom:16px">
+                <span data-icon="lock" style="font-size:17px;color:#1B4F8C"></span>
+                <span style="font-size:13px;line-height:20px;color:#4A5666">Compensation is visible to Accounts, Management and HR leads only. Every view is written to the audit log with your name and timestamp.</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:1px;background:#F1F4F8;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden">
+                <sc-for list="{{ person.pay }}" as="row" hint-placeholder-count="5">
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:13px 16px;background:#fff"><span style="font-size:13px;color:#4A5666">{{ row.k }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500">{{ row.v }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tabDocs }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ person.docs }}" as="d" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #E3E8EF;border-radius:10px">
+                  <span data-icon="file-text" style="font-size:19px;color:{{ d.fg }}"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ d.name }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798;margin-top:2px">{{ d.meta }}</span></span>
+                  <span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};font-size:11px;font-weight:600">{{ d.status }}</span>
+                </div>
+              </sc-for>
+              <div style="border:1.5px dashed #AFC9E7;border-radius:12px;padding:22px;text-align:center;background:#F8FAFD;font-size:13px;color:#4A5666">Drop a document, or click to browse</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tabAttendance }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:fadeIn 200ms">
+              <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #F1F4F8">
+                  <span style="flex:0 0 74px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ h.date }}</span>
+                  <span style="flex:1 1 110px;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ h.times }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4A5666">{{ h.duration }}</span>
+                  <span style="display:inline-flex;padding:3px 9px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};font-size:11px;font-weight:600">{{ h.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;gap:10px;padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ toast }}" style="flex:1;height:42px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Edit employee</button>
+          <button onClick="{{ toast }}" style="flex:1;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Change status</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ATTENDANCE DETAIL -->
+  <sc-if value="{{ attOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-end">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.32);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(540px,100%);height:100%;background:#fff;box-shadow:0 20px 48px -12px rgba(16,24,40,.28);animation:drawerIn 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;gap:13px;align-items:center;min-width:0">
+            <span style="width:42px;height:42px;flex:none;border-radius:50%;background:#EEF4FB;color:#16406F;display:grid;place-items:center;font:600 15px 'IBM Plex Sans'">{{ att.initials }}</span>
+            <span style="min-width:0"><span style="display:block;font-size:17px;font-weight:600">{{ att.name }}</span><span style="display:block;font-size:12px;color:#7A8798">{{ att.dept }} · Monday 9 March</span></span>
+          </div>
+          <button onClick="{{ closeAll }}" style="width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:16px"></span></button>
+        </div>
+        <div style="flex:1;overflow:auto;padding:20px 22px">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;background:{{ att.bg }};color:{{ att.fg }};font-size:12px;font-weight:600;margin-bottom:16px">{{ att.glyph }} {{ att.status }} · {{ att.mode }}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
+            <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Check-in</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ att.in }}</div></div>
+            <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Check-out</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ att.out }}</div></div>
+            <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">Duration</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px">{{ att.duration }}</div></div>
+            <div style="padding:13px;border:1px solid #E3E8EF;border-radius:10px"><div style="font-size:11px;color:#7A8798">GPS accuracy</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:4px;color:{{ att.accFg }}">{{ att.acc }}</div></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:10px">Evidence captured at check-in</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+            <div><div style="height:170px;border-radius:12px;background:repeating-linear-gradient(135deg,#F1F4F8 0 9px,#E7ECF3 9px 18px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4A5666">check-in selfie</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:6px">{{ att.in }} · front camera</div></div>
+            <div><div style="height:170px;border-radius:12px;background:repeating-linear-gradient(135deg,#EEF4FB 0 9px,#E2EDF8 9px 18px);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#16406F;text-align:center;padding:8px">static map<br />pin + accuracy circle</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A8798;margin-top:6px">{{ att.coords }}</div></div>
+          </div>
+          <div style="padding:14px;border-radius:10px;background:#F8F9FB;border:1px solid #E3E8EF;font-size:13px;line-height:21px;color:#4A5666;margin-bottom:20px">{{ att.summary }}</div>
+          <div style="font-size:12px;font-weight:600;color:#4A5666;margin-bottom:12px">Review trail</div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;gap:12px"><span style="display:flex;flex-direction:column;align-items:center"><span style="width:9px;height:9px;border-radius:50%;background:#0F7A54"></span><span style="flex:1;width:2px;background:#E3E8EF"></span></span><span style="padding-bottom:14px"><span style="display:block;font-size:13px;font-weight:500">Captured by employee</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ att.in }}</span></span></div>
+            <div style="display:flex;gap:12px"><span style="display:flex;flex-direction:column;align-items:center"><span style="width:9px;height:9px;border-radius:50%;background:{{ att.fg }}"></span><span style="flex:1;width:2px;background:#E3E8EF"></span></span><span style="padding-bottom:14px"><span style="display:block;font-size:13px;font-weight:500">Auto-classified {{ att.mode }}</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">{{ att.classified }}</span></span></div>
+            <div style="display:flex;gap:12px"><span style="display:flex;flex-direction:column;align-items:center"><span style="width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #8A5600"></span></span><span><span style="display:block;font-size:13px;font-weight:500">Awaiting HR decision</span><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A8798">open {{ att.waiting }}</span></span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;padding:16px 22px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ toastAccept }}" style="flex:1 1 120px;height:42px;border:1px solid #0F7A54;border-radius:8px;background:#0F7A54;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Accept as is</button>
+          <button onClick="{{ openCorrection }}" style="flex:1 1 120px;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Correct record</button>
+          <button onClick="{{ toastRecapture }}" style="flex:1 1 120px;height:42px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Ask to re-capture</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CORRECTION DIALOG -->
+  <sc-if value="{{ correctionOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px">
+      <div onClick="{{ closeCorrection }}" style="position:absolute;inset:0;background:rgba(19,26,34,.4);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(480px,100%);background:#fff;border-radius:14px;box-shadow:0 20px 48px -12px rgba(16,24,40,.3);padding:24px;animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <div style="font-size:17px;font-weight:600;letter-spacing:-.015em;margin-bottom:6px">Correct this attendance record</div>
+        <div style="font-size:13px;line-height:20px;color:#4A5666;margin-bottom:18px">The original capture is never deleted — your correction is stored alongside it, with your name attached.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Check-in</label><input value="09:20" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+          <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Check-out</label><input placeholder="--:--" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+        </div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Classification</label>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <span style="flex:1;padding:10px;border-radius:8px;border:1px solid #1B4F8C;background:#EEF4FB;color:#16406F;font-size:13px;font-weight:600;text-align:center;cursor:pointer">Remote</span>
+          <span style="flex:1;padding:10px;border-radius:8px;border:1px solid #CDD5E0;font-size:13px;text-align:center;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Office</span>
+          <span style="flex:1;padding:10px;border-radius:8px;border:1px solid #CDD5E0;font-size:13px;text-align:center;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Absent</span>
+        </div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reason (required, visible to the employee)</label>
+        <textarea rows="3" placeholder="GPS accuracy was ±140m — confirmed by phone with the store manager." style="width:100%;padding:11px 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none;resize:vertical" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+          <button onClick="{{ closeCorrection }}" style="height:40px;padding:0 16px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ saveCorrection }}" style="height:40px;padding:0 16px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Save correction</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CREATE EMPLOYEE -->
+  <sc-if value="{{ createOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;display:flex;justify-content:center;align-items:flex-start;overflow:auto">
+      <div onClick="{{ closeAll }}" style="position:absolute;inset:0;background:rgba(19,26,34,.45);animation:fadeIn 200ms"></div>
+      <div style="position:relative;width:min(720px,100%);min-height:100%;background:#fff;animation:rise 320ms cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#fff;padding:20px 26px 14px;border-bottom:1px solid #E3E8EF">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+            <div><div style="font-size:19px;font-weight:600;letter-spacing:-.015em">Add employee</div><div style="font-size:13px;color:#7A8798;margin-top:3px">HR only · creates the account and sends an invite email</div></div>
+            <button onClick="{{ closeAll }}" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #E3E8EF;border-radius:6px;background:#fff;color:#4A5666;cursor:pointer"><span data-icon="x" style="font-size:17px"></span></button>
+          </div>
+        </div>
+        <div style="flex:1;padding:24px 26px;display:flex;flex-direction:column;gap:26px">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A8798;margin-bottom:14px">01 — Personal</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Full name <span style="color:#B42318">*</span></label><input placeholder="Adaeze Okonkwo" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Work email <span style="color:#B42318">*</span></label><input placeholder="name@chfheron.com" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Phone</label><input placeholder="0704 410 2187" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Date of birth</label><input placeholder="DD / MM / YYYY" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A8798;margin-bottom:14px">02 — Employment</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Department <span style="color:#B42318">*</span></label><input value="Sales" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Position <span style="color:#B42318">*</span></label><input value="Field Sales Representative" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Reports to</label><input value="Tunde Bello — Head of Sales" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Primary office</label><input value="Head Office — Victoria Island" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Employment type</label><input value="Full-time" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Start date</label><input value="01 / 04 / 2026" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A8798;margin-bottom:14px">03 — Access and compensation</div>
+            <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Role in the system</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+              <span style="padding:9px 15px;border-radius:999px;background:#1B4F8C;color:#fff;font-size:13px;font-weight:500;cursor:pointer">Employee</span>
+              <span style="padding:9px 15px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Head of Department</span>
+              <span style="padding:9px 15px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">HR</span>
+              <span style="padding:9px 15px;border-radius:999px;border:1px solid #CDD5E0;font-size:13px;cursor:pointer;transition:background 140ms" style-hover="background:#F8F9FB">Accounts</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Gross monthly salary</label><input placeholder="₦ 000,000" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Mono';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+              <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Pay grade</label><input placeholder="SL-3" style="width:100%;height:42px;padding:0 13px;border:1px solid #CDD5E0;border-radius:8px;font:400 14px 'IBM Plex Sans';outline:none" style-focus="border-color:#1B4F8C;box-shadow:0 0 0 3px rgba(27,79,140,.16)" /></div>
+            </div>
+            <div style="margin-top:14px;padding:13px;border-radius:10px;background:#F7FAFD;border:1px solid #D9E6F5;font-size:12px;line-height:19px;color:#4A5666">Salary fields are only shown to HR leads and Accounts. Everyone else sees this section greyed with a lock.</div>
+          </div>
+        </div>
+        <div style="position:sticky;bottom:0;display:flex;gap:10px;justify-content:flex-end;padding:16px 26px;border-top:1px solid #E3E8EF;background:#F8F9FB">
+          <button onClick="{{ closeAll }}" style="height:44px;padding:0 18px;border:1px solid #CDD5E0;border-radius:8px;background:#fff;font:500 14px 'IBM Plex Sans';cursor:pointer">Cancel</button>
+          <button onClick="{{ saveEmployee }}" style="height:44px;padding:0 22px;border:1px solid #1B4F8C;border-radius:8px;background:#1B4F8C;color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Create and send invite</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:95;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:270px;max-width:350px;padding:12px 14px;border-radius:10px;background:#131A22;color:#fff;box-shadow:0 8px 24px -6px rgba(16,24,40,.3);animation:scaleIn 200ms cubic-bezier(0,.6,.25,1)">
+        <span data-icon="check-circle-2" style="font-size:18px;color:#6FD8A8"></span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:500">{{ t.title }}</span><span style="display:block;font-size:12px;color:#9AA7B6">{{ t.body }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+const N = "#4A5666", B = "#1B4F8C", G = "#0F7A54", W = "#8A5600", R = "#B42318";
+const PILL = { active: ["#E7F4EE","#0F7A54","●"], leave: ["#F1F4F8","#4A5666","—"], probation: ["#FDF2DF","#8A5600","▲"], exited: ["#FDECEA","#B42318","✕"] };
+const STAFF = [
+  ["Adaeze Okonkwo","AO","EMP-0118","Sales Representative","Sales","Lagos","active","12 Jan 2022"],
+  ["Chidi Uzo","CU","EMP-0142","Field Sales Representative","Sales","Lagos","active","03 Mar 2023"],
+  ["Tunde Bello","TB","EMP-0031","Head of Sales","Sales","Lagos","active","18 Jun 2016"],
+  ["Ifeoma Eze","IE","EMP-0044","Head of Finance","Finance","Lagos","active","02 Feb 2018"],
+  ["Musa Yakubu","MY","EMP-0207","Warehouse Assistant","Warehouse","Ikeja","probation","05 Jan 2026"],
+  ["Ngozi Aliu","NA","EMP-0002","Managing Director","Management","Lagos","active","01 Dec 1998"],
+  ["Bola Ogun","BO","EMP-0163","Merchandiser","Sales","Lagos","leave","22 Aug 2024"],
+  ["Sade Kalu","SK","EMP-0129","Accounts Officer","Finance","Lagos","active","14 Nov 2022"],
+  ["Emeka Nwosu","EN","EMP-0019","Director, Operations","Logistics","Lagos","active","09 Sep 2011"],
+  ["Joy Edet","JE","EMP-0188","Sales Representative","Sales","Port Harcourt","active","30 May 2025"],
+  ["Yusuf Lawal","YL","EMP-0071","Compliance Officer","Compliance","Lagos","active","17 Apr 2019"],
+  ["Amaka Duru","AD","EMP-0026","Head of People","HR","Lagos","active","06 Oct 2015"]
+];
+const DEPTS = [
+  { code: "DPT-SLS", name: "Sales", icon: "trending-up", head: "Tunde Bello", headInitials: "TB", staff: 38, positions: 5,
+    blurb: "Modern trade, open market and the national field organisation.",
+    metrics: [["Present today","34",G],["On leave","2",N],["Open tasks","12",N],["Attrition (12m)","6%",N]],
+    roles: [["Head of Sales",1],["Sales Representative",14],["Field Sales Representative",16],["Merchandiser",6],["Sales Analyst",1]],
+    people: [["Tunde Bello","TB","Head of Sales","Present","ok"],["Adaeze Okonkwo","AO","Sales Representative","Present","ok"],["Chidi Uzo","CU","Field Sales Representative","Remote","info"],["Bola Ogun","BO","Merchandiser","On leave","mute"]] },
+  { code: "DPT-LOG", name: "Logistics", icon: "truck", head: "Emeka Nwosu", headInitials: "EN", staff: 29, positions: 4,
+    blurb: "Fleet, dispatch and the depot network across three cities.",
+    metrics: [["Present today","26",G],["On leave","1",N],["Open tasks","8",N],["Attrition (12m)","9%",W]],
+    roles: [["Director, Operations",1],["Dispatch Supervisor",3],["Delivery Driver",21],["Fleet Officer",4]],
+    people: [["Emeka Nwosu","EN","Director, Operations","Present","ok"],["Kunle Ade","KA","Dispatch Supervisor","Present","ok"],["Ibrahim Sule","IS","Delivery Driver","Field","info"],["Peter Obi","PO","Fleet Officer","Late","warn"]] },
+  { code: "DPT-WHS", name: "Warehouse", icon: "warehouse", head: "Kunle Ade", headInitials: "KA", staff: 31, positions: 3,
+    blurb: "Receiving, FEFO picking and dispatch at Ikeja and Apapa.",
+    metrics: [["Present today","27",G],["On leave","2",N],["Open tasks","5",N],["Stock variance","0.3%",G]],
+    roles: [["Warehouse Supervisor",4],["Warehouse Assistant",24],["Stock Controller",3]],
+    people: [["Kunle Ade","KA","Warehouse Supervisor","Present","ok"],["Musa Yakubu","MY","Warehouse Assistant","No check-in","bad"],["Grace Etim","GE","Stock Controller","Present","ok"],["Sam Oje","SO","Warehouse Assistant","Present","ok"]] },
+  { code: "DPT-FIN", name: "Finance", icon: "wallet", head: "Ifeoma Eze", headInitials: "IE", staff: 12, positions: 4,
+    blurb: "Treasury, payroll, receivables and brand-owner settlement.",
+    metrics: [["Present today","11",G],["On leave","1",N],["Open tasks","6",N],["Month-end status","In review",W]],
+    roles: [["Head of Finance",1],["Accounts Officer",6],["Payroll Officer",2],["Credit Controller",3]],
+    people: [["Ifeoma Eze","IE","Head of Finance","Present","ok"],["Sade Kalu","SK","Accounts Officer","Present","ok"],["Uche Nna","UN","Payroll Officer","Remote","info"],["Ada Bassey","AB","Credit Controller","Present","ok"]] },
+  { code: "DPT-HR", name: "People", icon: "users", head: "Amaka Duru", headInitials: "AD", staff: 6, positions: 3,
+    blurb: "Hiring, HR operations and depot training.",
+    metrics: [["Present today","6",G],["On leave","0",N],["Open roles","4",W],["Time to hire","31d",N]],
+    roles: [["Head of People",1],["HR Officer",3],["Recruiter",2]],
+    people: [["Amaka Duru","AD","Head of People","Present","ok"],["Ruth Igwe","RI","HR Officer","Present","ok"],["Femi Ola","FO","Recruiter","Present","ok"],["Zainab Bala","ZB","HR Officer","Present","ok"]] },
+  { code: "DPT-CMP", name: "Compliance", icon: "shield-check", head: "Yusuf Lawal", headInitials: "YL", staff: 8, positions: 3,
+    blurb: "NAFDAC, customs documentation and quality assurance.",
+    metrics: [["Present today","8",G],["On leave","0",N],["Open cases","3",N],["Overdue filings","0",G]],
+    roles: [["Head of Compliance",1],["Compliance Officer",4],["QA Inspector",3]],
+    people: [["Yusuf Lawal","YL","Head of Compliance","Present","ok"],["Tolu Ade","TA","Compliance Officer","Present","ok"],["Nkem Obi","NO","QA Inspector","Present","ok"],["Ali Musa","AM","QA Inspector","Present","ok"]] },
+  { code: "DPT-MGT", name: "Management", icon: "building-2", head: "Ngozi Aliu", headInitials: "NA", staff: 18, positions: 5,
+    blurb: "Executive office, marketing and administration.",
+    metrics: [["Present today","16",G],["On leave","1",N],["Open tasks","9",N],["Headcount plan","+4",N]],
+    roles: [["Managing Director",1],["Trade Marketing",4],["Admin Officer",6],["IT Support",4],["Executive Assistant",3]],
+    people: [["Ngozi Aliu","NA","Managing Director","Present","ok"],["Dele Ayo","DA","Trade Marketing","Present","ok"],["Kemi Alao","KA","Admin Officer","Remote","info"],["Ben Chuks","BC","IT Support","Present","ok"]] }
+];
+const SMALL = { ok: ["#E7F4EE","#0F7A54"], warn: ["#FDF2DF","#8A5600"], bad: ["#FDECEA","#B42318"], info: ["#EEF4FB","#16406F"], mute: ["#F1F4F8","#4A5666"] };
+const ATT = [
+  ["Adaeze Okonkwo","AO","Sales","Present","Office","08:52","17:14","8h 22m","±6m","ok","selfie + GPS","check-circle-2",G,"6.4312°N, 3.4219°E","Inside the Victoria Island geofence, 42m from the office pin. Selfie matches the profile photo.","08:52:41","—"],
+  ["Chidi Uzo","CU","Field Sales","Remote","Remote","09:20","—","running","±140m","warn","selfie + GPS","alert-triangle",W,"6.4489°N, 3.4712°E","Outside the geofence at 3.8km, but GPS accuracy of ±140m is too coarse to confirm the position. Employee reports being at Shoprite Lekki.","09:20:58","1h 21m"],
+  ["Tunde Bello","TB","Sales","Late","Office","10:07","—","running","±9m","warn","selfie + GPS","check-circle-2",G,"6.4310°N, 3.4221°E","Inside the geofence. 67 minutes after the 09:00 expected start for this shift pattern.","10:07:12","—"],
+  ["Musa Yakubu","MY","Warehouse","Absent","—","—","—","—","—","bad","none","x-circle",R,"—","No check-in recorded. Expected on the 08:00 warehouse shift. No leave request on file.","—","1h 41m"],
+  ["Sade Kalu","SK","Finance","Incomplete","Office","08:41","—","auto-closed","±5m","mute","selfie + GPS","check-circle-2",G,"6.4311°N, 3.4218°E","Checked in normally but never checked out. The system auto-closed the day at midnight and flagged it for correction.","08:41:30","14h"],
+  ["Joy Edet","JE","Sales","Present","Office","09:58","—","running","±11m","ok","selfie + GPS","check-circle-2",G,"4.8156°N, 7.0498°E","Inside the Port Harcourt depot geofence.","09:58:04","—"]
+];
+const HISTORY = [
+  ["Fri 06", "08:47 → 17:22", "8h 35m", "Present", "ok"],
+  ["Thu 05", "09:12 → 17:40", "8h 28m", "Remote", "info"],
+  ["Wed 04", "08:39 → 17:05", "8h 26m", "Present", "ok"],
+  ["Tue 03", "10:21 → 17:18", "6h 57m", "Late", "warn"],
+  ["Mon 02", "— ", "—", "Leave", "mute"]
+];
+const CI = {
+  idle: { title: "Ready to check in", step: "Step 1 of 3", stageBg: "#F8F9FB", showMap: true, showPin: true, accent: "#1B4F8C",
+    statusBg: "#F1F4F8", statusFg: "#4A5666", statusIcon: "map-pin", statusTitle: "Location not requested yet", statusSub: "we ask only when you tap below",
+    cta: "Check in", ctaBg: "#1B4F8C", privacy: "We read your location once, now. Nothing runs in the background.",
+    noteTitle: "Before check-in", noteBody: "No permission has been requested. The map is a static illustration of the office, not your position — nothing about you has been read yet, and the copy says so plainly.",
+    noteMotion: "cta press · 80ms depress\nno entrance animation" },
+  locating: { title: "Finding your location", step: "Step 1 of 3", stageBg: "#F7FAFD", showRadar: true,
+    statusBg: "#EEF4FB", statusFg: "#16406F", statusIcon: "loader", statusTitle: "Reading GPS…", statusSub: "usually under 3 seconds",
+    cta: "Cancel", ctaBg: "#7A8798", privacy: "Reading a single position. You can cancel at any point.",
+    noteTitle: "Checking location", noteBody: "A two-ring radar pulse rather than a spinner: it reads as 'sensing', and it gives honest feedback for the 1–4 seconds a cold GPS fix takes.",
+    noteMotion: "radar · 1.8s ease-out, 2 rings offset 900ms\ncancel available from frame one" },
+  inside: { title: "You're at the office", step: "Step 2 of 3", stageBg: "#F4FBF8", showMap: true, showPin: true, accent: "#0F7A54",
+    statusBg: "#E7F4EE", statusFg: "#0F7A54", statusIcon: "check-circle-2", statusTitle: "Inside the office geofence · 42m", statusSub: "Head Office, Victoria Island · ±8m",
+    cta: "Take selfie", ctaBg: "#1B4F8C", privacy: "This will be recorded as Worked in Office.",
+    noteTitle: "Inside the geofence", noteBody: "Classification is stated before the selfie, not after — the employee always knows what is being recorded about them before they commit to it.",
+    noteMotion: "pin · pulseRing 2.4s\nstatus bar cross-fades 200ms" },
+  outside: { title: "You're working remotely", step: "Step 2 of 3", stageBg: "#F7FAFD", showMap: true, showPin: true, accent: "#1B4F8C",
+    statusBg: "#EEF4FB", statusFg: "#16406F", statusIcon: "map-pin", statusTitle: "Outside the geofence · 3.8km", statusSub: "will be recorded as Worked Remotely · ±12m",
+    cta: "Take selfie", ctaBg: "#1B4F8C", privacy: "Remote is a normal state, not a problem. No explanation required.",
+    noteTitle: "Outside the geofence", noteBody: "Deliberately neutral: blue, not amber. Remote work is a classification, not an exception — treating it as a warning would teach field staff to game their check-in position.",
+    noteMotion: "same treatment as inside\ncolour is the only difference" },
+  weak: { title: "Signal is too weak", step: "Step 2 of 3", stageBg: "#FFFDF7", showMap: true, showPin: true, accent: "#8A5600",
+    statusBg: "#FDF2DF", statusFg: "#8A5600", statusIcon: "alert-triangle", statusTitle: "GPS accuracy ±140m", statusSub: "can't confirm which side of the fence you're on",
+    cta: "Continue anyway", ctaBg: "#8A5600", secondary: "Retry location", hasSecondary: true,
+    privacy: "Your accuracy value is recorded so HR can judge the record fairly.",
+    noteTitle: "Poor accuracy", noteBody: "Never a dead end. Retry is offered first, but the employee can always proceed — the raw ±m value travels with the record, and HR reviews rather than the system rejecting.",
+    noteMotion: "amber wash 200ms\nsecondary action appears above the CTA" },
+  denied: { title: "Location is blocked", step: "Step 2 of 3", stageBg: "#FFFBFA", showDenied: true, deniedIcon: "shield-alert",
+    deniedTitle: "Location permission denied", deniedBody: "We need one position reading to record whether you're at the office or working remotely.",
+    statusBg: "#FDECEA", statusFg: "#B42318", statusIcon: "shield-alert", statusTitle: "No coordinates captured", statusSub: "check-in will be flagged for HR review",
+    cta: "Enable location", ctaBg: "#1B4F8C", secondary: "Continue without location", hasSecondary: true,
+    privacy: "Continuing without location still records your time — HR just confirms it manually.",
+    noteTitle: "Permission denied", noteBody: "The reason comes before the ask. The escape hatch is real: a flagged check-in beats no check-in, because an employee who can't record time will stop trusting the tool.",
+    noteMotion: "no shake, no alarm\nerror state fades in 200ms" },
+  camera: { title: "Take a live selfie", step: "Step 3 of 3", stageBg: "#F1F4F8", showCamera: true, cameraLabel: "live camera feed",
+    statusBg: "#EEF4FB", statusFg: "#16406F", statusIcon: "camera", statusTitle: "Front camera · Head Office", statusSub: "42m from the office pin · ±8m",
+    cta: "Capture", ctaBg: "#1B4F8C", privacy: "Taken now, from the front camera. The gallery can't be used.",
+    noteTitle: "Camera capture", noteBody: "Face guide, front camera only, capture at the moment of check-in. Stating that gallery uploads are impossible is a deterrent worth more than the check itself.",
+    noteMotion: "capture · 120ms white flash, then freeze frame" },
+  review: { title: "Check this looks right", step: "Step 3 of 3", stageBg: "#F1F4F8", showCamera: true, cameraLabel: "captured selfie",
+    statusBg: "#EEF4FB", statusFg: "#16406F", statusIcon: "check-circle-2", statusTitle: "Ready to submit", statusSub: "09:04 · Office · ±8m",
+    cta: "Confirm check-in", ctaBg: "#1B4F8C", secondary: "Retake photo", hasSecondary: true,
+    privacy: "Once submitted, the photo can only be viewed by HR and your line manager.",
+    noteTitle: "Selfie review", noteBody: "One retake tap, always. A blurred capture that gets submitted becomes an HR exception later — cheaper to fix here.",
+    noteMotion: "retake · reverse of capture, 140ms" },
+  cameraDenied: { title: "Camera is blocked", step: "Step 3 of 3", stageBg: "#FFFBFA", showDenied: true, deniedIcon: "camera-off",
+    deniedTitle: "Camera permission denied", deniedBody: "The selfie confirms it's really you checking in. Without it, HR has to verify manually.",
+    statusBg: "#FDECEA", statusFg: "#B42318", statusIcon: "camera-off", statusTitle: "No photo captured", statusSub: "location was recorded successfully",
+    cta: "Enable camera", ctaBg: "#1B4F8C", secondary: "Check in without a selfie", hasSecondary: true,
+    privacy: "Your location was already captured — only the photo is missing.",
+    noteTitle: "Camera denied", noteBody: "Partial success is stated explicitly. Losing the photo shouldn't cost the employee their recorded location or their time.",
+    noteMotion: "same pattern as location denied" },
+  submitting: { title: "Recording check-in", step: "Step 3 of 3", stageBg: "#F8F9FB", showWorking: true, workingLabel: "Uploading selfie…",
+    statusBg: "#F1F4F8", statusFg: "#4A5666", statusIcon: "upload", statusTitle: "Saving your record", statusSub: "queues offline if the network drops",
+    cta: "Please wait", ctaBg: "#7A8798", privacy: "If you lose signal now, the check-in is stored on your phone and syncs later.",
+    noteTitle: "Submitting", noteBody: "The offline promise is made here, before it's needed. Field staff in low-coverage areas need to know the capture isn't lost.",
+    noteMotion: "spinner 900ms linear\nno progress bar — upload time is unpredictable" },
+  success: { title: "You're checked in", step: "Done", stageBg: "#E7F4EE", showSuccess: true, successTitle: "Checked in · 09:04", successSub: "Office · ±8m · Head Office VI",
+    statusBg: "#E7F4EE", statusFg: "#0F7A54", statusIcon: "check-circle-2", statusTitle: "Recorded successfully", statusSub: "your manager can see this immediately",
+    cta: "Back to dashboard", ctaBg: "#0F7A54", privacy: "Location will not be read again until you check out.",
+    noteTitle: "Success", noteBody: "The single 420ms confirmation animation in the whole product. It earns it — this is the moment an employee needs to trust that their day was recorded.",
+    noteMotion: "checkPop · 420ms cubic-bezier(.2,.8,.2,1)\nreduced motion: opacity only" },
+  already: { title: "Already checked in", step: "Since 08:52", stageBg: "#F4FBF8", showMap: true, showPin: true, accent: "#0F7A54",
+    statusBg: "#E7F4EE", statusFg: "#0F7A54", statusIcon: "clock", statusTitle: "4h 12m elapsed · started 08:52", statusSub: "Office · expected 8h 00m",
+    cta: "Check out", ctaBg: "#1B4F8C", secondary: "Start a break", hasSecondary: true,
+    privacy: "Checking out reads your location once more, then stops.",
+    noteTitle: "Already checked in", noteBody: "The CTA becomes Check out — no duplicate check-in is possible. The elapsed counter is the screen's main content, because that's what people open the app to see.",
+    noteMotion: "counter ticks per minute, no animation" },
+  checkout: { title: "Checking out", step: "End of day", stageBg: "#F7FAFD", showMap: true, showPin: true, accent: "#1B4F8C",
+    statusBg: "#EEF4FB", statusFg: "#16406F", statusIcon: "log-out", statusTitle: "8h 22m worked today", statusSub: "08:52 → 17:14 · Office",
+    cta: "Confirm check-out", ctaBg: "#1B4F8C", privacy: "One final position reading. No selfie needed at check-out.",
+    noteTitle: "Check-out", noteBody: "Lighter than check-in: position only, no photo. The proof burden belongs at the start of the day, not the end of it.",
+    noteMotion: "confirmation toast, no full-screen success" }
+};
+const CI_ORDER = { idle: "locating", locating: "inside", inside: "camera", outside: "camera", weak: "camera", denied: "camera", camera: "review", review: "submitting", cameraDenied: "submitting", submitting: "success", success: "already", already: "checkout", checkout: "idle" };
+const CI_CHIPS = [["idle","Before"],["locating","Locating"],["inside","Inside fence"],["outside","Remote"],["weak","Weak GPS"],["denied","Location denied"],["camera","Camera"],["review","Selfie review"],["cameraDenied","Camera denied"],["submitting","Submitting"],["success","Success"],["already","Already in"],["checkout","Check-out"]];
+
+class Component extends DCLogic {
+  state = {
+    section: "employees", dirQuery: "", dept: "All departments", pos: "All positions", status: "All",
+    deptOpen: false, posOpen: false, sortAsc: true,
+    profileOpen: false, personIdx: 1, tab: "Overview",
+    createOpen: false, deptIdx: 0,
+    ci: "idle", attFilter: "All", attOpen: false, attIdx: 1, correctionOpen: false,
+    radius: 150, testPos: 30, toasts: []
+  };
+  componentDidMount() { this._icons(); }
+  componentDidUpdate() { this._icons(); }
+  _icons() {
+    const L = window.lucide; if (!L) return;
+    let need = false;
+    document.querySelectorAll("[data-icon]").forEach(el => {
+      const n = el.getAttribute("data-icon"); if (!n) return;
+      const svg = el.querySelector("svg");
+      if (svg && svg.classList.contains("lucide-" + n)) return;
+      el.innerHTML = '<i data-lucide="' + n + '"></i>';
+      need = true;
+    });
+    if (need) { try { L.createIcons(); } catch (e) {} }
+  }
+  toast(title, body) {
+    const id = Date.now() + Math.random();
+    this.setState(s => ({ toasts: [...s.toasts, { id, title, body }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 3800);
+  }
+  advanceCi() {
+    const cur = this.state.ci;
+    const next = CI_ORDER[cur];
+    this.setState({ ci: next });
+    if (next === "submitting") setTimeout(() => this.setState({ ci: "success" }), 1600);
+    if (next === "locating") setTimeout(() => this.setState(s => (s.ci === "locating" ? { ci: "inside" } : {})), 1800);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const chip = (on) => ({ bg: on ? "#1B4F8C" : "#fff", fg: on ? "#fff" : "#4A5666", border: on ? "#1B4F8C" : "#CDD5E0" });
+    const q = s.dirQuery.trim().toLowerCase();
+
+    let rows = STAFF.filter(e =>
+      (s.dept === "All departments" || e[4] === s.dept) &&
+      (s.pos === "All positions" || e[3] === s.pos) &&
+      (s.status === "All" || (s.status === "Active" && e[6] === "active") || (s.status === "On leave" && e[6] === "leave") || (s.status === "Probation" && e[6] === "probation")) &&
+      (!q || (e[0] + e[2] + e[3] + e[4]).toLowerCase().includes(q))
+    );
+    rows = rows.slice().sort((a, b) => a[0].localeCompare(b[0]) * (s.sortAsc ? 1 : -1));
+
+    const p = STAFF[s.personIdx], pp = PILL[p[6]];
+    const dept = DEPTS[s.deptIdx];
+    const a = ATT[s.attIdx], ap = SMALL[a[9]];
+    const ci = CI[s.ci];
+
+    const deptCounts = {};
+    STAFF.forEach(e => { deptCounts[e[4]] = (deptCounts[e[4]] || 0) + 1; });
+
+    const r = s.radius;
+    const dist = Math.round(s.testPos * 4.2);
+    const inside = dist <= r;
+    const attFiltered = s.attFilter === "All" ? ATT : ATT.filter(x => x[3] === s.attFilter || (s.attFilter === "Exception" && (x[3] === "Absent" || x[8] === "±140m" || x[3] === "Incomplete")));
+
+    return {
+      viewerLabel: s.section === "checkin" ? "Chidi Uzo · Employee" : "Amaka Duru · HR",
+      sections: [["employees","Employees","users"],["departments","Departments","building-2"],["checkin","Check-in flow","smartphone"],["attendance","HR attendance","calendar-check"],["location","Locations","map-pin"]]
+        .map(x => ({ label: x[1], icon: x[2], pick: () => this.setState({ section: x[0] }),
+          bg: s.section === x[0] ? "#EEF4FB" : "transparent", fg: s.section === x[0] ? "#16406F" : "#4A5666" })),
+      isEmployees: s.section === "employees", isDepartments: s.section === "departments",
+      isCheckin: s.section === "checkin", isAttendance: s.section === "attendance", isLocation: s.section === "location",
+
+      dirQuery: s.dirQuery,
+      onDirQuery: (e) => this.setState({ dirQuery: e.target.value }),
+      dirCountLabel: rows.length === STAFF.length ? "142 people" : rows.length + " of 142 people",
+      deptLabel: s.dept, posLabel: s.pos,
+      deptOpen: s.deptOpen, posOpen: s.posOpen,
+      toggleDept: () => this.setState(x => ({ deptOpen: !x.deptOpen, posOpen: false })),
+      togglePos: () => this.setState(x => ({ posOpen: !x.posOpen, deptOpen: false })),
+      deptOptions: ["All departments", "Sales", "Logistics", "Warehouse", "Finance", "HR", "Compliance", "Management"].map(d => ({
+        label: d, count: d === "All departments" ? 142 : (deptCounts[d] || 0),
+        bg: s.dept === d ? "#EEF4FB" : "transparent",
+        pick: () => this.setState({ dept: d, deptOpen: false })
+      })),
+      posOptions: ["All positions", "Sales Representative", "Field Sales Representative", "Warehouse Assistant", "Accounts Officer", "Head of Sales"].map(x => ({
+        label: x, bg: s.pos === x ? "#EEF4FB" : "transparent", pick: () => this.setState({ pos: x, posOpen: false })
+      })),
+      statusChips: ["All", "Active", "On leave", "Probation"].map(c => ({ label: c, pick: () => this.setState({ status: c }), ...chip(s.status === c) })),
+      clearFilters: () => this.setState({ dept: "All departments", pos: "All positions", status: "All", dirQuery: "" }),
+      sortName: () => this.setState(x => ({ sortAsc: !x.sortAsc })),
+      hasStaff: rows.length > 0, noStaff: rows.length === 0,
+      staff: rows.map(e => {
+        const pl = PILL[e[6]];
+        return { name: e[0], initials: e[1], id: e[2], position: e[3], dept: e[4], location: e[5],
+          status: e[6] === "leave" ? "On leave" : e[6] === "probation" ? "Probation" : e[6] === "exited" ? "Exited" : "Active",
+          pillBg: pl[0], pillFg: pl[1], pillGlyph: pl[2], started: e[7],
+          open: () => this.setState({ profileOpen: true, personIdx: STAFF.indexOf(e), tab: "Overview" }) };
+      }),
+
+      openCreate: () => this.setState({ createOpen: true }),
+      createOpen: s.createOpen,
+      saveEmployee: () => { this.setState({ createOpen: false }); this.toast("Employee created", "Invite email sent · account pending first login"); },
+
+      profileOpen: s.profileOpen,
+      closeAll: () => this.setState({ profileOpen: false, createOpen: false, attOpen: false, deptOpen: false, posOpen: false }),
+      profileTabs: ["Overview", "Employment", "Compensation", "Documents", "Attendance"].map(t => ({
+        label: t, pick: () => this.setState({ tab: t }),
+        fg: s.tab === t ? "#1B4F8C" : "#7A8798", underline: s.tab === t ? "#1B4F8C" : "transparent"
+      })),
+      tabOverview: s.tab === "Overview", tabEmployment: s.tab === "Employment",
+      tabPay: s.tab === "Compensation", tabDocs: s.tab === "Documents", tabAttendance: s.tab === "Attendance",
+      person: {
+        name: p[0], initials: p[1], id: p[2], position: p[3], dept: p[4], location: p[5],
+        status: p[6] === "leave" ? "On leave" : p[6] === "probation" ? "Probation" : "Active",
+        pillBg: pp[0], pillFg: pp[1], pillGlyph: pp[2],
+        email: p[0].toLowerCase().replace(" ", ".") + "@chfheron.com",
+        phone: "+234 704 410 21" + (10 + s.personIdx),
+        attendance: "21 / 22 days", leave: "11 days",
+        ecName: "Ada " + p[0].split(" ")[1], ecRel: "Sibling", ecPhone: "+234 803 221 4407",
+        employment: [
+          { k: "Employee ID", v: p[2] }, { k: "Department", v: p[4] }, { k: "Position", v: p[3] },
+          { k: "Reports to", v: p[4] === "Sales" ? "Tunde Bello" : "Ngozi Aliu" },
+          { k: "Employment type", v: "Full-time" }, { k: "Primary office", v: p[5] },
+          { k: "Start date", v: p[7] }, { k: "Contract expires", v: "—" }
+        ],
+        pay: [
+          { k: "Gross monthly", v: "₦512,000" }, { k: "Pay grade", v: "SL-3" },
+          { k: "Pension (8%)", v: "₦40,960" }, { k: "PAYE", v: "₦61,200" }, { k: "Net monthly", v: "₦409,840" }
+        ],
+        docs: [
+          { name: "Employment contract.pdf", meta: "2.1 MB · signed 12 Jan 2022", status: "Valid", bg: "#E7F4EE", fg: "#0F7A54" },
+          { name: "National ID.pdf", meta: "820 KB · expires 04 Aug 2029", status: "Valid", bg: "#E7F4EE", fg: "#0F7A54" },
+          { name: "Driver's licence.pdf", meta: "1.1 MB · expires 22 Apr 2026", status: "Expiring", bg: "#FDF2DF", fg: "#8A5600" },
+          { name: "Guarantor form", meta: "not uploaded", status: "Missing", bg: "#FDECEA", fg: "#B42318" }
+        ]
+      },
+      history: HISTORY.map(h => { const c = SMALL[h[4]]; return { date: h[0], times: h[1], duration: h[2], status: h[3], bg: c[0], fg: c[1] }; }),
+
+      departments: DEPTS.map((d, i) => ({
+        code: d.code, name: d.name, icon: d.icon, head: d.head, staff: d.staff, positions: d.positions,
+        border: i === s.deptIdx ? "#1B4F8C" : "#E3E8EF",
+        pick: () => this.setState({ deptIdx: i })
+      })),
+      dept: {
+        code: dept.code, name: dept.name, blurb: dept.blurb, head: dept.head, headInitials: dept.headInitials, staff: dept.staff,
+        metrics: dept.metrics.map(m => ({ label: m[0], value: m[1], fg: m[2] })),
+        roles: dept.roles.map(r2 => ({ name: r2[0], count: r2[1] })),
+        people: dept.people.map(pe => { const c = SMALL[pe[4]]; return { name: pe[0], initials: pe[1], role: pe[2], status: pe[3], bg: c[0], fg: c[1] }; })
+      },
+
+      ci: {
+        title: ci.title, step: ci.step, stageBg: ci.stageBg,
+        showMap: !!ci.showMap, showPin: !!ci.showPin, showRadar: !!ci.showRadar, showCamera: !!ci.showCamera,
+        showDenied: !!ci.showDenied, showSuccess: !!ci.showSuccess, showWorking: !!ci.showWorking,
+        accent: ci.accent || "#1B4F8C", cameraLabel: ci.cameraLabel || "", workingLabel: ci.workingLabel || "",
+        deniedIcon: ci.deniedIcon || "shield-alert", deniedTitle: ci.deniedTitle || "", deniedBody: ci.deniedBody || "",
+        successTitle: ci.successTitle || "", successSub: ci.successSub || "",
+        statusBg: ci.statusBg, statusFg: ci.statusFg, statusIcon: ci.statusIcon,
+        statusTitle: ci.statusTitle, statusSub: ci.statusSub,
+        cta: ci.cta, ctaBg: ci.ctaBg, privacy: ci.privacy,
+        hasSecondary: !!ci.hasSecondary, secondary: ci.secondary || "",
+        secondaryAct: () => {
+          if (s.ci === "weak") return this.setState({ ci: "locating" });
+          if (s.ci === "denied") return this.setState({ ci: "camera" });
+          if (s.ci === "review") return this.setState({ ci: "camera" });
+          if (s.ci === "cameraDenied") return this.setState({ ci: "submitting" }, () => setTimeout(() => this.setState({ ci: "success" }), 1600));
+          if (s.ci === "already") return this.toast("Break started", "Timer paused at 4h 12m");
+          return this.setState({ ci: "idle" });
+        },
+        act: () => {
+          if (s.ci === "locating") return this.setState({ ci: "idle" });
+          if (s.ci === "denied" || s.ci === "cameraDenied") return this.setState({ ci: s.ci === "denied" ? "inside" : "camera" });
+          if (s.ci === "checkout") { this.toast("Checked out", "8h 22m recorded for Monday 9 March"); return this.setState({ ci: "idle" }); }
+          this.advanceCi();
+        },
+        noteTitle: ci.noteTitle, noteBody: ci.noteBody, noteMotion: ci.noteMotion
+      },
+      ciStates: CI_CHIPS.map(c => ({ label: c[1], pick: () => this.setState({ ci: c[0] }), ...chip(s.ci === c[0]) })),
+
+      attTiles: [["Present","128","user-check",G],["In office","96","building-2",B],["Remote","32","laptop",B],["Absent","6","user-x",R],["Incomplete","4","clock",W],["Exceptions","6","alert-triangle",W]]
+        .map(t => ({ label: t[0], value: t[1], icon: t[2], fg: t[3], border: "#E3E8EF", pick: () => this.setState({ attFilter: "All" }) })),
+      attFilters: ["All", "Present", "Remote", "Late", "Absent", "Incomplete", "Exception"].map(f => ({ label: f, pick: () => this.setState({ attFilter: f }), ...chip(s.attFilter === f) })),
+      attCount: attFiltered.length + " of 142 shown",
+      attRows: attFiltered.map(x => {
+        const c = SMALL[x[9]];
+        return { name: x[0], initials: x[1], dept: x[2], status: x[3], mode: x[4], in: x[5], out: x[6], duration: x[7], acc: x[8],
+          bg: c[0], fg: c[1], glyph: x[3] === "Present" ? "●" : x[3] === "Remote" ? "◇" : x[3] === "Absent" ? "✕" : x[3] === "Late" ? "▲" : "—",
+          accFg: x[8] === "±140m" ? W : N, proof: x[10], proofIcon: x[11], proofFg: x[12],
+          open: () => this.setState({ attOpen: true, attIdx: ATT.indexOf(x) }) };
+      }),
+      attOpen: s.attOpen,
+      att: { name: a[0], initials: a[1], dept: a[2], status: a[3], mode: a[4], in: a[5], out: a[6], duration: a[7], acc: a[8],
+        bg: ap[0], fg: ap[1], glyph: a[3] === "Present" ? "●" : a[3] === "Remote" ? "◇" : a[3] === "Absent" ? "✕" : a[3] === "Late" ? "▲" : "—",
+        accFg: a[8] === "±140m" ? W : N, coords: a[13], summary: a[14], classified: a[15], waiting: a[16] },
+      openCorrection: () => this.setState({ correctionOpen: true }),
+      closeCorrection: () => this.setState({ correctionOpen: false }),
+      correctionOpen: s.correctionOpen,
+      saveCorrection: () => { this.setState({ correctionOpen: false, attOpen: false }); this.toast("Correction saved", "Original capture kept · employee notified"); },
+      toastAccept: () => { this.setState({ attOpen: false }); this.toast("Record accepted", "Marked reviewed by Amaka Duru"); },
+      toastRecapture: () => { this.setState({ attOpen: false }); this.toast("Re-capture requested", "Chidi Uzo notified on mobile"); },
+
+      radius: r, radiusLabel: r + " m",
+      onRadius: (e) => this.setState({ radius: Number(e.target.value) }),
+      radiusHint: r <= 25
+        ? "Very tight. Below about 25m, ordinary GPS drift will classify office staff as remote on cloudy days or inside the warehouse."
+        : r >= 250
+        ? "Very loose. At this size the fence reaches past the compound — someone across the street would register as being in the office."
+        : "Sensible for a Lagos city-centre office. Typical phone accuracy is ±8–25m, comfortably inside this fence.",
+      radiusHintBg: r <= 25 || r >= 250 ? "#FFFDF7" : "#F4FBF8",
+      radiusHintBorder: r <= 25 || r >= 250 ? "#F6E3BF" : "#BFE3D3",
+      fenceSize: Math.round(50 + r * 0.62) + "px",
+      testPos: s.testPos,
+      onTestPos: (e) => this.setState({ testPos: Number(e.target.value) }),
+      testX: (8 + s.testPos * 0.82) + "%",
+      testColor: inside ? "#0F7A54" : "#8A5600",
+      testBg: inside ? "#F4FBF8" : "#FFFDF7",
+      testIcon: inside ? "check-circle-2" : "map-pin",
+      testTitle: inside ? "Would be recorded as Worked in Office" : "Would be recorded as Worked Remotely",
+      testSub: "test pin " + dist + "m from the office · fence " + r + "m",
+
+      toast: () => this.toast("Saved", "Change written to the audit log"),
+      toasts: s.toasts
+    };
+  }
+}
+
+</script>
+</body>
+</html>

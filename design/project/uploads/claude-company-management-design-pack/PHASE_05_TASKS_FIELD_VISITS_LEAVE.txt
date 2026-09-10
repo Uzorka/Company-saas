@@ -1,0 +1,82 @@
+PHASE 5
+TASKS, FIELD VISIT VERIFICATION, LEAVE
+
+TASK MANAGEMENT
+Design:
+- My Tasks
+- Department Tasks
+- All Tasks
+- Task Detail
+- Create Task
+- Edit Task
+- List View
+- Kanban View
+- comments
+- attachments
+- activity timeline
+- priority
+- status
+- due date
+- multiple assignees
+- filters
+- search
+
+FIELD VISIT VERIFICATION
+Some tasks require field verification.
+
+Verification modes:
+- none
+- photo
+- location
+- photo + location
+- photo + location + report
+
+Design complete flow:
+1. Employee opens field task
+2. Sees expected destination
+3. Taps Verify Visit
+4. App captures current location
+5. Shows distance to target
+6. Employee captures live photo/selfie
+7. Employee writes visit report
+8. Evidence is submitted
+9. Task is verified or flagged
+
+Design:
+- expected location card
+- current location card
+- distance state
+- in-range
+- out-of-range
+- poor GPS
+- camera denied
+- location denied
+- upload failed
+- evidence viewer
+- manager/HOD review
+- approved verification
+- flagged verification
+
+LEAVE
+Employee:
+- leave balance
+- leave request
+- history
+- leave detail
+
+Approval:
+Employee -> HOD -> HR
+
+Design:
+- request form
+- duration calculation
+- attachment
+- approval timeline
+- HOD action
+- HR action
+- rejection reason
+- approved state
+- cancelled state
+- department leave calendar
+
+Add notifications and success states.
