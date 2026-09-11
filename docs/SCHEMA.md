@@ -1,6 +1,21 @@
-# Schema plan
+# Schema
 
-No migrations exist yet. This is the planned entity set, grouped by the migration that will create it.
+Migrations `0001` to `0007` exist and are applied. Everything below them is
+still planned. The full set is grouped by the migration that creates it.
+
+**Built:** `0001_organizations` `0002_profiles` `0003_rbac` `0004_audit`
+`0005_rls` `0006_permission_catalogue` `0007_access_token_hook`.
+
+Two deliberate departures from the plan, both discovered while building:
+
+* **Audit moved from `013` to `0004`.** The design requires audit writes
+  alongside each module rather than retrofitted at the end, so the table has
+  to exist before the first module does.
+* **Settings permissions split three ways** — `settings.manage` (full, for
+  Management), `settings.manage_structure` (departments and leave types, HR)
+  and `settings.manage_payroll` (rates and statutory settings, Accounts).
+  The design's "Some areas" scope is by subject, and a single `settings.manage`
+  slug would have handed HR and Accounts each other's areas.
 
 Conventions: every company-owned table carries `organization_id uuid not null references organizations(id)`. Money is `numeric(14,2)` plus a stored `currency_code` (default `NGN`). Decisive timestamps are `timestamptz` written by the server. Nothing is hard-deleted.
 

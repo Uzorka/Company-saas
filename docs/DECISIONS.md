@@ -61,3 +61,38 @@ Notifications centre, announcements composer, shift-pattern admin and org chart 
 
 ## D20 — Repository placement — **Open, blocking Phase 1**
 `uzorka/uzorka` currently holds an unrelated Vite/Capacitor project at its root. Recommendation: a fresh repository. Alternatives: a subdirectory, or replacing the root contents.
+
+## D21 — Settings permissions split by subject — **Accepted**
+The design's Settings scope for HR and Accounts is "Some areas", scoped by
+subject rather than department: HR owns departments and leave types, Accounts
+owns payroll rates and statutory settings, and neither can open the other's. A
+single `settings.manage` slug cannot express that — it gave both roles full
+settings access, including each other's areas. Split into `settings.manage`,
+`settings.manage_structure` and `settings.manage_payroll`. Found by checking
+the seeded permission sets against the matrix rather than by reading the code.
+
+## D22 — The RLS suite runs against real PostgreSQL, not a mock — **Accepted**
+A local PostgreSQL 16 cluster plus a test-only shim (`supabase/tests/00_supabase_shim.sql`)
+providing the `auth` schema, `auth.uid()` and the anon/authenticated/service_role
+roles. Policies are asserted as the actual database roles with claims set the
+way PostgREST sets them, so a pass reflects what the policies do rather than
+what they look like they do. The shim is never applied to a real project.
+
+## D23 — The RLS suite is mutation-tested — **Accepted**
+Four deliberate regressions — org isolation weakened to `using (true)`, HR
+granted the payroll module, the audit log made editable, and the tenant check
+dropped from the audit policy — were each confirmed to fail the suite. A
+security suite that cannot fail is not evidence, and the first attempt at one
+of these mutations was itself a no-op that looked like a pass.
+
+## D24 — Audit entries are written only through `write_audit()` — **Accepted**
+There is deliberately no INSERT policy on `audit_logs`. The function is
+`security definer` and takes the organization from the caller's own JWT claim
+rather than from an argument, so a client cannot forge an entry against
+another tenant even if it can call the function.
+
+## D25 — Unconfigured environments get a screen, not a stack trace — **Accepted**
+A clone without `.env.local` is the first thing a new contributor hits.
+`isSupabaseConfigured()` is checked before any client is created, and the
+workspace and picker render a setup screen naming the exact fix. "Safe error
+messages, never a stack trace" applies to developers too.

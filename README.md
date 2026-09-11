@@ -44,12 +44,45 @@ workspace shell.
 npm run dev        # dev server
 npm run lint       # eslint
 npm run typecheck  # tsc --noEmit
-npm run test       # vitest
+npm run test       # vitest — unit and component
+npm run test:db    # migrations + RLS suite against real PostgreSQL
 npm run build      # production build
 npm run check      # all of the above, in order
 ```
 
 `npm run check` is the gate. No phase closes with it failing.
+
+## Database
+
+Migrations live in `supabase/migrations/` and are the only way schema changes
+happen — nothing is created by hand in the Supabase dashboard.
+
+They are developed against a local PostgreSQL cluster so the policies can
+actually be executed and asserted:
+
+```bash
+npm run db:start   # start a local cluster (idempotent)
+npm run db:reset   # rebuild it, apply every migration, then the seed
+npm run test:db    # rebuild and run the RLS suite
+```
+
+`supabase/tests/00_supabase_shim.sql` supplies the pieces a real Supabase
+project would provide — the `auth` schema, `auth.uid()`, and the
+anon/authenticated/service_role roles. It is test-only and never applied to a
+real project.
+
+The RLS suite runs as the actual database roles with JWT claims set the way
+PostgREST sets them, so a pass reflects what the policies do rather than what
+they look like they do. It is mutation-tested: see `docs/DECISIONS.md` D23.
+
+### Against a real Supabase project
+
+1. Apply `supabase/migrations/` in order.
+2. Register the access token hook: **Authentication → Hooks → Customize Access
+   Token**, pointing at `public.custom_access_token_hook`. **Without this
+   there are no permission claims in the token and every policy denies.**
+3. Run `supabase/seed.sql` for the tenant, offices and default roles.
+4. Attach your account — the steps are at the foot of the seed file.
 
 ## Stack
 

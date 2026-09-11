@@ -95,6 +95,8 @@ const controlBase =
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
+  /** React 19 passes ref as a plain prop; declared so callers can use it. */
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 export function Input({ className, invalid, id, ...props }: InputProps) {
@@ -118,6 +120,7 @@ export function Input({ className, invalid, id, ...props }: InputProps) {
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   invalid?: boolean;
+  ref?: React.Ref<HTMLTextAreaElement>;
 }
 
 export function Textarea({ className, invalid, id, ...props }: TextareaProps) {
@@ -140,6 +143,7 @@ export function Textarea({ className, invalid, id, ...props }: TextareaProps) {
 export interface SelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean;
+  ref?: React.Ref<HTMLSelectElement>;
 }
 
 export function Select({ className, invalid, id, children, ...props }: SelectProps) {

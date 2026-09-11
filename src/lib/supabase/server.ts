@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { isSupabaseConfigured, MISSING_SUPABASE_MESSAGE } from "./config";
 
 /**
  * Request-scoped server client. Carries the user's JWT, so RLS applies.
@@ -7,6 +8,8 @@ import { cookies } from "next/headers";
  * where bypassing RLS is genuinely required.
  */
 export async function createClient() {
+  if (!isSupabaseConfigured()) throw new Error(MISSING_SUPABASE_MESSAGE);
+
   const cookieStore = await cookies();
 
   return createServerClient(

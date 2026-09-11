@@ -1,7 +1,7 @@
 # Build state
 
-**Current phase:** Phase 1 — foundation. Complete and green.
-**Next phase:** Phase 2 — Supabase and security foundation. **Awaiting approval.**
+**Current phase:** Phase 2 — Supabase and security foundation. Complete and green.
+**Next phase:** Phase 3 — departments and employees. **Awaiting approval.**
 
 ## Completed
 
@@ -36,8 +36,38 @@ implementation plan, 16 technical conflicts and 14 missing inputs. See
   client fenced behind `server-only`.
 - `.env.example` committed; no real credentials anywhere.
 
+### Phase 2 — Supabase and security foundation
+- **Seven migrations**, all applied and exercised against real PostgreSQL 16:
+  `0001_organizations` (tenants, settings, offices, platform admins),
+  `0002_profiles` (identity split from employment), `0003_rbac` (roles,
+  permissions, user_roles, the second-approver workflow, and the helper
+  functions every policy is built on), `0004_audit` (append-only log),
+  `0005_rls` (policies for every table so far), `0006_permission_catalogue`
+  (61 permissions and default-role provisioning), `0007_access_token_hook`.
+- **Row Level Security** on every table, forced for owners too. Policies test
+  permissions, never role names, and read JWT claims rather than joining
+  user_roles per row.
+- **Audit immutability enforced by the database**: update and delete revoked
+  from every role including Management, plus rejecting triggers. Entries are
+  written only through `write_audit()`, which takes the organization from the
+  caller's own claim so no client can forge one against another tenant.
+- **Auth**: sign in (company code, email, password), forgot, reset with the
+  org's password policy, workspace picker that skips itself for
+  single-workspace users, sign out. Server actions validate with Zod.
+- **Session layer**: `getSession`, `requireSession`, `requireOrg`, `can`,
+  `canAny`, `assertPermission` — all reading verified JWT claims.
+- **Middleware** refreshes the session cookie and keeps unauthenticated
+  callers out of the workspace. Redirect targets are validated against open
+  redirects.
+- **Local database harness**: `scripts/db-start.sh`, `db-test.sh`,
+  `db-rls-test.sh`, plus a Supabase shim so migrations and policies can be run
+  and asserted locally. Wired into `npm run check`.
+- **Setup-required screen** so a clone without `.env.local` explains itself
+  instead of returning a 500.
+
 ## Routes added
-`/` (public placeholder) · `/[org]/dashboard` (workspace shell demo)
+Phase 1: `/` and `/[org]/dashboard`.
+Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
 
 ## Components added
 `ui/button` `ui/field` `ui/card` `ui/avatar` `ui/status-pill` `states/index`
@@ -45,7 +75,12 @@ implementation plan, 16 technical conflicts and 14 missing inputs. See
 `shell/command-palette`
 
 ## Database migrations
-None yet. Phase 2 begins `001_organizations`.
+`0001_organizations` `0002_profiles` `0003_rbac` `0004_audit` `0005_rls`
+`0006_permission_catalogue` `0007_access_token_hook`
+
+Audit was built as `0004` rather than the brief's `013` because the design
+requires audit writes alongside each module rather than retrofitted at the
+end — the table has to exist before the first module does.
 
 ## Environment variables required
 `NEXT_PUBLIC_SUPABASE_URL` `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -53,21 +88,48 @@ None yet. Phase 2 begins `001_organizations`.
 A map provider key is pending the provider decision.
 
 ## Tests
-16 passing across 4 files: status vocabulary (every tone has a distinct
-glyph, so colour is never the only cue), role navigation (HR has no payroll,
-Accounts has no HR modules, only Management has audit), motion tokens, and
-the sidebar's restricted-not-hidden rule.
+**31 unit and component tests** — status vocabulary, role navigation, motion
+tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
+(absolute, protocol-relative, backslash, javascript: and data: targets), and
+the permission vocabulary.
+
+**47 database assertions** against real PostgreSQL, run as the `authenticated`
+and `anon` roles with claims set the way PostgREST sets them:
+- Tenant isolation in both directions, including audit entries.
+- HR holds no payroll permission; Accounts holds no recruitment or HR
+  permission; neither inherits the other.
+- Settings is subject-scoped: HR owns structure, Accounts owns payroll rates,
+  neither can open the other's, and neither holds full settings access.
+- Employee "own only" works as a distinct scope, not a weaker read.
+- Audit entries cannot be updated or deleted by anyone, Management included.
+- A session with no org claim reads nothing; anon is refused outright.
+- The workspace picker still lists memberships before an org is chosen.
+- A structural audit: every table has RLS, no unconditional `authenticated`
+  policy (two named exemptions, justified in place), every organization-owned
+  table gates on `current_org_id()`, anon holds no privileges, audit_logs
+  grants no mutation, and every security-definer function pins `search_path`.
+
+The suite was mutation-tested: weakening org isolation to `using (true)`,
+granting HR the payroll module, making the audit log editable, and dropping
+the tenant check from the audit policy each produce a failure. A suite that
+cannot fail is not evidence.
 
 ## Known limitations
-- The workspace layout renders a **fixed demo identity**. Roles and
-  permissions come from the session in Phase 2; nothing here is
-  authorisation.
-- The dashboard and public home are deliberate placeholders. They show
+- **Nothing has run against a real Supabase project yet.** The migrations and
+  policies are exercised against local PostgreSQL 16 with a shim providing the
+  `auth` schema and the anon/authenticated/service_role roles. That validates
+  the SQL and the policies, but not the access token hook end to end — that
+  needs a project with the hook registered in the dashboard.
+- The dashboard and public home are still deliberate placeholders showing
   components, not fabricated statistics.
-- Table, slide-over, dialog, bottom-sheet-as-filters, toast, timeline,
-  capture panel and evidence viewer are specified but not yet built — they
-  land with the modules that use them, from Phase 2 onward.
-- No database, no auth, no RLS yet.
+- Failed-login lockout (3 attempts / 15 minutes) and 2FA for Management and
+  Accounts are **stored as settings but not yet enforced** — both need
+  Supabase Auth configuration that only exists on a real project.
+- The notification count is hard-zero until the notifications table lands in
+  Phase 5. It shows nothing rather than an invented badge.
+- Table, slide-over, dialog, bottom sheet, toast, timeline, capture panel and
+  evidence viewer are specified but not yet built — they land with the modules
+  that use them.
 
 ## Awaiting decisions
 C1 geofence default (10 m vs 150 m) · C2 dark mode · C4 out-of-range field
@@ -75,6 +137,5 @@ visits · C6 map provider · C10 selfie/face-matching. Full list in
 `PHASE_0_PLAN.md` sections 0.10-0.11.
 
 ## Blocked
-Remote repository does not exist yet — the GitHub App cannot create one
-("Resource not accessible by integration"). Commits are local only until a
-repository is created and access granted.
+A Supabase project and its credentials are needed to take Phase 2 from
+"validated locally" to "running". Everything else is unblocked.
