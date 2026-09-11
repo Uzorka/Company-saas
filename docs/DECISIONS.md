@@ -96,3 +96,43 @@ A clone without `.env.local` is the first thing a new contributor hits.
 `isSupabaseConfigured()` is checked before any client is created, and the
 workspace and picker render a setup screen naming the exact fix. "Safe error
 messages, never a stack trace" applies to developers too.
+
+## D26 — Department headship is a table, not a column — **Accepted**
+The design says an HOD may head more than one department. Every "Dept only"
+scope in the matrix resolves through `department_heads`, keyed on `user_id`
+rather than an employee id — the scope has to resolve from a JWT, and not
+every head necessarily has an employee record yet.
+
+## D27 — The three employee scopes are three separate RLS policies — **Accepted**
+Postgres ORs permissive policies together, which is precisely the union
+semantics the matrix calls for. Someone who is both an HOD and an employee
+sees their department and themselves, with no special case anywhere in the
+code.
+
+## D28 — An HOD cannot read next-of-kin details — **Accepted**
+Heading a department is a reason to see who is in it, not a reason to hold
+their emergency contacts. `employee_emergency_contacts` is gated on
+`employees.update` (HR and Management) or being the person themselves. The
+design does not state this explicitly; it follows from its data-minimisation
+principle, and it is cheap to loosen later if the client disagrees.
+
+## D29 — Shift patterns built as data without a designed screen — **Accepted**
+"Late" and "Absent" are computed against an expected start, and Phase 4 shows
+a 09:00 sales shift beside an 08:00 warehouse shift, but no screen was ever
+designed for managing them. Built as `shift_patterns` and `employee_shifts`
+with three seeded patterns so Phase 4 has something real to compare against
+rather than a hardcoded time. Flagged for a design pass.
+
+## D30 — No employees are seeded — **Accepted**
+Departments, positions and shift patterns are seeded; people are not. An
+employee record with no attendance, tasks, leave or payslips is a row
+pretending to be a record, and it would make the directory look finished while
+every screen behind it was empty. The demo population belongs to Phase 10,
+once the modules that give those records meaning exist.
+
+## D31 — Search terms are stripped of PostgREST delimiters — **Accepted**
+Commas and parentheses delimit an `or(...)` group, so "Okonkwo, Adaeze" in the
+search box would be parsed as filter syntax. They are replaced with spaces and
+the resulting whitespace is collapsed — without the collapse the pattern
+carries a double space and matches nothing, which is a silent failure rather
+than a loud one.

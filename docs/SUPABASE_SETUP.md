@@ -3,11 +3,23 @@
 Everything needed to take this project from "validated locally" to "running".
 Roughly 15 minutes.
 
-> **Note on the links below.** This build environment's network policy blocks
-> `supabase.com`, so these paths could not be checked against the live
-> dashboard. They are correct as of writing; if one 404s, the page is reachable
-> from the dashboard sidebar. The `_` in a URL is a Supabase placeholder that
-> resolves to your most recently opened project.
+**Project:** `cqokclmrsyhydzbvgnje` — API URL `https://cqokclmrsyhydzbvgnje.supabase.co`
+
+Direct links for this project:
+
+| Step | Link |
+|---|---|
+| SQL editor | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/sql/new |
+| Auth hooks | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/auth/hooks |
+| Auth users | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/auth/users |
+| API keys | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/settings/api |
+
+> **Note on the links.** This build environment's network policy blocks
+> `supabase.com`, so none of these could be checked against the live
+> dashboard. They follow the standard dashboard path scheme; if one 404s, the
+> page is reachable from the sidebar. The project ref above is not a secret —
+> it appears in every request a browser makes — but the keys on the API page
+> are, and the service-role one especially so.
 
 ---
 

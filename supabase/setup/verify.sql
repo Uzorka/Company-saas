@@ -10,7 +10,7 @@
 
 with checks as (
 
-  select 1 as ord, 'Tables created' as check_name,
+  select 1::numeric as ord, 'Tables created' as check_name,
     (select count(*) from pg_tables where schemaname = 'public')::text || ' tables' as detail,
     (select count(*) from pg_tables where schemaname = 'public') >= 12 as ok
 
@@ -74,6 +74,26 @@ with checks as (
       'none — correct'),
     not exists (select 1 from roles r join role_permissions rp on rp.role_id = r.id
       where r.slug = 'accounts' and rp.permission_slug like 'recruitment%')
+
+  union all select 10.1, 'Departments seeded',
+    (select count(*) from departments)::text || ' departments',
+    (select count(*) from departments) >= 7
+
+  union all select 10.2, 'Positions seeded',
+    (select count(*) from positions)::text || ' positions',
+    (select count(*) from positions) >= 20
+
+  union all select 10.3, 'Shift patterns seeded',
+    (select count(*) from shift_patterns)::text || ' patterns',
+    (select count(*) from shift_patterns) >= 3
+
+  union all select 10.4, 'Salary is a separate table from employees',
+    case when exists (select 1 from information_schema.columns
+      where table_name = 'employees' and column_name like '%salary%')
+      then 'SALARY COLUMN ON employees — investigate'
+      else 'employee_compensation only' end,
+    not exists (select 1 from information_schema.columns
+      where table_name = 'employees' and column_name like '%salary%')
 
   union all select 11, 'Your account is attached to the tenant',
     coalesce((select count(*)::text || ' member(s)' from organization_members

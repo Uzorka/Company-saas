@@ -4,7 +4,8 @@ Migrations `0001` to `0007` exist and are applied. Everything below them is
 still planned. The full set is grouped by the migration that creates it.
 
 **Built:** `0001_organizations` `0002_profiles` `0003_rbac` `0004_audit`
-`0005_rls` `0006_permission_catalogue` `0007_access_token_hook`.
+`0005_rls` `0006_permission_catalogue` `0007_access_token_hook`
+`0008_departments_positions` `0009_employees` `0010_employees_rls`.
 
 Two deliberate departures from the plan, both discovered while building:
 

@@ -21,6 +21,7 @@ cd "$(dirname "$0")/.."
 output=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TEST_DB" \
   -v ON_ERROR_STOP=1 -q \
   -f supabase/tests/10_rls_test.sql \
+  -f supabase/tests/11_employees_test.sql \
   -f supabase/tests/20_rls_audit.sql 2>&1)
 
 echo "$output" | grep -E '^(NOTICE:\s+)?(PASS|FAIL|ERROR)' | sed 's/^NOTICE:  //' || true
@@ -36,8 +37,8 @@ count=$(echo "$output" | grep -c 'PASS' || true)
 
 # A suite that asserts nothing is not a passing suite. Guard against a silenced
 # log level or a skipped block reporting a false green.
-if [[ "$count" -lt 45 ]]; then
-  echo "RLS suite reported only $count assertions — expected at least 45. Treating as a failure."
+if [[ "$count" -lt 65 ]]; then
+  echo "RLS suite reported only $count assertions — expected at least 65. Treating as a failure."
   exit 1
 fi
 

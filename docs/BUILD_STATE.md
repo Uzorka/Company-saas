@@ -1,7 +1,8 @@
 # Build state
 
-**Current phase:** Phase 2 — Supabase and security foundation. Complete and green.
-**Next phase:** Phase 3 — departments and employees. **Awaiting approval.**
+**Current phase:** Phase 3 — departments and employees. Complete and green.
+**Next phase:** Phase 4 — attendance and check-in. **Awaiting approval, and
+blocked on two decisions: the geofence default and the map provider.**
 
 ## Completed
 
@@ -65,9 +66,34 @@ implementation plan, 16 technical conflicts and 14 missing inputs. See
 - **Setup-required screen** so a clone without `.env.local` explains itself
   instead of returning a 500.
 
+### Phase 3 — departments and employees
+- **Three migrations.** `0008_departments_positions` (departments, positions,
+  headship as its own table since an HOD may head several), `0009_employees`
+  (employees, emergency contacts, effective-dated compensation, documents,
+  shift patterns), `0010_employees_rls`.
+- **The three employee scopes as three separate policies.** Postgres ORs
+  permissive policies, which is exactly the union semantics the matrix needs:
+  someone who is both an HOD and an employee sees their department and
+  themselves.
+- **Compensation is a separate table**, so HR — who may edit everything else
+  about a person — cannot read their salary. Enforced in the database, not by
+  a UI check.
+- **Emergency contacts are narrower than the directory**: an HOD can see who
+  is in their department but not their next of kin.
+- **Shift patterns** built as data. The design computes "Late" against an
+  expected start and shows 09:00 and 08:00 shifts, but never designed a screen
+  for managing them — flagged in BACKLOG.
+- **DataTable** that becomes cards under 640px and drops non-essential columns
+  at tablet width (removed, never squeezed), and **SlideOver** that returns
+  focus to the row that opened it.
+- **Directory** with URL-backed search and filters, filters as a bottom sheet
+  on phones, and a profile slide-over that keeps the list behind it.
+- **Departments** grid with live headcounts.
+
 ## Routes added
 Phase 1: `/` and `/[org]/dashboard`.
 Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
+Phase 3: `/[org]/employees`, `/[org]/departments`.
 
 ## Components added
 `ui/button` `ui/field` `ui/card` `ui/avatar` `ui/status-pill` `states/index`
@@ -77,6 +103,7 @@ Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
 ## Database migrations
 `0001_organizations` `0002_profiles` `0003_rbac` `0004_audit` `0005_rls`
 `0006_permission_catalogue` `0007_access_token_hook`
+`0008_departments_positions` `0009_employees` `0010_employees_rls`
 
 Audit was built as `0004` rather than the brief's `013` because the design
 requires audit writes alongside each module rather than retrofitted at the
@@ -88,12 +115,12 @@ end — the table has to exist before the first module does.
 A map provider key is pending the provider decision.
 
 ## Tests
-**31 unit and component tests** — status vocabulary, role navigation, motion
+**43 unit and component tests** — status vocabulary, role navigation, motion
 tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
 (absolute, protocol-relative, backslash, javascript: and data: targets), and
 the permission vocabulary.
 
-**47 database assertions** against real PostgreSQL, run as the `authenticated`
+**66 database assertions** against real PostgreSQL, run as the `authenticated`
 and `anon` roles with claims set the way PostgREST sets them:
 - Tenant isolation in both directions, including audit entries.
 - HR holds no payroll permission; Accounts holds no recruitment or HR
@@ -104,15 +131,25 @@ and `anon` roles with claims set the way PostgREST sets them:
 - Audit entries cannot be updated or deleted by anyone, Management included.
 - A session with no org claim reads nothing; anon is refused outright.
 - The workspace picker still lists memberships before an org is chosen.
+- An HOD sees their own department's people and nobody else's, and cannot
+  read salary for anyone — including their own team.
+- HR sees every employee and zero salary rows.
+- Accounts reads salary but cannot create an employee.
+- An Employee sees exactly one employee row and one salary row, both theirs.
+- An HOD cannot read next-of-kin details for their own team.
+- Employees cannot be deleted by anyone — there is no delete policy.
 - A structural audit: every table has RLS, no unconditional `authenticated`
   policy (two named exemptions, justified in place), every organization-owned
   table gates on `current_org_id()`, anon holds no privileges, audit_logs
   grants no mutation, and every security-definer function pins `search_path`.
 
-The suite was mutation-tested: weakening org isolation to `using (true)`,
-granting HR the payroll module, making the audit log editable, and dropping
-the tenant check from the audit policy each produce a failure. A suite that
-cannot fail is not evidence.
+The suite is mutation-tested. Eight deliberate regressions were each confirmed
+to fail it: org isolation weakened to `using (true)`, HR granted the payroll
+module, the audit log made editable, the tenant check dropped from the audit
+policy, HR allowed to read salary, the HOD department restriction removed, an
+employee allowed to see everyone, and an HOD allowed to read next of kin. A
+suite that cannot fail is not evidence — and two of these attempts were
+themselves no-ops on the first try, which is exactly why they get checked.
 
 ## Known limitations
 - **Nothing has run against a real Supabase project yet.** The migrations and
@@ -127,9 +164,17 @@ cannot fail is not evidence.
   Supabase Auth configuration that only exists on a real project.
 - The notification count is hard-zero until the notifications table lands in
   Phase 5. It shows nothing rather than an invented badge.
-- Table, slide-over, dialog, bottom sheet, toast, timeline, capture panel and
-  evidence viewer are specified but not yet built — they land with the modules
-  that use them.
+- Dialog, toast, timeline, capture panel and evidence viewer are still
+  unbuilt — they land with the modules that use them. Table and slide-over
+  arrived with Phase 3.
+- **Create-employee and the full employee profile are not built.** The
+  directory's Add button is present only when the caller holds
+  `employees.create`, and the slide-over shows the directory fields plus a
+  note about what is still to come — no fake form, no dead button beyond the
+  one the next phase fills in.
+- **No employees are seeded.** Departments, positions and shifts are; people
+  are not, because a person without attendance, tasks or leave is a row
+  pretending to be a record. The demo population belongs to Phase 10.
 
 ## Awaiting decisions
 C1 geofence default (10 m vs 150 m) · C2 dark mode · C4 out-of-range field
