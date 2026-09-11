@@ -137,5 +137,13 @@ visits · C6 map provider · C10 selfie/face-matching. Full list in
 `PHASE_0_PLAN.md` sections 0.10-0.11.
 
 ## Blocked
-A Supabase project and its credentials are needed to take Phase 2 from
-"validated locally" to "running". Everything else is unblocked.
+Nothing blocks Phase 3 — it is migrations and UI, both testable locally.
+
+To *run* what exists, a Supabase project is needed. The walkthrough is in
+`docs/SUPABASE_SETUP.md`, with `supabase/setup/install.sql` (generated from
+the migrations) and `supabase/setup/verify.sql` to confirm it took.
+
+Note that this build environment's network policy blocks `supabase.com` and
+`*.supabase.co`, so end-to-end sign-in cannot be verified from a session here
+— hence the paste-and-verify scripts. Widening the policy is optional and
+described at the foot of the setup doc.

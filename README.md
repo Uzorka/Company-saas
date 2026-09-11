@@ -77,12 +77,16 @@ they look like they do. It is mutation-tested: see `docs/DECISIONS.md` D23.
 
 ### Against a real Supabase project
 
-1. Apply `supabase/migrations/` in order.
-2. Register the access token hook: **Authentication → Hooks → Customize Access
-   Token**, pointing at `public.custom_access_token_hook`. **Without this
-   there are no permission claims in the token and every policy denies.**
-3. Run `supabase/seed.sql` for the tenant, offices and default roles.
-4. Attach your account — the steps are at the foot of the seed file.
+**See [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)** — a step-by-step
+walkthrough with dashboard links, about 15 minutes.
+
+In short: paste `supabase/setup/install.sql` into the SQL editor, register the
+access token hook, run `supabase/seed.sql`, attach your account, then run
+`supabase/setup/verify.sql` and check every row reads PASS.
+
+Registering the hook is the step people miss. Without it the token carries no
+permission claims, every policy denies, and the app looks broken rather than
+unconfigured.
 
 ## Stack
 
