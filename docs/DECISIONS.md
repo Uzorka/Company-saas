@@ -136,3 +136,65 @@ search box would be parsed as filter syntax. They are replaced with spaces and
 the resulting whitespace is collapsed — without the collapse the pattern
 carries a double space and matches nothing, which is a silent failure rather
 than a loud one.
+
+## D32 — The geofence "map" is a to-scale SVG diagram, not map tiles — **Proposed**
+No tile provider is named anywhere in the design pack, and none is free at
+scale. Rather than pick a vendor on the client's behalf or ship a broken map,
+`GeofenceMap` draws the information the map actually carries: the office pin,
+the geofence to scale, the employee's position, and the accuracy circle around
+it. The accuracy circle is the part that matters — it shows visually why a
+reading is or is not decisive. Adding real tiles later means putting a
+background layer under this geometry, not rewriting it. Still open: the client
+may want real tiles, which is C6 in the Phase 0 plan.
+
+## D33 — Geofence default stays at the design's 150m — **Proposed, unanswered**
+The brief says 10m; the design says 150m with per-office overrides. Built as
+150m in `organization_settings.default_geofence_radius_m`, configurable per
+office. This is a one-value change if the client insists on 10m — but the
+classification logic will then mark most office arrivals `uncertain`, because
+a 10m fence cannot be resolved by a fix with ±15m accuracy. That is the honest
+outcome, not a bug.
+
+## D34 — A GPS fix is a circle, and classification says so — **Accepted**
+`classify_attendance` resolves office/remote only when the entire accuracy
+circle falls on one side of the fence:
+
+    distance + accuracy <= radius  -> office
+    distance - accuracy >  radius  -> remote
+    otherwise                      -> uncertain
+
+So 149m with ±8m is *uncertain*, not "office" — 141-157m straddles a 150m
+fence. Claiming otherwise would be the product asserting something it cannot
+know, on a record that determines someone's pay.
+
+Classification and review are separate: a fix can be geometrically decisive
+and still poor enough in absolute terms to deserve a person's glance (3.8km
+away with ±140m is certainly outside the fence, but does not corroborate where
+the employee says they are). The absolute threshold is 100m — a judgement, not
+a design constant.
+
+## D35 — Geofence logic is duplicated in SQL and TypeScript, and cross-checked — **Accepted**
+The database is authoritative. But the design requires the classification to be
+stated *before* the selfie is taken, and a round trip per GPS reading is not
+viable on a phone in a depot. So the logic exists in both languages, and
+`scripts/check-geofence-parity.mjs` runs 17 cases through both and fails the
+build if they disagree. Duplication is only safe when it is checked.
+
+## D36 — Attendance records can only be written by check_in() — **Accepted**
+There is no INSERT policy on `attendance_records`. The function is security
+definer and derives the employee, organization, timestamp, classification and
+review state itself; the caller supplies only a position and an accuracy —
+facts that genuinely come from the device. An employee therefore cannot record
+themselves as being at the office by posting a chosen value, which is the whole
+point of the module.
+
+`check_in_at` is additionally immutable by trigger: not even HR can rewrite a
+captured time. A correction is a new row in `attendance_corrections` carrying a
+mandatory reason of at least ten characters.
+
+## D37 — Every capture failure still records the time — **Accepted**
+Location denied, camera denied, and an unresolvable fix all still produce a
+record, flagged for review. The design's reasoning, which I agree with: "a
+flagged check-in beats no check-in, because an employee who can't record time
+will stop trusting the tool." A failed selfie upload likewise does not roll back
+the check-in — the record exists and is flagged for the missing photo.

@@ -1647,4 +1647,801 @@ grant delete on department_heads, employee_emergency_contacts,
   to authenticated;
 
 
+-- ---------------------------------------------------------------------------
+-- 0011_attendance.sql
+-- ---------------------------------------------------------------------------
+
+-- 0011_attendance
+--
+-- The verification core. Source: Phase 4, const CI (13 states) and const ATT.
+--
+-- The design's principle for this module: "Verification is the product... Do
+-- not simplify them." Two things follow, and both are load-bearing:
+--
+--  1. Location is read at the moment of an action and never in the background.
+--     There is no table here that could hold a track, and no column for one.
+--  2. Nothing is destroyed. A correction is a new row referencing the
+--     original; a forgotten check-out is auto-closed and flagged, never
+--     deleted.
+
+create type attendance_type as enum ('office', 'remote', 'uncertain');
+
+create type attendance_state as enum (
+  'checked_in',   -- open, running
+  'checked_out',  -- closed normally
+  'auto_closed'   -- no check-out by midnight; flagged, never deleted
+);
+
+create type attendance_review_state as enum (
+  'not_required',   -- nothing anomalous
+  'pending',        -- flagged, awaiting HR
+  'approved',       -- HR accepted it as recorded
+  'corrected'       -- superseded by a correction record
+);
+
+create table attendance_records (
+  id                 uuid primary key default gen_random_uuid(),
+  organization_id    uuid not null references organizations(id) on delete cascade,
+  employee_id        uuid not null references employees(id) on delete cascade,
+  office_id          uuid references offices(id) on delete set null,
+
+  -- Server-authoritative. The browser's clock is never trusted for the time
+  -- an employee is paid against.
+  check_in_at        timestamptz not null default now(),
+  check_out_at       timestamptz,
+
+  -- The local date the shift belongs to, so a session crossing midnight still
+  -- counts as one working day rather than two half-days.
+  work_date          date not null,
+
+  check_in_latitude   numeric(9, 6),
+  check_in_longitude  numeric(9, 6),
+  check_in_accuracy_m numeric(8, 2),
+  check_in_distance_m numeric(10, 2),
+
+  check_out_latitude   numeric(9, 6),
+  check_out_longitude  numeric(9, 6),
+  check_out_accuracy_m numeric(8, 2),
+  check_out_distance_m numeric(10, 2),
+
+  attendance_type    attendance_type not null,
+  state              attendance_state not null default 'checked_in',
+  review_state       attendance_review_state not null default 'not_required',
+
+  -- Why this record needs a human. Kept as text codes rather than an enum so
+  -- a new exception does not need a migration to be recordable.
+  exception_codes    text[] not null default '{}',
+
+  -- Minutes late against the employee's shift, null when no shift applies.
+  late_by_minutes    integer,
+
+  device             text,
+  notes              text,
+
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+
+  constraint check_out_after_check_in
+    check (check_out_at is null or check_out_at >= check_in_at),
+  constraint closed_records_have_a_check_out
+    check (state = 'checked_in' or check_out_at is not null)
+);
+
+-- One open record per employee. This is what makes a duplicate check-in
+-- impossible rather than merely discouraged by the UI.
+create unique index attendance_one_open_per_employee
+  on attendance_records (employee_id)
+  where state = 'checked_in';
+
+-- One record per employee per working day, so a second check-in after
+-- checking out cannot silently create a parallel day.
+create unique index attendance_one_per_employee_per_day
+  on attendance_records (employee_id, work_date);
+
+create index attendance_org_date_idx on attendance_records (organization_id, work_date desc);
+create index attendance_employee_date_idx on attendance_records (employee_id, work_date desc);
+create index attendance_review_idx on attendance_records (organization_id, review_state)
+  where review_state = 'pending';
+
+create trigger attendance_records_updated_at
+  before update on attendance_records
+  for each row execute function set_updated_at();
+
+comment on table attendance_records is
+  'One row per employee per working day. Location is captured only at check-in '
+  'and check-out — there is deliberately no structure here capable of holding '
+  'a continuous track.';
+
+-- Evidence: the selfie. The image itself lives in a private bucket; this is
+-- the metadata and the access-control point.
+create type attendance_evidence_kind as enum ('check_in_selfie', 'check_out_selfie');
+
+create table attendance_evidence (
+  id                   uuid primary key default gen_random_uuid(),
+  organization_id      uuid not null references organizations(id) on delete cascade,
+  attendance_record_id uuid not null references attendance_records(id) on delete cascade,
+  kind                 attendance_evidence_kind not null,
+  storage_path         text not null,
+  captured_at          timestamptz not null default now(),
+  created_at           timestamptz not null default now(),
+  unique (attendance_record_id, kind)
+);
+
+create index attendance_evidence_record_idx
+  on attendance_evidence (attendance_record_id);
+
+-- Breaks. The design's "Start a break" action on an open record.
+create table attendance_breaks (
+  id                   uuid primary key default gen_random_uuid(),
+  organization_id      uuid not null references organizations(id) on delete cascade,
+  attendance_record_id uuid not null references attendance_records(id) on delete cascade,
+  started_at           timestamptz not null default now(),
+  ended_at             timestamptz,
+  created_at           timestamptz not null default now(),
+  constraint break_ends_after_it_starts
+    check (ended_at is null or ended_at >= started_at)
+);
+
+create index attendance_breaks_record_idx on attendance_breaks (attendance_record_id);
+
+-- Corrections.
+--
+-- A correction is a NEW row referencing the original. The original record is
+-- never edited and never deleted — the design is explicit, and an attendance
+-- record is the evidence behind someone's pay.
+create table attendance_corrections (
+  id                   uuid primary key default gen_random_uuid(),
+  organization_id      uuid not null references organizations(id) on delete cascade,
+  attendance_record_id uuid not null references attendance_records(id) on delete restrict,
+  corrected_by         uuid not null references auth.users(id),
+  -- Mandatory wherever an action affects someone else's record.
+  reason               text not null check (length(trim(reason)) >= 10),
+  previous_check_in_at  timestamptz,
+  previous_check_out_at timestamptz,
+  new_check_in_at       timestamptz,
+  new_check_out_at      timestamptz,
+  previous_type        attendance_type,
+  new_type             attendance_type,
+  created_at           timestamptz not null default now()
+);
+
+create index attendance_corrections_record_idx
+  on attendance_corrections (attendance_record_id, created_at desc);
+
+-- The original row is the historical fact; it is not rewritten by a
+-- correction. Block the two columns a correction might be tempted to edit.
+create or replace function reject_check_in_time_edit()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old.check_in_at is distinct from new.check_in_at then
+    raise exception
+      'check_in_at is immutable: record a correction referencing this record instead'
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger attendance_check_in_immutable
+  before update on attendance_records
+  for each row execute function reject_check_in_time_edit();
+
+
+-- ---------------------------------------------------------------------------
+-- 0012_geofence.sql
+-- ---------------------------------------------------------------------------
+
+-- 0012_geofence
+--
+-- Distance and classification, in SQL so the database and the application
+-- cannot disagree about whether someone was at the office.
+--
+-- The rule, stated carefully, because this is where the product is most
+-- tempted to overclaim:
+--
+--   A GPS fix is a circle, not a point. `accuracy_m` is the radius of that
+--   circle. So the honest question is not "is the reported point inside the
+--   fence" but "can we tell which side of the fence the person is on".
+--
+--     distance + accuracy <= radius   -> certainly inside   -> office
+--     distance - accuracy >  radius   -> certainly outside  -> remote
+--     otherwise                       -> cannot tell        -> uncertain
+--
+--   The design's own example: a 10m radius with a ±50m fix cannot be resolved
+--   either way, and must be reviewed rather than asserted.
+--
+-- Classification and review are separate concerns. A fix can be geometrically
+-- decisive and still be poor enough in absolute terms to deserve a human
+-- glance — 3.8km away with ±140m is certainly outside the fence, but the
+-- employee's claim about *where* they are is not corroborated.
+
+-- Great-circle distance in metres. Haversine on a spherical earth: accurate
+-- to ~0.5%, which is far inside any GPS error we will ever see here, and it
+-- avoids a PostGIS dependency for one function.
+create or replace function geo_distance_m(
+  lat1 numeric, lon1 numeric,
+  lat2 numeric, lon2 numeric
+)
+returns numeric
+language sql
+immutable
+parallel safe
+as $$
+  select round(
+    (6371000 * 2 * asin(
+      sqrt(
+        power(sin(radians(lat2 - lat1) / 2), 2) +
+        cos(radians(lat1)) * cos(radians(lat2)) *
+        power(sin(radians(lon2 - lon1) / 2), 2)
+      )
+    ))::numeric
+  , 2);
+$$;
+
+comment on function geo_distance_m is
+  'Great-circle distance in metres (haversine). Spherical-earth approximation, '
+  'accurate to roughly 0.5% — well inside GPS error at any distance this '
+  'product cares about.';
+
+-- Classify a fix against a fence.
+--
+-- `accuracy_m` null means the device gave no accuracy figure. That is not the
+-- same as a perfect fix, so it is treated as unresolvable rather than exact.
+create or replace function classify_attendance(
+  distance_m  numeric,
+  accuracy_m  numeric,
+  radius_m    numeric
+)
+returns attendance_type
+language sql
+immutable
+parallel safe
+as $$
+  select case
+    when distance_m is null then 'uncertain'::attendance_type
+    when accuracy_m is null then 'uncertain'::attendance_type
+    when distance_m + accuracy_m <= radius_m then 'office'::attendance_type
+    when distance_m - accuracy_m >  radius_m then 'remote'::attendance_type
+    else 'uncertain'::attendance_type
+  end;
+$$;
+
+comment on function classify_attendance is
+  'Office / remote / uncertain from distance, accuracy and radius. A fix is a '
+  'circle: only a fix whose whole circle falls on one side of the fence is '
+  'decisive. Everything else is uncertain and goes to a person.';
+
+-- Absolute-accuracy threshold beyond which a fix is flagged for review even
+-- when it is geometrically decisive. 100m is a judgement, not a design
+-- constant — the design shows ±140m treated as needing attention and ±8-12m
+-- treated as routine.
+create or replace function attendance_exception_codes(
+  distance_m   numeric,
+  accuracy_m   numeric,
+  radius_m     numeric,
+  has_selfie   boolean,
+  classified   attendance_type
+)
+returns text[]
+language sql
+immutable
+parallel safe
+as $$
+  select array_remove(array[
+    case when distance_m is null then 'no_location' end,
+    case when accuracy_m is null and distance_m is not null then 'no_accuracy' end,
+    case when accuracy_m is not null and accuracy_m > 100 then 'poor_accuracy' end,
+    case when classified = 'uncertain' then 'position_unresolved' end,
+    case when not has_selfie then 'no_selfie' end
+  ], null);
+$$;
+
+-- Does this record need a person to look at it?
+create or replace function attendance_needs_review(codes text[])
+returns boolean
+language sql
+immutable
+parallel safe
+as $$
+  select coalesce(array_length(codes, 1), 0) > 0;
+$$;
+
+-- Minutes late against a shift, or null when the employee has no shift on
+-- that date. Null is not zero: "not applicable" and "on time" are different
+-- facts, and reporting them as the same would overstate punctuality.
+create or replace function minutes_late(
+  check_in_at   timestamptz,
+  shift_start   time,
+  grace_minutes integer,
+  tz            text
+)
+returns integer
+language sql
+stable
+as $$
+  select case
+    when shift_start is null then null
+    else greatest(
+      0,
+      (extract(epoch from (
+        (check_in_at at time zone tz)::time - shift_start
+      )) / 60)::integer - coalesce(grace_minutes, 0)
+    )
+  end;
+$$;
+
+-- Nearest active office to a fix, with the distance to it.
+create or replace function nearest_office(
+  p_organization_id uuid,
+  p_latitude        numeric,
+  p_longitude       numeric
+)
+returns table (office_id uuid, distance_m numeric, radius_m integer)
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select o.id,
+         geo_distance_m(p_latitude, p_longitude, o.latitude, o.longitude),
+         o.geofence_radius_m
+  from offices o
+  where o.organization_id = p_organization_id
+    and o.active
+  order by geo_distance_m(p_latitude, p_longitude, o.latitude, o.longitude)
+  limit 1;
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- 0013_attendance_rls.sql
+-- ---------------------------------------------------------------------------
+
+-- 0013_attendance_rls
+--
+-- Attendance policies, plus the write paths.
+--
+-- Check-in is not an ordinary insert: the classification, the exception codes
+-- and the timestamp all have to be computed server-side from the caller's own
+-- identity, or an employee could record themselves as being at the office by
+-- posting whatever they liked. So there is no INSERT policy on
+-- attendance_records at all — the only way in is check_in(), which is
+-- security definer and derives everything it can rather than accepting it.
+
+alter table attendance_records     enable row level security;
+alter table attendance_evidence    enable row level security;
+alter table attendance_breaks      enable row level security;
+alter table attendance_corrections enable row level security;
+
+alter table attendance_records     force row level security;
+alter table attendance_evidence    force row level security;
+alter table attendance_breaks      force row level security;
+alter table attendance_corrections force row level security;
+
+-- The three scopes again. Postgres ORs them, so an HOD who is also an
+-- employee sees their department and themselves.
+create policy attendance_select_all on attendance_records
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('attendance.view_all'));
+
+create policy attendance_select_department on attendance_records
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('attendance.view_department')
+    and exists (
+      select 1 from employees e
+      where e.id = attendance_records.employee_id
+        and e.department_id in (select headed_department_ids())
+    )
+  );
+
+create policy attendance_select_self on attendance_records
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('attendance.view_self')
+    and employee_id = my_employee_id()
+  );
+
+-- Review actions only. Times are immutable (see the trigger in 0011) and a
+-- correction is a separate record, so this covers flagging and approving.
+create policy attendance_review on attendance_records
+  for update to authenticated
+  using (organization_id = current_org_id() and has_permission('attendance.review'))
+  with check (organization_id = current_org_id() and has_permission('attendance.review'));
+
+-- Deliberately no INSERT and no DELETE policy. Records are created by
+-- check_in() and never removed.
+
+-- Visibility follows the parent record — the policies above already decide who
+-- may see it, so this cannot widen access to a selfie. The explicit tenant
+-- check is belt and braces: inheriting isolation from a join is correct but
+-- invisible, and a future change to the parent policy should not be able to
+-- silently widen this one.
+create policy attendance_evidence_select on attendance_evidence
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from attendance_records r
+      where r.id = attendance_evidence.attendance_record_id
+    )
+  );
+
+create policy attendance_breaks_select on attendance_breaks
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from attendance_records r
+      where r.id = attendance_breaks.attendance_record_id
+    )
+  );
+
+create policy attendance_breaks_own on attendance_breaks
+  for all to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from attendance_records r
+      where r.id = attendance_breaks.attendance_record_id
+        and r.employee_id = my_employee_id()
+    )
+  )
+  with check (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from attendance_records r
+      where r.id = attendance_breaks.attendance_record_id
+        and r.employee_id = my_employee_id()
+    )
+  );
+
+-- Corrections are visible to whoever can see the record they correct, and
+-- writable only with attendance.review. No update, no delete: a correction is
+-- itself a historical fact.
+create policy attendance_corrections_select on attendance_corrections
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from attendance_records r
+      where r.id = attendance_corrections.attendance_record_id
+    )
+  );
+
+create policy attendance_corrections_insert on attendance_corrections
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and has_permission('attendance.review')
+    and corrected_by = auth.uid()
+  );
+
+grant select on attendance_records, attendance_evidence, attendance_breaks,
+                attendance_corrections
+  to authenticated;
+grant update on attendance_records to authenticated;
+grant insert, update, delete on attendance_breaks to authenticated;
+grant insert on attendance_corrections to authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- 0014_attendance_actions.sql
+-- ---------------------------------------------------------------------------
+
+-- 0014_attendance_actions
+--
+-- The only ways to write an attendance record.
+--
+-- Both are `security definer` and derive everything they can rather than
+-- accepting it. The caller supplies a position and an accuracy — facts only
+-- their device knows — and nothing else. In particular the caller cannot
+-- supply:
+--
+--   * the employee the record belongs to  (taken from their own identity)
+--   * the organization                    (taken from their own claim)
+--   * the time                            (now(), server-side)
+--   * the classification                  (computed from the position)
+--   * whether it needs review             (computed)
+--
+-- An employee therefore cannot record themselves as being at the office by
+-- posting a chosen value, which is the whole point of the module.
+
+create or replace function check_in(
+  p_latitude   numeric default null,
+  p_longitude  numeric default null,
+  p_accuracy_m numeric default null,
+  p_device     text    default null
+)
+returns attendance_records
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org        uuid := current_org_id();
+  v_employee   uuid := my_employee_id();
+  v_office     uuid;
+  v_distance   numeric;
+  v_radius     integer;
+  v_type       attendance_type;
+  v_codes      text[];
+  v_tz         text;
+  v_shift      record;
+  v_record     attendance_records;
+  v_work_date  date;
+begin
+  if v_org is null or v_employee is null then
+    raise exception 'No employee record for this account in this organization'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not has_permission('attendance.check_in') then
+    raise exception 'attendance.check_in is required'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select timezone into v_tz from organization_settings where organization_id = v_org;
+  v_tz := coalesce(v_tz, 'UTC');
+  v_work_date := (now() at time zone v_tz)::date;
+
+  -- Already checked in? Return the open record rather than failing. The
+  -- design turns the CTA into "Check out" in that state; a duplicate attempt
+  -- is a navigation problem, not an error to shout about.
+  select * into v_record
+  from attendance_records
+  where employee_id = v_employee and state = 'checked_in';
+
+  if found then
+    return v_record;
+  end if;
+
+  if p_latitude is not null and p_longitude is not null then
+    select o.office_id, o.distance_m, o.radius_m
+      into v_office, v_distance, v_radius
+    from nearest_office(v_org, p_latitude, p_longitude) o;
+  end if;
+
+  -- No office configured, or no position: fall back to the organization's
+  -- default radius so classification still has something to measure against.
+  if v_radius is null then
+    select default_geofence_radius_m into v_radius
+    from organization_settings where organization_id = v_org;
+  end if;
+
+  v_type := classify_attendance(v_distance, p_accuracy_m, v_radius);
+  -- has_selfie is false here by construction: evidence is attached after the
+  -- record exists. The code is recalculated when the selfie lands.
+  v_codes := attendance_exception_codes(v_distance, p_accuracy_m, v_radius, true, v_type);
+
+  select sp.starts_at, sp.grace_minutes into v_shift
+  from employee_shifts es
+  join shift_patterns sp on sp.id = es.shift_pattern_id
+  where es.employee_id = v_employee
+    and es.effective_from <= v_work_date
+    and (es.effective_to is null or es.effective_to > v_work_date)
+  order by es.effective_from desc
+  limit 1;
+
+  insert into attendance_records (
+    organization_id, employee_id, office_id, work_date,
+    check_in_latitude, check_in_longitude, check_in_accuracy_m, check_in_distance_m,
+    attendance_type, state, review_state, exception_codes, late_by_minutes, device
+  )
+  values (
+    v_org, v_employee, v_office, v_work_date,
+    p_latitude, p_longitude, p_accuracy_m, v_distance,
+    v_type, 'checked_in',
+    (case when attendance_needs_review(v_codes)
+          then 'pending' else 'not_required' end)::attendance_review_state,
+    v_codes,
+    minutes_late(now(), v_shift.starts_at, v_shift.grace_minutes, v_tz),
+    p_device
+  )
+  returning * into v_record;
+
+  perform write_audit(
+    'attendance.check_in', 'attendance_record', v_record.id::text,
+    jsonb_build_object(
+      'type', v_type, 'distance_m', v_distance,
+      'accuracy_m', p_accuracy_m, 'exceptions', v_codes
+    )
+  );
+
+  return v_record;
+end;
+$$;
+
+create or replace function check_out(
+  p_latitude   numeric default null,
+  p_longitude  numeric default null,
+  p_accuracy_m numeric default null
+)
+returns attendance_records
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org      uuid := current_org_id();
+  v_employee uuid := my_employee_id();
+  v_distance numeric;
+  v_record   attendance_records;
+begin
+  if v_org is null or v_employee is null then
+    raise exception 'No employee record for this account in this organization'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_record
+  from attendance_records
+  where employee_id = v_employee and state = 'checked_in';
+
+  if not found then
+    raise exception 'Not checked in' using errcode = 'no_data_found';
+  end if;
+
+  if p_latitude is not null and p_longitude is not null and v_record.office_id is not null then
+    select geo_distance_m(p_latitude, p_longitude, o.latitude, o.longitude)
+      into v_distance
+    from offices o where o.id = v_record.office_id;
+  end if;
+
+  update attendance_records
+  set check_out_at = now(),
+      check_out_latitude = p_latitude,
+      check_out_longitude = p_longitude,
+      check_out_accuracy_m = p_accuracy_m,
+      check_out_distance_m = v_distance,
+      state = 'checked_out'
+  where id = v_record.id
+  returning * into v_record;
+
+  perform write_audit('attendance.check_out', 'attendance_record', v_record.id::text,
+    jsonb_build_object('distance_m', v_distance, 'accuracy_m', p_accuracy_m));
+
+  return v_record;
+end;
+$$;
+
+-- Auto-close records left open past midnight.
+--
+-- The design: "check-out missing at midnight (auto-closes and flags, never
+-- deletes)". The record keeps its check-in exactly as captured; only the
+-- closure is added, and it is flagged so a person decides what the day was
+-- worth rather than the system guessing.
+create or replace function auto_close_stale_attendance()
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  closed integer;
+begin
+  with stale as (
+    select r.id, os.timezone
+    from attendance_records r
+    join organization_settings os on os.organization_id = r.organization_id
+    where r.state = 'checked_in'
+      and r.work_date < (now() at time zone coalesce(os.timezone, 'UTC'))::date
+  )
+  update attendance_records r
+  set state = 'auto_closed',
+      -- Midnight after the working day, but never before the check-in itself.
+      -- work_date and check_in_at can disagree — a record created either side
+      -- of a timezone boundary, or one whose work_date was corrected — and a
+      -- check-out earlier than its check-in is not a closure, it is a broken
+      -- row the constraint would rightly refuse.
+      check_out_at = greatest(
+        ((r.work_date + 1) || ' 00:00:00')::timestamp
+          at time zone coalesce(stale.timezone, 'UTC'),
+        r.check_in_at
+      ),
+      review_state = 'pending',
+      exception_codes = array_append(r.exception_codes, 'no_check_out')
+  from stale
+  where r.id = stale.id;
+
+  get diagnostics closed = row_count;
+  return closed;
+end;
+$$;
+
+comment on function auto_close_stale_attendance is
+  'Closes records left open past their working day and flags them for review. '
+  'Never deletes, and never alters the captured check-in. Schedule nightly '
+  'with pg_cron.';
+
+grant execute on function check_in(numeric, numeric, numeric, text) to authenticated;
+grant execute on function check_out(numeric, numeric, numeric) to authenticated;
+revoke execute on function auto_close_stale_attendance() from public, authenticated, anon;
+
+
+-- ---------------------------------------------------------------------------
+-- 0015_storage.sql
+-- ---------------------------------------------------------------------------
+
+-- 0015_storage
+--
+-- Private buckets and their policies.
+--
+-- Every bucket except public-assets is private. Nothing here is ever served
+-- from a permanent public URL: private objects reach a browser only through a
+-- short-lived signed URL issued server-side, after the same permission check
+-- the table policies apply.
+--
+-- Object paths are prefixed with the organization id, so storage isolation is
+-- keyed on the same boundary as table isolation:
+--
+--   attendance-selfies/{organization_id}/{employee_id}/{record_id}.jpg
+--
+-- On a real Supabase project the storage schema already exists. The guard
+-- below lets this migration run against the local test cluster too, where it
+-- does not — the policies are then skipped, and the table tests that matter
+-- are unaffected.
+do $$
+begin
+  if to_regclass('storage.buckets') is null then
+    raise notice 'storage schema absent (local test cluster) — skipping bucket setup';
+    return;
+  end if;
+
+  insert into storage.buckets (id, name, public)
+  values
+    ('public-assets',        'public-assets',        true),
+    ('employee-documents',   'employee-documents',   false),
+    ('attendance-selfies',   'attendance-selfies',   false),
+    ('applicant-documents',  'applicant-documents',  false),
+    ('task-attachments',     'task-attachments',     false),
+    ('field-visit-evidence', 'field-visit-evidence', false),
+    ('company-documents',    'company-documents',    false),
+    ('payslips',             'payslips',             false)
+  on conflict (id) do nothing;
+
+  -- Read: the first path segment must be the caller's own organization.
+  -- Beyond that, who may see a particular selfie is decided by the table
+  -- policies when the signed URL is issued — this is the outer boundary, not
+  -- the whole rule.
+  execute $p$
+    create policy "tenant reads its own private objects"
+      on storage.objects for select to authenticated
+      using (
+        bucket_id in (
+          'employee-documents', 'attendance-selfies', 'applicant-documents',
+          'task-attachments', 'field-visit-evidence', 'company-documents',
+          'payslips'
+        )
+        and (storage.foldername(name))[1] = current_org_id()::text
+      )
+  $p$;
+
+  -- Write: an employee may add their own attendance selfie; everything else
+  -- is written server-side.
+  execute $p$
+    create policy "employee writes own attendance selfie"
+      on storage.objects for insert to authenticated
+      with check (
+        bucket_id = 'attendance-selfies'
+        and (storage.foldername(name))[1] = current_org_id()::text
+        and (storage.foldername(name))[2] = my_employee_id()::text
+      )
+  $p$;
+
+  -- Selfies are evidence. They are never replaced or removed by the person
+  -- they depict, so there is deliberately no update or delete policy —
+  -- retention deletion runs server-side.
+  execute $p$
+    create policy "public assets are readable"
+      on storage.objects for select to public
+      using (bucket_id = 'public-assets')
+  $p$;
+end
+$$;
+
+
 commit;

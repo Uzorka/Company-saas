@@ -1,8 +1,12 @@
 # Build state
 
-**Current phase:** Phase 3 — departments and employees. Complete and green.
-**Next phase:** Phase 4 — attendance and check-in. **Awaiting approval, and
-blocked on two decisions: the geofence default and the map provider.**
+**Current phase:** Phase 4 — attendance and check-in. Complete and green.
+**Next phase:** Phase 5 — tasks and field visits.
+
+Phase 4 proceeded under two stated assumptions rather than waiting: the
+geofence default is the design's 150m (D33) and the position diagram is a
+to-scale SVG rather than map tiles (D32). Both are cheap to change — one is a
+settings value, the other one component.
 
 ## Completed
 
@@ -94,6 +98,7 @@ implementation plan, 16 technical conflicts and 14 missing inputs. See
 Phase 1: `/` and `/[org]/dashboard`.
 Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
 Phase 3: `/[org]/employees`, `/[org]/departments`.
+Phase 4: `/[org]/attendance`, `/[org]/attendance/check-in`.
 
 ## Components added
 `ui/button` `ui/field` `ui/card` `ui/avatar` `ui/status-pill` `states/index`
@@ -104,6 +109,8 @@ Phase 3: `/[org]/employees`, `/[org]/departments`.
 `0001_organizations` `0002_profiles` `0003_rbac` `0004_audit` `0005_rls`
 `0006_permission_catalogue` `0007_access_token_hook`
 `0008_departments_positions` `0009_employees` `0010_employees_rls`
+`0011_attendance` `0012_geofence` `0013_attendance_rls`
+`0014_attendance_actions` `0015_storage`
 
 Audit was built as `0004` rather than the brief's `013` because the design
 requires audit writes alongside each module rather than retrofitted at the
@@ -115,12 +122,12 @@ end — the table has to exist before the first module does.
 A map provider key is pending the provider decision.
 
 ## Tests
-**43 unit and component tests** — status vocabulary, role navigation, motion
+**67 unit and component tests** — status vocabulary, role navigation, motion
 tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
 (absolute, protocol-relative, backslash, javascript: and data: targets), and
 the permission vocabulary.
 
-**66 database assertions** against real PostgreSQL, run as the `authenticated`
+**91 database assertions** against real PostgreSQL, run as the `authenticated`
 and `anon` roles with claims set the way PostgREST sets them:
 - Tenant isolation in both directions, including audit entries.
 - HR holds no payroll permission; Accounts holds no recruitment or HR
