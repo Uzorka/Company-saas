@@ -41,14 +41,27 @@ with checks as (
     has_function_privilege('supabase_auth_admin',
       'public.custom_access_token_hook(jsonb)', 'execute')
 
-  union all select 6, 'Audit log is append-only',
-    case when exists (select 1 from information_schema.role_table_grants
-      where table_name = 'audit_logs' and privilege_type in ('UPDATE','DELETE')
-        and grantee <> 'postgres')
-      then 'MUTABLE — investigate' else 'no update/delete granted' end,
+  -- Scoped to the roles an application request can actually run as. Platform
+  -- roles (postgres, supabase_admin, dashboard_user) keep their grants so the
+  -- dashboard tooling works, and the trigger below refuses them anyway.
+  union all select 6, 'No app role can mutate the audit log',
+    coalesce((select string_agg(distinct grantee || ':' || privilege_type, ', ')
+      from information_schema.role_table_grants
+      where table_name = 'audit_logs'
+        and privilege_type in ('UPDATE','DELETE','TRUNCATE')
+        and grantee in ('anon','authenticated','service_role')),
+      'anon, authenticated and service_role all revoked'),
     not exists (select 1 from information_schema.role_table_grants
-      where table_name = 'audit_logs' and privilege_type in ('UPDATE','DELETE')
-        and grantee <> 'postgres')
+      where table_name = 'audit_logs'
+        and privilege_type in ('UPDATE','DELETE','TRUNCATE')
+        and grantee in ('anon','authenticated','service_role'))
+
+  -- The guarantee that does not depend on grants at all.
+  union all select 6.1, 'Audit trigger refuses updates and deletes',
+    (select count(*)::text || ' guard trigger(s)' from pg_trigger
+      where tgrelid = 'audit_logs'::regclass and not tgisinternal),
+    (select count(*) from pg_trigger
+      where tgrelid = 'audit_logs'::regclass and not tgisinternal) >= 2
 
   union all select 7, 'Seed tenant present',
     coalesce((select name || ' (' || slug || ')' from organizations limit 1),

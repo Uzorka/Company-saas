@@ -483,7 +483,16 @@ create trigger audit_logs_no_delete
   before delete on audit_logs
   for each row execute function reject_audit_mutation();
 
-revoke update, delete, truncate on audit_logs from public, anon, authenticated;
+-- Supabase grants ALL on public tables to anon, authenticated and
+-- service_role by default, so every one of them has to be named here.
+-- service_role especially: it is the key server-side code uses, it bypasses
+-- RLS, and there is no legitimate reason for it to rewrite history.
+--
+-- Platform roles (postgres, supabase_admin, dashboard_user) keep their
+-- grants — revoking those would break the dashboard's own table tooling —
+-- and the trigger above still refuses the statement whoever issues it.
+revoke update, delete, truncate on audit_logs
+  from public, anon, authenticated, service_role;
 
 -- The one supported way to write an audit entry. `security definer` so the
 -- caller needs no direct insert privilege, and the organization is taken from
