@@ -103,6 +103,54 @@ with checks as (
   union all select 12, 'At least one user has a role',
     (select count(*) from user_roles)::text || ' role assignment(s)',
     (select count(*) from user_roles) > 0
+
+  -- The check that matters most, and the one that was missing.
+  --
+  -- Confirming the hook function EXISTS is not the same as confirming it
+  -- RUNS: a function with a bad variable reference is created cleanly and
+  -- only fails when called. So this actually invokes it with a real user and
+  -- inspects the token it produces. If this row says PASS, sign-in works.
+  union all select 13, 'Access token hook runs and stamps a company',
+    coalesce((
+      select 'company + ' || jsonb_array_length(c -> 'permissions')::text || ' permissions'
+      from (
+        select custom_access_token_hook(jsonb_build_object(
+          'user_id', (select user_id from user_roles limit 1),
+          'claims', '{}'::jsonb
+        )) -> 'claims' as c
+      ) t
+      where c ->> 'organization_id' is not null
+    ), 'HOOK RETURNED NO COMPANY — sign-in would show empty pages'),
+    coalesce((
+      select (c ->> 'organization_id') is not null
+         and jsonb_array_length(c -> 'permissions') > 0
+      from (
+        select custom_access_token_hook(jsonb_build_object(
+          'user_id', (select user_id from user_roles limit 1),
+          'claims', '{}'::jsonb
+        )) -> 'claims' as c
+      ) t
+    ), false)
+
+  union all select 14, 'That user''s roles are in the token',
+    coalesce((
+      select (c -> 'roles')::text
+      from (
+        select custom_access_token_hook(jsonb_build_object(
+          'user_id', (select user_id from user_roles limit 1),
+          'claims', '{}'::jsonb
+        )) -> 'claims' as c
+      ) t
+    ), 'none'),
+    coalesce((
+      select jsonb_array_length(c -> 'roles') > 0
+      from (
+        select custom_access_token_hook(jsonb_build_object(
+          'user_id', (select user_id from user_roles limit 1),
+          'claims', '{}'::jsonb
+        )) -> 'claims' as c
+      ) t
+    ), false)
 )
 select
   case when ok then 'PASS' else 'FAIL' end as result,
