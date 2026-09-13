@@ -2456,4 +2456,653 @@ end
 $$;
 
 
+-- ---------------------------------------------------------------------------
+-- 0016_tasks.sql
+-- ---------------------------------------------------------------------------
+
+-- 0016_tasks
+--
+-- Tasks and field-visit verification. Source: Phase 5 - Tasks, Field Visits,
+-- Leave.
+--
+-- The design's central rule for this module: proof is required only where it
+-- is meaningful. "Do not force field verification on every task" — desk work
+-- is trust-based, a store visit is not. Five verification modes, chosen per
+-- task, rather than one policy for everything.
+
+create type task_status as enum ('todo', 'in_progress', 'review', 'completed', 'cancelled');
+create type task_priority as enum ('low', 'medium', 'high', 'urgent');
+
+-- Source: const VER in Phase 5.
+create type verification_mode as enum (
+  'none',                  -- marked done by the assignee; desk work
+  'photo',                 -- one photo at the moment of completion
+  'location',              -- a single position reading when the task closes
+  'photo_location',        -- both, captured together at the site
+  'photo_location_report'  -- both plus a written report; audits, stock counts
+);
+
+create table tasks (
+  id                uuid primary key default gen_random_uuid(),
+  organization_id   uuid not null references organizations(id) on delete cascade,
+  reference         text not null,
+  title             text not null check (length(trim(title)) > 0),
+  description       text,
+  department_id     uuid references departments(id) on delete set null,
+  created_by        uuid not null references auth.users(id),
+  priority          task_priority not null default 'medium',
+  status            task_status not null default 'todo',
+  verification_mode verification_mode not null default 'none',
+  start_date        date,
+  due_date          date,
+  completed_at      timestamptz,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (organization_id, reference),
+  constraint due_after_start check (due_date is null or start_date is null or due_date >= start_date)
+);
+
+create index tasks_org_status_idx on tasks (organization_id, status);
+create index tasks_department_idx on tasks (organization_id, department_id);
+create index tasks_due_idx on tasks (organization_id, due_date) where status <> 'completed';
+
+create trigger tasks_updated_at
+  before update on tasks
+  for each row execute function set_updated_at();
+
+-- Multiple assignees, per the brief. A task with two people is one task.
+create table task_assignees (
+  task_id     uuid not null references tasks(id) on delete cascade,
+  employee_id uuid not null references employees(id) on delete cascade,
+  assigned_at timestamptz not null default now(),
+  primary key (task_id, employee_id)
+);
+
+create index task_assignees_employee_idx on task_assignees (employee_id);
+
+-- Where a field task is supposed to happen.
+--
+-- allowed_radius_m is per-task rather than per-organization: a supermarket
+-- forecourt and a small kiosk do not deserve the same tolerance.
+create table task_target_locations (
+  id               uuid primary key default gen_random_uuid(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  task_id          uuid not null references tasks(id) on delete cascade,
+  name             text not null check (length(trim(name)) > 0),
+  address          text,
+  latitude         numeric(9, 6) not null check (latitude between -90 and 90),
+  longitude        numeric(9, 6) not null check (longitude between -180 and 180),
+  allowed_radius_m integer not null default 150 check (allowed_radius_m between 1 and 5000),
+  contact_person   text,
+  instructions     text,
+  created_at       timestamptz not null default now(),
+  unique (task_id)
+);
+
+create table task_comments (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  task_id         uuid not null references tasks(id) on delete cascade,
+  author_id       uuid not null references auth.users(id),
+  body            text not null check (length(trim(body)) > 0),
+  created_at      timestamptz not null default now()
+);
+
+create index task_comments_task_idx on task_comments (task_id, created_at);
+
+create table task_attachments (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  task_id         uuid not null references tasks(id) on delete cascade,
+  name            text not null,
+  storage_path    text not null,
+  mime_type       text,
+  size_bytes      bigint check (size_bytes is null or size_bytes >= 0),
+  uploaded_by     uuid references auth.users(id),
+  created_at      timestamptz not null default now()
+);
+
+-- Activity. Append-only like the audit log, but scoped to one task and
+-- readable by anyone who can see it — the audit log is for Management, this is
+-- for the people doing the work.
+create table task_activity (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  task_id         uuid not null references tasks(id) on delete cascade,
+  actor_id        uuid references auth.users(id) on delete set null,
+  action          text not null,
+  detail          jsonb not null default '{}'::jsonb,
+  created_at      timestamptz not null default now()
+);
+
+create index task_activity_task_idx on task_activity (task_id, created_at desc);
+
+
+-- ---------------------------------------------------------------------------
+-- Field visits
+--
+-- Source: Phase 5, const FV — thirteen states, and const FV_NEXT.
+--
+-- Two design rules are enforced structurally rather than by the UI:
+--
+--   * "Out of range blocks capture." Range is checked before the camera
+--     opens, so a submitted visit is one that was in range or explicitly
+--     flagged — never a silent mismatch.
+--   * "A returned visit keeps the original alongside the reason." A return is
+--     a new state on the same row plus a reason, and the evidence stays.
+-- ---------------------------------------------------------------------------
+create type field_visit_state as enum (
+  'assigned',
+  'submitted',
+  'verified',
+  'returned',
+  'flagged'      -- submitted but something is off; a person decides
+);
+
+create table field_visits (
+  id                uuid primary key default gen_random_uuid(),
+  organization_id   uuid not null references organizations(id) on delete cascade,
+  task_id           uuid not null references tasks(id) on delete cascade,
+  employee_id       uuid not null references employees(id) on delete cascade,
+
+  state             field_visit_state not null default 'assigned',
+
+  -- Captured at submission, server-side.
+  submitted_at      timestamptz,
+  latitude          numeric(9, 6),
+  longitude         numeric(9, 6),
+  accuracy_m        numeric(8, 2),
+  distance_m        numeric(10, 2),
+
+  report            text,
+  outcome           text,
+  exception_codes   text[] not null default '{}',
+
+  reviewed_by       uuid references auth.users(id),
+  reviewed_at       timestamptz,
+  -- Mandatory on return: the assignee has to know what to do differently.
+  review_reason     text,
+
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+
+  constraint returned_visits_state_a_reason
+    check (state <> 'returned' or (review_reason is not null and length(trim(review_reason)) >= 10)),
+  constraint reviewed_visits_have_a_reviewer
+    check (state not in ('verified', 'returned') or reviewed_by is not null)
+);
+
+create index field_visits_task_idx on field_visits (task_id);
+create index field_visits_employee_idx on field_visits (employee_id);
+create index field_visits_review_idx on field_visits (organization_id, state)
+  where state in ('submitted', 'flagged');
+
+create trigger field_visits_updated_at
+  before update on field_visits
+  for each row execute function set_updated_at();
+
+create table field_visit_evidence (
+  id               uuid primary key default gen_random_uuid(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  field_visit_id   uuid not null references field_visits(id) on delete cascade,
+  storage_path     text not null,
+  captured_at      timestamptz not null default now(),
+  -- A re-capture after a return adds evidence rather than replacing it, so
+  -- the reviewer can see both. Nothing is destroyed.
+  attempt          integer not null default 1 check (attempt >= 1),
+  created_at       timestamptz not null default now(),
+  unique (field_visit_id, attempt)
+);
+
+-- Human-readable task references: TSK-2041, per the design.
+create sequence if not exists task_reference_seq start 1000;
+
+create or replace function next_task_reference()
+returns text
+language sql
+volatile
+as $$
+  select 'TSK-' || nextval('task_reference_seq')::text;
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- 0017_tasks_rls.sql
+-- ---------------------------------------------------------------------------
+
+-- 0017_tasks_rls
+--
+-- Task and field-visit policies, plus the submit/review write paths.
+--
+-- The scope shape here differs from employees: an assignee sees a task
+-- because it was given to them, not because of their department. So
+-- "view_assigned" resolves through task_assignees, and someone can hold it
+-- without holding any departmental scope at all.
+
+alter table tasks                  enable row level security;
+alter table task_assignees         enable row level security;
+alter table task_target_locations  enable row level security;
+alter table task_comments          enable row level security;
+alter table task_attachments       enable row level security;
+alter table task_activity          enable row level security;
+alter table field_visits           enable row level security;
+alter table field_visit_evidence   enable row level security;
+
+alter table tasks                  force row level security;
+alter table task_target_locations  force row level security;
+alter table task_comments          force row level security;
+alter table task_attachments       force row level security;
+alter table task_activity          force row level security;
+alter table field_visits           force row level security;
+alter table field_visit_evidence   force row level security;
+
+-- Is this task assigned to the caller? Defined once; several policies use it.
+create or replace function is_assigned_to_me(target_task_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from task_assignees ta
+    where ta.task_id = target_task_id
+      and ta.employee_id = my_employee_id()
+  );
+$$;
+
+-- Can the caller see this task at all? The three scopes, ORed.
+create or replace function can_see_task(target_task_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from tasks t
+    where t.id = target_task_id
+      and t.organization_id = current_org_id()
+      and (
+        has_permission('tasks.view_all')
+        or (has_permission('tasks.view_department')
+            and t.department_id in (select headed_department_ids()))
+        or (has_permission('tasks.view_assigned') and is_assigned_to_me(t.id))
+      )
+  );
+$$;
+
+create policy tasks_select_all on tasks
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('tasks.view_all'));
+
+create policy tasks_select_department on tasks
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('tasks.view_department')
+    and department_id in (select headed_department_ids())
+  );
+
+create policy tasks_select_assigned on tasks
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('tasks.view_assigned')
+    and is_assigned_to_me(id)
+  );
+
+create policy tasks_insert on tasks
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and has_permission('tasks.create')
+    and created_by = auth.uid()
+    -- An HOD may only create work inside a department they head. Without
+    -- this, tasks.create would let them assign across the whole company.
+    and (
+      has_permission('tasks.assign_any')
+      or department_id in (select headed_department_ids())
+    )
+  );
+
+create policy tasks_update_any on tasks
+  for update to authenticated
+  using (organization_id = current_org_id() and has_permission('tasks.update_any'))
+  with check (organization_id = current_org_id() and has_permission('tasks.update_any'));
+
+create policy tasks_update_assigned on tasks
+  for update to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('tasks.update_assigned')
+    and is_assigned_to_me(id)
+  )
+  with check (organization_id = current_org_id() and is_assigned_to_me(id));
+
+-- No delete policy. A cancelled task is status 'cancelled' and stays visible;
+-- deleting work someone did is how history disappears.
+
+create policy task_assignees_select on task_assignees
+  for select to authenticated
+  using (can_see_task(task_id));
+
+create policy task_assignees_manage on task_assignees
+  for all to authenticated
+  using (
+    exists (
+      select 1 from tasks t
+      where t.id = task_assignees.task_id
+        and t.organization_id = current_org_id()
+        and (
+          has_permission('tasks.assign_any')
+          or (has_permission('tasks.assign_department')
+              and t.department_id in (select headed_department_ids()))
+        )
+    )
+  )
+  with check (
+    exists (
+      select 1 from tasks t
+      where t.id = task_assignees.task_id
+        and t.organization_id = current_org_id()
+        and (
+          has_permission('tasks.assign_any')
+          or (has_permission('tasks.assign_department')
+              and t.department_id in (select headed_department_ids()))
+        )
+    )
+  );
+
+create policy task_locations_select on task_target_locations
+  for select to authenticated
+  using (organization_id = current_org_id() and can_see_task(task_id));
+
+create policy task_locations_manage on task_target_locations
+  for all to authenticated
+  using (organization_id = current_org_id() and has_permission('tasks.create'))
+  with check (organization_id = current_org_id() and has_permission('tasks.create'));
+
+create policy task_comments_select on task_comments
+  for select to authenticated
+  using (organization_id = current_org_id() and can_see_task(task_id));
+
+create policy task_comments_insert on task_comments
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and has_permission('tasks.comment')
+    and author_id = auth.uid()
+    and can_see_task(task_id)
+  );
+
+-- Comments are not editable or deletable: a conversation someone acted on is
+-- not something to quietly rewrite.
+
+create policy task_attachments_select on task_attachments
+  for select to authenticated
+  using (organization_id = current_org_id() and can_see_task(task_id));
+
+create policy task_attachments_insert on task_attachments
+  for insert to authenticated
+  with check (organization_id = current_org_id() and can_see_task(task_id));
+
+create policy task_activity_select on task_activity
+  for select to authenticated
+  using (organization_id = current_org_id() and can_see_task(task_id));
+
+-- Activity is written by the functions below, never by a client.
+
+
+-- ---------------------------------------------------------------------------
+-- field_visits
+-- ---------------------------------------------------------------------------
+create policy field_visits_select on field_visits
+  for select to authenticated
+  using (organization_id = current_org_id() and can_see_task(task_id));
+
+-- No insert, update or delete policy. Visits are created with the task and
+-- advanced only by submit_field_visit() and review_field_visit(), which are
+-- security definer and derive the position, distance and identity themselves.
+
+create policy field_visit_evidence_select on field_visit_evidence
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from field_visits v
+      where v.id = field_visit_evidence.field_visit_id
+        and can_see_task(v.task_id)
+    )
+  );
+
+create policy field_visit_evidence_insert on field_visit_evidence
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from field_visits v
+      where v.id = field_visit_evidence.field_visit_id
+        and v.employee_id = my_employee_id()
+    )
+  );
+
+grant select on tasks, task_assignees, task_target_locations, task_comments,
+                task_attachments, task_activity, field_visits,
+                field_visit_evidence
+  to authenticated;
+grant insert, update on tasks to authenticated;
+grant insert, update, delete on task_assignees to authenticated;
+grant insert, update, delete on task_target_locations to authenticated;
+grant insert on task_comments, task_attachments, field_visit_evidence to authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- 0018_field_visit_actions.sql
+-- ---------------------------------------------------------------------------
+
+-- 0018_field_visit_actions
+--
+-- Submitting and reviewing a field visit.
+--
+-- Same shape as check_in(): the caller supplies a position and a report — the
+-- things only they can know — and the function derives everything else. The
+-- distance in particular is computed here from the task's own target, never
+-- accepted from the client, because "I was 12m from the store" is exactly the
+-- claim the module exists to verify.
+
+-- Out of range blocks capture, per the design. The threshold is the task's
+-- own allowed_radius_m, and — as with attendance — a fix is a circle, so the
+-- check is against the near edge of the accuracy circle rather than its
+-- centre. Someone genuinely at the door with a poor fix is not turned away.
+create or replace function field_visit_in_range(
+  distance_m numeric,
+  accuracy_m numeric,
+  radius_m   numeric
+)
+returns boolean
+language sql
+immutable
+parallel safe
+as $$
+  select distance_m is not null
+     and greatest(distance_m - coalesce(accuracy_m, 0), 0) <= radius_m;
+$$;
+
+comment on function field_visit_in_range is
+  'Whether the employee could plausibly be within the target radius. Measured '
+  'against the near edge of the accuracy circle: a coarse fix at the door '
+  'should not block a genuine visit, and the recorded accuracy lets a '
+  'reviewer judge it afterwards.';
+
+create or replace function submit_field_visit(
+  p_task_id    uuid,
+  p_latitude   numeric default null,
+  p_longitude  numeric default null,
+  p_accuracy_m numeric default null,
+  p_report     text    default null,
+  p_outcome    text    default null
+)
+returns field_visits
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org      uuid := current_org_id();
+  v_employee uuid := my_employee_id();
+  v_task     tasks;
+  v_target   task_target_locations;
+  v_distance numeric;
+  v_codes    text[] := '{}';
+  v_state    field_visit_state;
+  v_visit    field_visits;
+  v_needs_photo  boolean;
+  v_needs_report boolean;
+begin
+  if v_org is null or v_employee is null then
+    raise exception 'No employee record for this account in this organization'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_task from tasks where id = p_task_id and organization_id = v_org;
+  if not found then
+    raise exception 'Task not found' using errcode = 'no_data_found';
+  end if;
+
+  if not is_assigned_to_me(p_task_id) then
+    raise exception 'Only an assignee can submit a visit for this task'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  v_needs_photo := v_task.verification_mode in
+    ('photo', 'photo_location', 'photo_location_report');
+  v_needs_report := v_task.verification_mode = 'photo_location_report';
+
+  if v_needs_report and coalesce(length(trim(p_report)), 0) < 10 then
+    raise exception 'This task requires a visit report'
+      using errcode = 'check_violation';
+  end if;
+
+  select * into v_target from task_target_locations where task_id = p_task_id;
+
+  if v_target.id is not null and p_latitude is not null then
+    v_distance := geo_distance_m(p_latitude, p_longitude, v_target.latitude, v_target.longitude);
+
+    -- The block. Refused rather than recorded-and-flagged: the design checks
+    -- range before the camera opens, so submitting from the wrong place is
+    -- not a state this table should be able to hold.
+    if not field_visit_in_range(v_distance, p_accuracy_m, v_target.allowed_radius_m) then
+      raise exception
+        'You are % from %, outside the % m allowed for this visit',
+        round(v_distance) || 'm', v_target.name, v_target.allowed_radius_m
+        using errcode = 'check_violation';
+    end if;
+
+    if p_accuracy_m is null then
+      v_codes := array_append(v_codes, 'no_accuracy');
+    elsif p_accuracy_m > 100 then
+      v_codes := array_append(v_codes, 'poor_accuracy');
+    end if;
+  elsif v_task.verification_mode in ('location', 'photo_location', 'photo_location_report') then
+    -- Location was required and none arrived. Recorded and reviewed by a
+    -- person — the design: "No GPS or no photo is always reviewed by a
+    -- person, never auto-rejected."
+    v_codes := array_append(v_codes, 'no_location');
+  end if;
+
+  -- A person decides whenever anything is off; otherwise it goes to the
+  -- reviewer as an ordinary submission.
+  v_state := case when array_length(v_codes, 1) > 0
+                  then 'flagged'::field_visit_state
+                  else 'submitted'::field_visit_state end;
+
+  insert into field_visits (
+    organization_id, task_id, employee_id, state, submitted_at,
+    latitude, longitude, accuracy_m, distance_m, report, outcome, exception_codes
+  )
+  values (
+    v_org, p_task_id, v_employee, v_state, now(),
+    p_latitude, p_longitude, p_accuracy_m, v_distance, p_report, p_outcome, v_codes
+  )
+  on conflict (id) do nothing
+  returning * into v_visit;
+
+  insert into task_activity (organization_id, task_id, actor_id, action, detail)
+  values (v_org, p_task_id, auth.uid(), 'visit.submitted',
+          jsonb_build_object('distance_m', v_distance, 'accuracy_m', p_accuracy_m,
+                             'exceptions', v_codes, 'photo_required', v_needs_photo));
+
+  perform write_audit('field_visit.submit', 'field_visit', v_visit.id::text,
+    jsonb_build_object('task', v_task.reference, 'distance_m', v_distance,
+                       'accuracy_m', p_accuracy_m, 'state', v_state));
+
+  return v_visit;
+end;
+$$;
+
+-- Accept or return. A return keeps the original evidence and states why.
+create or replace function review_field_visit(
+  p_visit_id uuid,
+  p_accept   boolean,
+  p_reason   text default null
+)
+returns field_visits
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org   uuid := current_org_id();
+  v_visit field_visits;
+begin
+  if not has_permission('tasks.verify_visit') then
+    raise exception 'tasks.verify_visit is required'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_visit from field_visits
+  where id = p_visit_id and organization_id = v_org;
+
+  if not found then
+    raise exception 'Visit not found' using errcode = 'no_data_found';
+  end if;
+
+  if not can_see_task(v_visit.task_id) then
+    raise exception 'Not your department''s task'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not p_accept and coalesce(length(trim(p_reason)), 0) < 10 then
+    raise exception
+      'Returning a visit needs a reason the assignee can act on'
+      using errcode = 'check_violation';
+  end if;
+
+  update field_visits
+  set state = (case when p_accept then 'verified' else 'returned' end)::field_visit_state,
+      reviewed_by = auth.uid(),
+      reviewed_at = now(),
+      review_reason = p_reason
+  where id = p_visit_id
+  returning * into v_visit;
+
+  insert into task_activity (organization_id, task_id, actor_id, action, detail)
+  values (v_org, v_visit.task_id, auth.uid(),
+          case when p_accept then 'visit.verified' else 'visit.returned' end,
+          jsonb_build_object('reason', p_reason));
+
+  perform write_audit(
+    case when p_accept then 'field_visit.verify' else 'field_visit.return' end,
+    'field_visit', p_visit_id::text,
+    jsonb_build_object('reason', p_reason, 'original_kept', true));
+
+  return v_visit;
+end;
+$$;
+
+grant execute on function submit_field_visit(uuid, numeric, numeric, numeric, text, text) to authenticated;
+grant execute on function review_field_visit(uuid, boolean, text) to authenticated;
+
+
 commit;

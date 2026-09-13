@@ -1,7 +1,7 @@
 # Build state
 
-**Current phase:** Phase 4 — attendance and check-in. Complete and green.
-**Next phase:** Phase 5 — tasks and field visits.
+**Current phase:** Phase 5 — tasks and field visits. Complete and green.
+**Next phase:** Phase 6 — leave.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the
 geofence default is the design's 150m (D33) and the position diagram is a
@@ -99,6 +99,29 @@ Phase 1: `/` and `/[org]/dashboard`.
 Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
 Phase 3: `/[org]/employees`, `/[org]/departments`.
 Phase 4: `/[org]/attendance`, `/[org]/attendance/check-in`.
+Phase 5: `/[org]/tasks`, `/[org]/tasks/visits`.
+
+### Phase 5 — tasks and field visits
+- **Three migrations.** `0016_tasks` (tasks, assignees, target locations,
+  comments, attachments, activity, field visits and their evidence),
+  `0017_tasks_rls`, `0018_field_visit_actions`.
+- **Five verification modes**, chosen per task. `none` is a first-class mode
+  and the default: the design is explicit that forcing proof on desk work is
+  wrong.
+- **Out of range blocks capture.** `submit_field_visit()` computes the
+  distance from the task's own target and *refuses* a submission from the
+  wrong place rather than recording it flagged. Measured against the near
+  edge of the accuracy circle, so a coarse fix at the door is not turned away
+  — but it is flagged for a person.
+- **A returned visit keeps its original evidence** and carries a mandatory
+  reason of at least ten characters. Re-capture adds an attempt rather than
+  replacing one.
+- **Assignment is bounded by department.** An HOD holding `tasks.create`
+  still cannot create work outside a department they head.
+- Board on desktop, list under 768px — the design rules out a horizontally
+  scrolling board on a phone. Both render from the same rows.
+- Review queue showing distance, accuracy, report and flags before the
+  decision; accept is one click, return demands a reason.
 
 ## Components added
 `ui/button` `ui/field` `ui/card` `ui/avatar` `ui/status-pill` `states/index`
@@ -110,7 +133,8 @@ Phase 4: `/[org]/attendance`, `/[org]/attendance/check-in`.
 `0006_permission_catalogue` `0007_access_token_hook`
 `0008_departments_positions` `0009_employees` `0010_employees_rls`
 `0011_attendance` `0012_geofence` `0013_attendance_rls`
-`0014_attendance_actions` `0015_storage`
+`0014_attendance_actions` `0015_storage` `0016_tasks` `0017_tasks_rls`
+`0018_field_visit_actions`
 
 Audit was built as `0004` rather than the brief's `013` because the design
 requires audit writes alongside each module rather than retrofitted at the
@@ -122,12 +146,12 @@ end — the table has to exist before the first module does.
 A map provider key is pending the provider decision.
 
 ## Tests
-**67 unit and component tests** — status vocabulary, role navigation, motion
+**81 unit and component tests** — status vocabulary, role navigation, motion
 tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
 (absolute, protocol-relative, backslash, javascript: and data: targets), and
 the permission vocabulary.
 
-**91 database assertions** against real PostgreSQL, run as the `authenticated`
+**114 database assertions** against real PostgreSQL, run as the `authenticated`
 and `anon` roles with claims set the way PostgREST sets them:
 - Tenant isolation in both directions, including audit entries.
 - HR holds no payroll permission; Accounts holds no recruitment or HR

@@ -198,3 +198,31 @@ record, flagged for review. The design's reasoning, which I agree with: "a
 flagged check-in beats no check-in, because an employee who can't record time
 will stop trusting the tool." A failed selfie upload likewise does not roll back
 the check-in — the record exists and is flagged for the missing photo.
+
+## D38 — Out-of-range visits are refused, not recorded — **Accepted**
+The design says range is checked before the camera opens, so
+`submit_field_visit()` raises rather than writing a flagged row. A visit
+submitted from the wrong place is not a state the table should be able to
+hold. The brief proposed record-and-flag; the design's position is stronger
+and it is what shipped (C4 in the Phase 0 plan).
+
+The range test measures the **near edge** of the accuracy circle, not its
+centre: someone genuinely at the door with a poor fix is not turned away, and
+the recorded accuracy lets the reviewer judge it afterwards. A coarse fix is
+accepted and flagged, never silently trusted.
+
+## D39 — Cancelled is a filter, not a board column — **Accepted**
+`BOARD_COLUMNS` has four lanes. A lane for abandoned work fills up and never
+empties, and it pushes the live columns off a laptop screen. Cancelled tasks
+remain visible and queryable; they just are not a destination.
+
+## D40 — A task due today is not overdue — **Accepted**
+`isOverdue` compares calendar dates, not timestamps. Marking a task overdue at
+09:00 on its due date makes every morning look like a crisis and trains people
+to ignore the colour.
+
+## D41 — An HOD cannot create work outside their department — **Accepted**
+`tasks.create` alone is not enough: the insert policy also requires either
+`tasks.assign_any` or a department the caller heads. Without that pairing, the
+"Dept only" scope in the matrix would hold for reading tasks but not for
+creating them, which is the more consequential direction.
