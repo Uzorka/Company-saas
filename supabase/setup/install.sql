@@ -3669,4 +3669,722 @@ grant select on leave_types, leave_balances, leave_requests, leave_approvals
 grant insert, update, delete on leave_types, leave_balances to authenticated;
 
 
+-- ---------------------------------------------------------------------------
+-- 0022_payroll.sql
+-- ---------------------------------------------------------------------------
+
+-- 0022_payroll
+--
+-- Payroll. Source: Phase 6 - Payroll, Recruitment, Documents, and the
+-- statutory rates in Phase 7 settings.
+--
+-- The highest correctness risk in the product, so three things are structural
+-- rather than conventional:
+--
+--   1. Money is numeric. Never float — 0.1 + 0.2 costing someone a kobo is
+--      not a rounding curiosity when it is their salary.
+--   2. A run line is a SNAPSHOT. Every figure that made up a payslip is
+--      stored on it, so a raise next March cannot alter what December paid.
+--   3. Publishing is irreversible, and the pipeline enforces who may do what.
+--
+-- What this module deliberately does NOT do: present its output as statutory
+-- compliance. Rates are configurable data supplied by the client, and the
+-- brief excludes filing, remittance and pension APIs from MVP.
+
+create type payroll_status as enum (
+  'draft',       -- generated from contracts; nothing locked
+  'processing',  -- Accounts is working through it
+  'review',      -- figures complete, awaiting a second pair of eyes
+  'approved',    -- signed off; figures locked
+  'published',   -- payslips visible to employees; irreversible
+  'closed'       -- fully read-only
+);
+
+create type salary_component_kind as enum (
+  'recurring_earning',
+  'one_time_earning',
+  'recurring_deduction',
+  'one_time_deduction'
+);
+
+-- Statutory rates, effective-dated.
+--
+-- Stored as data because they change, and because they are the client's to
+-- state. The seeded values come from the design and must be confirmed against
+-- current FIRS/PenCom/NHF guidance before anyone is paid from them.
+create table statutory_rates (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  code            text not null check (code in ('pension_employee', 'pension_employer', 'nhf')),
+  rate_percent    numeric(6, 3) not null check (rate_percent >= 0 and rate_percent <= 100),
+  effective_from  date not null,
+  effective_to    date,
+  created_at      timestamptz not null default now(),
+  constraint statutory_period_valid check (effective_to is null or effective_to > effective_from)
+);
+
+create index statutory_rates_lookup on statutory_rates (organization_id, code, effective_from desc);
+
+-- Progressive tax bands. Generic rather than Nigeria-specific: a band table
+-- can express any progressive schedule, and hard-coding one country's law
+-- into a function would make it a lie the moment it changed.
+create table paye_bands (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  band_order      smallint not null check (band_order > 0),
+  -- Annual thresholds. upper_bound null means "and above".
+  lower_bound     numeric(14, 2) not null check (lower_bound >= 0),
+  upper_bound     numeric(14, 2),
+  rate_percent    numeric(6, 3) not null check (rate_percent >= 0 and rate_percent <= 100),
+  effective_from  date not null,
+  effective_to    date,
+  created_at      timestamptz not null default now(),
+  unique (organization_id, effective_from, band_order),
+  constraint band_bounds_ordered check (upper_bound is null or upper_bound > lower_bound)
+);
+
+-- Per-employee earnings and deductions beyond basic salary.
+create table salary_components (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  employee_id     uuid not null references employees(id) on delete cascade,
+  kind            salary_component_kind not null,
+  name            text not null check (length(trim(name)) > 0),
+  amount          numeric(14, 2) not null check (amount >= 0),
+  currency_code   char(3) not null default 'NGN',
+  -- Recurring components apply every period in their window; one-time
+  -- components apply to a single period and are consumed by it.
+  effective_from  date,
+  effective_to    date,
+  taxable         boolean not null default true,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index salary_components_employee_idx on salary_components (employee_id);
+
+create trigger salary_components_updated_at
+  before update on salary_components
+  for each row execute function set_updated_at();
+
+create table payroll_periods (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  label           text not null,
+  starts_on       date not null,
+  ends_on         date not null,
+  pay_date        date,
+  status          payroll_status not null default 'draft',
+  currency_code   char(3) not null default 'NGN',
+
+  -- Separation of duties, recorded rather than assumed.
+  submitted_by    uuid references auth.users(id),
+  submitted_at    timestamptz,
+  approved_by     uuid references auth.users(id),
+  approved_at     timestamptz,
+  published_by    uuid references auth.users(id),
+  published_at    timestamptz,
+  closed_at       timestamptz,
+
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+
+  unique (organization_id, label),
+  constraint period_dates_ordered check (ends_on >= starts_on),
+
+  -- Accounts cannot approve its own run. Enforced here, not only in the UI:
+  -- it is the whole point of a two-person pipeline.
+  constraint approver_is_a_second_person
+    check (approved_by is null or submitted_by is null or approved_by <> submitted_by)
+);
+
+create index payroll_periods_org_idx on payroll_periods (organization_id, starts_on desc);
+
+create trigger payroll_periods_updated_at
+  before update on payroll_periods
+  for each row execute function set_updated_at();
+
+-- One line per employee per run. Every figure is stored, not derived.
+--
+-- This is the snapshot that makes historical payroll stable: a raise in March
+-- changes employee_compensation, and touches nothing here.
+create table payroll_run_lines (
+  id                  uuid primary key default gen_random_uuid(),
+  organization_id     uuid not null references organizations(id) on delete cascade,
+  payroll_period_id   uuid not null references payroll_periods(id) on delete cascade,
+  employee_id         uuid not null references employees(id) on delete restrict,
+
+  -- Denormalised on purpose. An employee who later leaves, changes department
+  -- or is renamed must not alter a payslip already issued to them.
+  employee_no         text not null,
+  employee_name       text not null,
+  department_name     text,
+
+  basic_salary        numeric(14, 2) not null default 0 check (basic_salary >= 0),
+  total_earnings      numeric(14, 2) not null default 0 check (total_earnings >= 0),
+  gross_pay           numeric(14, 2) not null default 0 check (gross_pay >= 0),
+
+  paye                numeric(14, 2) not null default 0 check (paye >= 0),
+  pension_employee    numeric(14, 2) not null default 0 check (pension_employee >= 0),
+  pension_employer    numeric(14, 2) not null default 0 check (pension_employer >= 0),
+  nhf                 numeric(14, 2) not null default 0 check (nhf >= 0),
+  other_deductions    numeric(14, 2) not null default 0 check (other_deductions >= 0),
+  total_deductions    numeric(14, 2) not null default 0 check (total_deductions >= 0),
+
+  net_pay             numeric(14, 2) not null default 0,
+  currency_code       char(3) not null default 'NGN',
+
+  -- The components that produced the figures above, kept so a payslip can be
+  -- itemised years later without re-deriving anything.
+  earning_lines       jsonb not null default '[]'::jsonb,
+  deduction_lines     jsonb not null default '[]'::jsonb,
+
+  created_at          timestamptz not null default now(),
+  unique (payroll_period_id, employee_id),
+
+  constraint net_is_gross_less_deductions
+    check (net_pay = gross_pay - total_deductions)
+);
+
+create index payroll_run_lines_period_idx on payroll_run_lines (payroll_period_id);
+create index payroll_run_lines_employee_idx on payroll_run_lines (employee_id);
+
+-- Adjustments: an addition or subtraction on one run, with an author and a
+-- reason. Corrections after publication become an adjustment on the NEXT
+-- period, never an edit to this one.
+create table payroll_adjustments (
+  id                uuid primary key default gen_random_uuid(),
+  organization_id   uuid not null references organizations(id) on delete cascade,
+  payroll_period_id uuid not null references payroll_periods(id) on delete cascade,
+  employee_id       uuid not null references employees(id) on delete restrict,
+  label             text not null check (length(trim(label)) > 0),
+  amount            numeric(14, 2) not null,
+  reason            text not null check (length(trim(reason)) >= 10),
+  created_by        uuid not null references auth.users(id),
+  created_at        timestamptz not null default now(),
+  constraint adjustment_is_not_zero check (amount <> 0)
+);
+
+create index payroll_adjustments_period_idx on payroll_adjustments (payroll_period_id);
+
+create table payslips (
+  id                  uuid primary key default gen_random_uuid(),
+  organization_id     uuid not null references organizations(id) on delete cascade,
+  payroll_run_line_id uuid not null references payroll_run_lines(id) on delete restrict,
+  employee_id         uuid not null references employees(id) on delete restrict,
+  published_at        timestamptz not null default now(),
+  unique (payroll_run_line_id)
+);
+
+create index payslips_employee_idx on payslips (employee_id, published_at desc);
+
+
+-- ---------------------------------------------------------------------------
+-- Immutability
+-- ---------------------------------------------------------------------------
+
+-- Run lines freeze at approval. Before that the run is being worked on and
+-- recalculating is normal; after it, the figures are what two people signed.
+create or replace function reject_locked_payroll_line()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_status payroll_status;
+begin
+  select status into v_status from payroll_periods
+  where id = coalesce(new.payroll_period_id, old.payroll_period_id);
+
+  if v_status in ('approved', 'published', 'closed') then
+    raise exception
+      'This run is % — its figures are locked. A correction becomes an adjustment on the next period.',
+      v_status
+      using errcode = 'check_violation';
+  end if;
+
+  return coalesce(new, old);
+end;
+$$;
+
+create trigger payroll_run_lines_locked
+  before insert or update or delete on payroll_run_lines
+  for each row execute function reject_locked_payroll_line();
+
+-- A payslip is a document that has been issued. It is never edited or
+-- withdrawn.
+create or replace function reject_payslip_mutation()
+returns trigger
+language plpgsql
+as $$
+begin
+  raise exception 'A published payslip cannot be % — it has been issued',
+    case tg_op when 'UPDATE' then 'changed' else 'withdrawn' end
+    using errcode = 'insufficient_privilege';
+end;
+$$;
+
+create trigger payslips_immutable
+  before update or delete on payslips
+  for each row execute function reject_payslip_mutation();
+
+revoke update, delete, truncate on payslips from public, anon, authenticated, service_role;
+
+
+-- ---------------------------------------------------------------------------
+-- 0023_payroll_actions.sql
+-- ---------------------------------------------------------------------------
+
+-- 0023_payroll_actions
+--
+-- Payroll calculation and the six-status pipeline.
+--
+-- All arithmetic is here, in numeric. Nothing about a payslip is computed in
+-- JavaScript: floating point is fine for a progress bar and wrong for money,
+-- and the figure an employee is paid should come from one place.
+
+-- Progressive tax on an annual amount, from the band table.
+--
+-- Each band taxes only the slice of income that falls inside it — that is
+-- what "progressive" means, and computing it as a single rate on the whole
+-- amount is the classic way to get it wrong.
+create or replace function calculate_paye_annual(
+  p_organization_id uuid,
+  p_annual_taxable  numeric,
+  p_on_date         date
+)
+returns numeric
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce(round(sum(
+    greatest(
+      least(p_annual_taxable, coalesce(b.upper_bound, p_annual_taxable)) - b.lower_bound,
+      0
+    ) * b.rate_percent / 100
+  ), 2), 0)
+  from paye_bands b
+  where b.organization_id = p_organization_id
+    and b.effective_from <= p_on_date
+    and (b.effective_to is null or b.effective_to > p_on_date)
+    and b.lower_bound < p_annual_taxable;
+$$;
+
+comment on function calculate_paye_annual is
+  'Progressive tax from the band table: each band taxes only the slice of '
+  'income inside it. Returns zero when no bands are configured — the caller '
+  'must not treat that as a computed tax of nil.';
+
+create or replace function statutory_rate(
+  p_organization_id uuid, p_code text, p_on_date date
+)
+returns numeric
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce((
+    select rate_percent from statutory_rates
+    where organization_id = p_organization_id
+      and code = p_code
+      and effective_from <= p_on_date
+      and (effective_to is null or effective_to > p_on_date)
+    order by effective_from desc
+    limit 1
+  ), 0);
+$$;
+
+-- Build (or rebuild) the lines for a run.
+--
+-- Only legal while the run is draft or processing; the trigger in 0022
+-- refuses once it is approved. Rebuilding is deliberately allowed before
+-- then — that is what "processing" is for.
+create or replace function calculate_payroll(p_period_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org      uuid := current_org_id();
+  v_period   payroll_periods;
+  v_employee record;
+  v_lines    integer := 0;
+  v_pension_ee numeric; v_pension_er numeric; v_nhf_rate numeric;
+begin
+  if not has_permission('payroll.process') then
+    raise exception 'payroll.process is required' using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_period from payroll_periods
+  where id = p_period_id and organization_id = v_org;
+  if not found then
+    raise exception 'Period not found' using errcode = 'no_data_found';
+  end if;
+
+  if v_period.status not in ('draft', 'processing') then
+    raise exception 'A % run cannot be recalculated', v_period.status
+      using errcode = 'check_violation';
+  end if;
+
+  v_pension_ee := statutory_rate(v_org, 'pension_employee', v_period.ends_on);
+  v_pension_er := statutory_rate(v_org, 'pension_employer', v_period.ends_on);
+  v_nhf_rate   := statutory_rate(v_org, 'nhf', v_period.ends_on);
+
+  delete from payroll_run_lines where payroll_period_id = p_period_id;
+
+  for v_employee in
+    select e.id, e.employee_no,
+           e.first_name || ' ' || e.last_name as full_name,
+           d.name as department_name,
+           coalesce((
+             select c.basic_salary from employee_compensation c
+             where c.employee_id = e.id
+               and c.effective_from <= v_period.ends_on
+               and (c.effective_to is null or c.effective_to > v_period.ends_on)
+             order by c.effective_from desc limit 1
+           ), 0) as basic
+    from employees e
+    left join departments d on d.id = e.department_id
+    where e.organization_id = v_org
+      and e.employment_status <> 'exited'
+  loop
+    declare
+      v_earnings   numeric := 0;
+      v_taxable_extra numeric := 0;
+      v_other_ded  numeric := 0;
+      v_gross      numeric;
+      v_paye       numeric;
+      v_pen_ee_amt numeric;
+      v_pen_er_amt numeric;
+      v_nhf_amt    numeric;
+      v_adjust     numeric := 0;
+      v_total_ded  numeric;
+      v_earn_json  jsonb := '[]'::jsonb;
+      v_ded_json   jsonb := '[]'::jsonb;
+    begin
+      -- Earnings and deductions in effect for this period.
+      select
+        coalesce(sum(amount) filter (where kind in ('recurring_earning','one_time_earning')), 0),
+        coalesce(sum(amount) filter (where kind in ('recurring_earning','one_time_earning') and taxable), 0),
+        coalesce(sum(amount) filter (where kind in ('recurring_deduction','one_time_deduction')), 0),
+        coalesce(jsonb_agg(jsonb_build_object('name', name, 'amount', amount))
+                 filter (where kind in ('recurring_earning','one_time_earning')), '[]'::jsonb),
+        coalesce(jsonb_agg(jsonb_build_object('name', name, 'amount', amount))
+                 filter (where kind in ('recurring_deduction','one_time_deduction')), '[]'::jsonb)
+      into v_earnings, v_taxable_extra, v_other_ded, v_earn_json, v_ded_json
+      from salary_components
+      where employee_id = v_employee.id
+        and coalesce(effective_from, v_period.starts_on) <= v_period.ends_on
+        and (effective_to is null or effective_to > v_period.starts_on);
+
+      -- Adjustments on this run, with their reasons already recorded.
+      select coalesce(sum(amount), 0) into v_adjust
+      from payroll_adjustments
+      where payroll_period_id = p_period_id and employee_id = v_employee.id;
+
+      v_gross := round(v_employee.basic + v_earnings + greatest(v_adjust, 0), 2);
+
+      v_pen_ee_amt := round(v_employee.basic * v_pension_ee / 100, 2);
+      v_pen_er_amt := round(v_employee.basic * v_pension_er / 100, 2);
+      v_nhf_amt    := round(v_employee.basic * v_nhf_rate / 100, 2);
+
+      -- Pension and NHF reduce taxable pay before PAYE is applied. Annualised
+      -- for the band lookup, then divided back — bands are annual figures.
+      v_paye := round(
+        calculate_paye_annual(
+          v_org,
+          greatest((v_employee.basic + v_taxable_extra - v_pen_ee_amt - v_nhf_amt) * 12, 0),
+          v_period.ends_on
+        ) / 12, 2);
+
+      v_total_ded := round(
+        v_paye + v_pen_ee_amt + v_nhf_amt + v_other_ded + greatest(-v_adjust, 0), 2);
+
+      insert into payroll_run_lines (
+        organization_id, payroll_period_id, employee_id,
+        employee_no, employee_name, department_name,
+        basic_salary, total_earnings, gross_pay,
+        paye, pension_employee, pension_employer, nhf,
+        other_deductions, total_deductions, net_pay,
+        currency_code, earning_lines, deduction_lines
+      )
+      values (
+        v_org, p_period_id, v_employee.id,
+        v_employee.employee_no, v_employee.full_name, v_employee.department_name,
+        v_employee.basic, v_earnings, v_gross,
+        v_paye, v_pen_ee_amt, v_pen_er_amt, v_nhf_amt,
+        round(v_other_ded + greatest(-v_adjust, 0), 2), v_total_ded,
+        round(v_gross - v_total_ded, 2),
+        v_period.currency_code, v_earn_json, v_ded_json
+      );
+
+      v_lines := v_lines + 1;
+    end;
+  end loop;
+
+  update payroll_periods set status = 'processing' where id = p_period_id;
+
+  perform write_audit('payroll.calculate', 'payroll_period', p_period_id::text,
+    jsonb_build_object('lines', v_lines));
+
+  return v_lines;
+end;
+$$;
+
+-- Advance the pipeline. Each transition has its own permission and its own
+-- rule; there is no generic "set status".
+create or replace function advance_payroll(p_period_id uuid, p_to payroll_status)
+returns payroll_periods
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org    uuid := current_org_id();
+  v_period payroll_periods;
+begin
+  select * into v_period from payroll_periods
+  where id = p_period_id and organization_id = v_org;
+  if not found then
+    raise exception 'Period not found' using errcode = 'no_data_found';
+  end if;
+
+  if p_to = 'review' then
+    if v_period.status <> 'processing' then
+      raise exception 'Only a run in processing can be sent for review'
+        using errcode = 'check_violation';
+    end if;
+    if not has_permission('payroll.process') then
+      raise exception 'payroll.process is required' using errcode = 'insufficient_privilege';
+    end if;
+    if not exists (select 1 from payroll_run_lines where payroll_period_id = p_period_id) then
+      raise exception 'This run has no lines to review' using errcode = 'check_violation';
+    end if;
+    update payroll_periods
+    set status = 'review', submitted_by = auth.uid(), submitted_at = now()
+    where id = p_period_id returning * into v_period;
+
+  elsif p_to = 'approved' then
+    if v_period.status <> 'review' then
+      raise exception 'Only a run in review can be approved' using errcode = 'check_violation';
+    end if;
+    if not has_permission('payroll.approve') then
+      raise exception 'payroll.approve is required' using errcode = 'insufficient_privilege';
+    end if;
+    -- The separation of duties. The table constraint catches it too; this
+    -- raises the message a person can act on.
+    if v_period.submitted_by = auth.uid() then
+      raise exception
+        'You submitted this run, so someone else has to approve it'
+        using errcode = 'insufficient_privilege';
+    end if;
+    update payroll_periods
+    set status = 'approved', approved_by = auth.uid(), approved_at = now()
+    where id = p_period_id returning * into v_period;
+
+  elsif p_to = 'published' then
+    if v_period.status <> 'approved' then
+      raise exception 'Only an approved run can be published' using errcode = 'check_violation';
+    end if;
+    if not has_permission('payroll.publish') then
+      raise exception 'payroll.publish is required' using errcode = 'insufficient_privilege';
+    end if;
+    update payroll_periods
+    set status = 'published', published_by = auth.uid(), published_at = now()
+    where id = p_period_id returning * into v_period;
+
+    -- Issue the payslips. This is the irreversible step.
+    insert into payslips (organization_id, payroll_run_line_id, employee_id)
+    select organization_id, id, employee_id
+    from payroll_run_lines where payroll_period_id = p_period_id
+    on conflict (payroll_run_line_id) do nothing;
+
+  elsif p_to = 'closed' then
+    if v_period.status <> 'published' then
+      raise exception 'Only a published run can be closed' using errcode = 'check_violation';
+    end if;
+    if not has_permission('payroll.process') then
+      raise exception 'payroll.process is required' using errcode = 'insufficient_privilege';
+    end if;
+    update payroll_periods set status = 'closed', closed_at = now()
+    where id = p_period_id returning * into v_period;
+
+  else
+    raise exception 'Payroll does not move to % from here', p_to
+      using errcode = 'check_violation';
+  end if;
+
+  perform write_audit('payroll.' || p_to::text, 'payroll_period', p_period_id::text,
+    jsonb_build_object('from', v_period.status, 'label', v_period.label));
+
+  return v_period;
+end;
+$$;
+
+grant execute on function calculate_payroll(uuid) to authenticated;
+grant execute on function advance_payroll(uuid, payroll_status) to authenticated;
+grant execute on function calculate_paye_annual(uuid, numeric, date) to authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- 0024_payroll_rls.sql
+-- ---------------------------------------------------------------------------
+
+-- 0024_payroll_rls
+--
+-- Payroll policies.
+--
+-- The matrix row this enforces: HR has NO payroll access at all, and an
+-- Employee sees only their own payslip — inside a module they otherwise
+-- cannot open. That "own only" scope is why payslips get their own policy
+-- rather than inheriting from the run.
+
+alter table statutory_rates     enable row level security;
+alter table paye_bands          enable row level security;
+alter table salary_components   enable row level security;
+alter table payroll_periods     enable row level security;
+alter table payroll_run_lines   enable row level security;
+alter table payroll_adjustments enable row level security;
+alter table payslips            enable row level security;
+
+alter table statutory_rates     force row level security;
+alter table paye_bands          force row level security;
+alter table salary_components   force row level security;
+alter table payroll_periods     force row level security;
+alter table payroll_run_lines   force row level security;
+alter table payroll_adjustments force row level security;
+alter table payslips            force row level security;
+
+-- Rates and bands: readable by anyone who can see payroll, managed by
+-- whoever owns payroll settings (Accounts' area, not HR's).
+create policy statutory_rates_select on statutory_rates
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+create policy statutory_rates_manage on statutory_rates
+  for all to authenticated
+  using (
+    organization_id = current_org_id()
+    and (has_permission('settings.manage') or has_permission('settings.manage_payroll'))
+  )
+  with check (
+    organization_id = current_org_id()
+    and (has_permission('settings.manage') or has_permission('settings.manage_payroll'))
+  );
+
+create policy paye_bands_select on paye_bands
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+create policy paye_bands_manage on paye_bands
+  for all to authenticated
+  using (
+    organization_id = current_org_id()
+    and (has_permission('settings.manage') or has_permission('settings.manage_payroll'))
+  )
+  with check (
+    organization_id = current_org_id()
+    and (has_permission('settings.manage') or has_permission('settings.manage_payroll'))
+  );
+
+-- Salary components carry pay information, so they follow the same rule as
+-- compensation: payroll access, or your own.
+create policy salary_components_select on salary_components
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and (
+      has_permission('payroll.view_all')
+      or (has_permission('payroll.view_self') and employee_id = my_employee_id())
+    )
+  );
+
+create policy salary_components_manage on salary_components
+  for all to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.manage_components'))
+  with check (organization_id = current_org_id() and has_permission('payroll.manage_components'));
+
+create policy payroll_periods_select on payroll_periods
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+create policy payroll_periods_insert on payroll_periods
+  for insert to authenticated
+  with check (organization_id = current_org_id() and has_permission('payroll.create'));
+
+-- Status changes go through advance_payroll(), which enforces the order and
+-- the separation of duties. This covers editing labels and dates on a run
+-- that has not yet been submitted.
+create policy payroll_periods_update on payroll_periods
+  for update to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('payroll.process')
+    and status in ('draft', 'processing')
+  )
+  with check (organization_id = current_org_id() and has_permission('payroll.process'));
+
+create policy payroll_run_lines_select on payroll_run_lines
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+-- Lines are written only by calculate_payroll(). No client-facing insert.
+
+create policy payroll_adjustments_select on payroll_adjustments
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+create policy payroll_adjustments_insert on payroll_adjustments
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and has_permission('payroll.process')
+    and created_by = auth.uid()
+    -- An adjustment on a locked run would silently not apply, because the
+    -- lines cannot be recalculated. Refuse it rather than accept a no-op.
+    and exists (
+      select 1 from payroll_periods p
+      where p.id = payroll_adjustments.payroll_period_id
+        and p.status in ('draft', 'processing')
+    )
+  );
+
+-- Payslips. The "own only" scope: an Employee sees theirs and nobody else's,
+-- and cannot see the run it came from.
+create policy payslips_select_own on payslips
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('payroll.view_self')
+    and employee_id = my_employee_id()
+  );
+
+create policy payslips_select_all on payslips
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('payroll.view_all'));
+
+-- The run line behind an employee's own payslip has to be readable, or the
+-- payslip is a row with no figures on it.
+create policy payroll_run_lines_select_own on payroll_run_lines
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('payroll.view_self')
+    and employee_id = my_employee_id()
+    and exists (select 1 from payslips s where s.payroll_run_line_id = payroll_run_lines.id)
+  );
+
+grant select on statutory_rates, paye_bands, salary_components, payroll_periods,
+                payroll_run_lines, payroll_adjustments, payslips
+  to authenticated;
+grant insert, update, delete on statutory_rates, paye_bands, salary_components to authenticated;
+grant insert, update on payroll_periods to authenticated;
+grant insert on payroll_adjustments to authenticated;
+
+
 commit;

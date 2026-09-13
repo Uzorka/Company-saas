@@ -257,3 +257,42 @@ Found when "an employee cannot reset their own balance" failed: the data was
 safe (zero rows changed), but the assertion was looking for the wrong thing.
 Added `rows_changed_by()` to the shared fixtures and asserted on the effect.
 Any future write test should use it rather than `denies()`.
+
+## D46 — Payroll arithmetic lives in SQL, in numeric — **Accepted**
+Money is `numeric(14,2)` and every figure on a payslip is computed by
+`calculate_payroll()`. The TypeScript layer formats and totals for display and
+does nothing else. Floating point is fine for a progress bar and wrong for
+someone's salary, and two implementations of the same sum will eventually
+disagree.
+
+## D47 — A run line is a snapshot, not a join — **Accepted**
+Employee name, number and department are copied onto `payroll_run_lines`
+alongside every computed figure. A raise, a rename or a transfer next quarter
+must not change a payslip already issued. Verified by a test that raises the
+salary after publication and asserts the recorded net is unchanged.
+
+## D48 — Progressive tax comes from a band table, not a function — **Accepted**
+`paye_bands` is generic: any progressive schedule can be expressed in it, and
+correcting a rate is an insert rather than a migration. `calculate_paye_annual`
+taxes each band's own slice — computing a single top rate over the whole
+amount is the classic error, and a test pins the difference (₦32,000 versus
+₦44,000 on the same income).
+
+The seeded rates and bands are **the design's sample values, not tax advice**,
+and the seed file says so. They need checking against current FIRS, PenCom and
+NHF guidance before anyone is paid from them.
+
+## D49 — An adjustment on a locked run is refused, not ignored — **Accepted**
+Once a run is approved its lines cannot be recalculated, so an adjustment
+added afterwards would silently never apply. The insert policy refuses it and
+the message says corrections go to the next period.
+
+## D50 — Test the guard, not the grant — **Accepted**
+"An approved run's lines cannot be edited" was passing because `authenticated`
+holds no UPDATE grant on `payroll_run_lines` — the lock trigger was never
+exercised, and dropping it did not fail the suite. The trigger exists for
+paths that bypass grants entirely (security-definer functions, service-role),
+so it is now tested as the table owner. Dropping it now fails.
+
+Same shape as D45: a passing test proves something, but not always the thing
+its name claims.

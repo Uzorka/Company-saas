@@ -136,3 +136,36 @@ values
   ('00000000-0000-4000-8000-000000000001', 'Unpaid leave',
    'Needs HOD and HR approval', null, null, null, false)
 on conflict (organization_id, name) do nothing;
+
+
+-- ---------------------------------------------------------------------------
+-- Phase 7: statutory rates and tax bands.
+--
+-- ⚠ THESE ARE THE DESIGN'S SAMPLE VALUES, NOT TAX ADVICE.
+--
+-- The percentages come from the design's settings screen and the bands are
+-- illustrative. Confirm every figure against current FIRS, PenCom and NHF
+-- guidance — and against the client's own payroll practice — before anyone is
+-- paid from them. The brief excludes filing, remittance and pension APIs from
+-- the MVP, and nothing here should be presented as compliance.
+--
+-- They are data, effective-dated, so correcting them is an insert, not a
+-- code change. Published payslips keep the figures they were calculated with.
+-- ---------------------------------------------------------------------------
+insert into statutory_rates (organization_id, code, rate_percent, effective_from)
+values
+  ('00000000-0000-4000-8000-000000000001', 'pension_employee', 8.0,  date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 'pension_employer', 10.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 'nhf',              2.5,  date '2020-01-01')
+on conflict do nothing;
+
+-- Six illustrative progressive bands, annual thresholds.
+insert into paye_bands (organization_id, band_order, lower_bound, upper_bound, rate_percent, effective_from)
+values
+  ('00000000-0000-4000-8000-000000000001', 1,       0,   300000,  7.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 2,  300000,   600000, 11.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 3,  600000,  1100000, 15.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 4, 1100000,  1600000, 19.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 5, 1600000,  3200000, 21.0, date '2020-01-01'),
+  ('00000000-0000-4000-8000-000000000001', 6, 3200000,     null, 24.0, date '2020-01-01')
+on conflict do nothing;

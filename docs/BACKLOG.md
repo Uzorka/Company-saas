@@ -20,6 +20,13 @@
 - Logo and brand assets (SVG) plus a favicon set.
 - Production domain(s).
 
+## Needed before payroll runs for real
+- **Confirm the statutory rates and PAYE bands.** The seeded values are the
+  design's samples. They need checking against current FIRS, PenCom and NHF
+  guidance and against the client's own practice. They are effective-dated
+  data, so correcting them is an insert.
+- Bank account details per employee, if a bank CSV export is wanted.
+
 ## Needed for Phase 6 (leave)
 - **The public holiday calendar.** Leave day counts exclude weekends only.
   Nigerian public holidays need the client's actual list — guessing would

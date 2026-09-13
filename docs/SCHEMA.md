@@ -8,7 +8,8 @@ still planned. The full set is grouped by the migration that creates it.
 `0008_departments_positions` `0009_employees` `0010_employees_rls`
 `0011_attendance` `0012_geofence` `0013_attendance_rls`
 `0014_attendance_actions` `0015_storage` `0016_tasks` `0017_tasks_rls`
-`0018_field_visit_actions` `0019_leave` `0020_leave_actions` `0021_leave_rls`.
+`0018_field_visit_actions` `0019_leave` `0020_leave_actions` `0021_leave_rls` `0022_payroll`
+`0023_payroll_actions` `0024_payroll_rls`.
 
 Two deliberate departures from the plan, both discovered while building:
 
