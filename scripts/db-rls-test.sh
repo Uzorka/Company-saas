@@ -16,7 +16,7 @@ TEST_DB="${TEST_DB:-heron_test}"
 "$(dirname "$0")/db-start.sh" >/dev/null
 
 cd "$(dirname "$0")/.."
-./scripts/db-test.sh >/dev/null
+./scripts/db-test.sh >/dev/null 2>&1
 
 output=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TEST_DB" \
   -v ON_ERROR_STOP=1 -q \
@@ -24,6 +24,7 @@ output=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TEST_DB" \
   -f supabase/tests/11_employees_test.sql \
   -f supabase/tests/12_attendance_test.sql \
   -f supabase/tests/13_tasks_test.sql \
+  -f supabase/tests/14_leave_test.sql \
   -f supabase/tests/20_rls_audit.sql 2>&1)
 
 echo "$output" | grep -E '^(NOTICE:\s+)?(PASS|FAIL|ERROR)' | sed 's/^NOTICE:  //' || true
@@ -39,8 +40,8 @@ count=$(echo "$output" | grep -c 'PASS' || true)
 
 # A suite that asserts nothing is not a passing suite. Guard against a silenced
 # log level or a skipped block reporting a false green.
-if [[ "$count" -lt 110 ]]; then
-  echo "RLS suite reported only $count assertions — expected at least 110. Treating as a failure."
+if [[ "$count" -lt 135 ]]; then
+  echo "RLS suite reported only $count assertions — expected at least 135. Treating as a failure."
   exit 1
 fi
 

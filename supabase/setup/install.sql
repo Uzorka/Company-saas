@@ -3105,4 +3105,568 @@ grant execute on function submit_field_visit(uuid, numeric, numeric, numeric, te
 grant execute on function review_field_visit(uuid, boolean, text) to authenticated;
 
 
+-- ---------------------------------------------------------------------------
+-- 0019_leave.sql
+-- ---------------------------------------------------------------------------
+
+-- 0019_leave
+--
+-- Leave, with a two-stage approval chain. Source: Phase 5 - Leave, and the
+-- leave types in Phase 7 settings.
+--
+-- The chain is Employee -> HOD -> HR -> Approved, and it collapses to
+-- Employee -> HR when the requester has no head of department. Two stages
+-- exist because they ask different questions: the HOD judges coverage, HR
+-- judges policy. Collapsing them into one approval loses that.
+--
+-- The rule that most needs to hold: **a balance moves only on final
+-- approval.** Deducting at submission would make a declined request cost the
+-- employee days, and deducting at HOD approval would strand days in limbo if
+-- HR declines.
+
+create type leave_status as enum (
+  'draft',
+  'pending_hod',
+  'pending_hr',
+  'approved',
+  'declined',
+  'cancelled'
+);
+
+create type leave_stage as enum ('hod', 'hr');
+create type approval_decision as enum ('approved', 'declined');
+
+create table leave_types (
+  id                  uuid primary key default gen_random_uuid(),
+  organization_id     uuid not null references organizations(id) on delete cascade,
+  name                text not null check (length(trim(name)) > 0),
+  description         text,
+  -- Null means uncapped, as unpaid leave is. Zero would mean "none allowed",
+  -- which is a different thing and would silently block every request.
+  annual_entitlement_days numeric(5, 2) check (annual_entitlement_days is null or annual_entitlement_days >= 0),
+  accrual_days_per_month  numeric(5, 3) check (accrual_days_per_month is null or accrual_days_per_month >= 0),
+  -- Sick leave over this many consecutive days needs a certificate. Null
+  -- means no document is ever required.
+  document_required_after_days smallint check (document_required_after_days is null or document_required_after_days > 0),
+  paid                boolean not null default true,
+  active              boolean not null default true,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  unique (organization_id, name)
+);
+
+create trigger leave_types_updated_at
+  before update on leave_types
+  for each row execute function set_updated_at();
+
+-- One row per employee per type per leave year.
+create table leave_balances (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  employee_id     uuid not null references employees(id) on delete cascade,
+  leave_type_id   uuid not null references leave_types(id) on delete cascade,
+  leave_year      smallint not null,
+  entitled_days   numeric(5, 2) not null default 0 check (entitled_days >= 0),
+  taken_days      numeric(5, 2) not null default 0 check (taken_days >= 0),
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (employee_id, leave_type_id, leave_year)
+);
+
+create index leave_balances_employee_idx on leave_balances (employee_id, leave_year);
+
+create trigger leave_balances_updated_at
+  before update on leave_balances
+  for each row execute function set_updated_at();
+
+create table leave_requests (
+  id               uuid primary key default gen_random_uuid(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  employee_id      uuid not null references employees(id) on delete cascade,
+  leave_type_id    uuid not null references leave_types(id) on delete restrict,
+  status           leave_status not null default 'draft',
+  starts_on        date not null,
+  ends_on          date not null,
+  -- Stored rather than derived: a later change to the working calendar must
+  -- not retroactively alter what an approved request cost.
+  days_requested   numeric(5, 2) not null check (days_requested > 0),
+  reason           text,
+  document_path    text,
+  submitted_at     timestamptz,
+  decided_at       timestamptz,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  constraint ends_on_after_starts_on check (ends_on >= starts_on)
+);
+
+create index leave_requests_employee_idx on leave_requests (employee_id, starts_on desc);
+create index leave_requests_pending_idx on leave_requests (organization_id, status)
+  where status in ('pending_hod', 'pending_hr');
+
+create trigger leave_requests_updated_at
+  before update on leave_requests
+  for each row execute function set_updated_at();
+
+-- Every decision, kept. A declined request keeps its reason and an approved
+-- one keeps who signed it off — the design's approval timeline is rendered
+-- from this table, not reconstructed.
+create table leave_approvals (
+  id               uuid primary key default gen_random_uuid(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  leave_request_id uuid not null references leave_requests(id) on delete cascade,
+  stage            leave_stage not null,
+  decision         approval_decision not null,
+  approver_id      uuid not null references auth.users(id),
+  note             text,
+  decided_at       timestamptz not null default now(),
+  -- A declined stage must say why. An approval may add a note or not.
+  constraint declines_state_a_reason
+    check (decision <> 'declined' or (note is not null and length(trim(note)) >= 10))
+);
+
+create index leave_approvals_request_idx on leave_approvals (leave_request_id, decided_at);
+
+comment on table leave_approvals is
+  'Append-only decision history. A cancellation after approval is a new '
+  'request, never an edit — so this table is the record of what was agreed.';
+
+
+-- ---------------------------------------------------------------------------
+-- 0020_leave_actions.sql
+-- ---------------------------------------------------------------------------
+
+-- 0020_leave_actions
+--
+-- The leave workflow.
+--
+-- Three things are decided here rather than in the application, because each
+-- of them costs an employee real days if it goes wrong:
+--
+--   1. A balance moves ONLY on final approval.
+--   2. Insufficient balance blocks submission, with the shortfall stated.
+--   3. The chain routes to HR directly when the requester has no HOD.
+
+-- Working days between two dates, weekends excluded.
+--
+-- Public holidays are not modelled yet — that needs the client's calendar,
+-- and guessing Nigerian holidays would silently miscount leave. Flagged in
+-- BACKLOG; the count is stored on the request so adding a holiday table later
+-- cannot retroactively change an approved request.
+create or replace function working_days_between(starts_on date, ends_on date)
+returns numeric
+language sql
+immutable
+as $$
+  select count(*)::numeric
+  from generate_series(starts_on, ends_on, interval '1 day') as d
+  where extract(isodow from d) < 6;
+$$;
+
+-- Days left, for a type and year.
+create or replace function leave_days_remaining(
+  p_employee_id   uuid,
+  p_leave_type_id uuid,
+  p_year          smallint
+)
+returns numeric
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce(
+    (select b.entitled_days - b.taken_days
+     from leave_balances b
+     where b.employee_id = p_employee_id
+       and b.leave_type_id = p_leave_type_id
+       and b.leave_year = p_year),
+    0
+  );
+$$;
+
+-- Who approves first? The requester's HOD, if they have one.
+create or replace function first_leave_stage(p_employee_id uuid)
+returns leave_status
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select case
+    when exists (
+      select 1
+      from employees e
+      join department_heads dh on dh.department_id = e.department_id
+      where e.id = p_employee_id
+        -- A head does not approve their own leave; that would make the two
+        -- stages one. Their request goes straight to HR.
+        and dh.user_id is distinct from e.user_id
+    )
+    then 'pending_hod'::leave_status
+    else 'pending_hr'::leave_status
+  end;
+$$;
+
+comment on function first_leave_stage is
+  'Routes to the HOD when the requester has one other than themselves, and '
+  'straight to HR otherwise. A department head''s own leave skips the stage '
+  'they would be signing.';
+
+create or replace function submit_leave_request(
+  p_leave_type_id uuid,
+  p_starts_on     date,
+  p_ends_on       date,
+  p_reason        text default null,
+  p_document_path text default null
+)
+returns leave_requests
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org       uuid := current_org_id();
+  v_employee  uuid := my_employee_id();
+  v_type      leave_types;
+  v_days      numeric;
+  v_remaining numeric;
+  v_year      smallint := extract(year from p_starts_on)::smallint;
+  v_request   leave_requests;
+begin
+  if v_org is null or v_employee is null then
+    raise exception 'No employee record for this account in this organization'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not has_permission('leave.request') then
+    raise exception 'leave.request is required' using errcode = 'insufficient_privilege';
+  end if;
+
+  if p_ends_on < p_starts_on then
+    raise exception 'Leave cannot end before it starts' using errcode = 'check_violation';
+  end if;
+
+  select * into v_type from leave_types
+  where id = p_leave_type_id and organization_id = v_org and active;
+  if not found then
+    raise exception 'That leave type is not available' using errcode = 'no_data_found';
+  end if;
+
+  v_days := working_days_between(p_starts_on, p_ends_on);
+  if v_days <= 0 then
+    raise exception 'That range contains no working days'
+      using errcode = 'check_violation';
+  end if;
+
+  -- Document requirement, e.g. sick leave over three consecutive days.
+  if v_type.document_required_after_days is not null
+     and v_days > v_type.document_required_after_days
+     and coalesce(length(trim(p_document_path)), 0) = 0 then
+    raise exception
+      '% over % days needs a supporting document',
+      v_type.name, v_type.document_required_after_days
+      using errcode = 'check_violation';
+  end if;
+
+  -- Insufficient balance blocks submission, and states the shortfall — the
+  -- design is explicit that the employee should learn this before submitting,
+  -- not be declined for it a week later. Uncapped types skip the check.
+  if v_type.annual_entitlement_days is not null then
+    v_remaining := leave_days_remaining(v_employee, p_leave_type_id, v_year);
+    if v_days > v_remaining then
+      raise exception
+        'You have % days of % left and this request is % days — short by %',
+        v_remaining, v_type.name, v_days, v_days - v_remaining
+        using errcode = 'check_violation';
+    end if;
+  end if;
+
+  insert into leave_requests (
+    organization_id, employee_id, leave_type_id, status,
+    starts_on, ends_on, days_requested, reason, document_path, submitted_at
+  )
+  values (
+    v_org, v_employee, p_leave_type_id, first_leave_stage(v_employee),
+    p_starts_on, p_ends_on, v_days, p_reason, p_document_path, now()
+  )
+  returning * into v_request;
+
+  perform write_audit('leave.submit', 'leave_request', v_request.id::text,
+    jsonb_build_object('type', v_type.name, 'days', v_days,
+                       'routed_to', v_request.status));
+
+  return v_request;
+end;
+$$;
+
+-- Approve or decline one stage.
+create or replace function decide_leave_request(
+  p_request_id uuid,
+  p_approve    boolean,
+  p_note       text default null
+)
+returns leave_requests
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org      uuid := current_org_id();
+  v_request  leave_requests;
+  v_stage    leave_stage;
+  v_year     smallint;
+begin
+  select * into v_request from leave_requests
+  where id = p_request_id and organization_id = v_org;
+
+  if not found then
+    raise exception 'Request not found' using errcode = 'no_data_found';
+  end if;
+
+  -- Which stage is this, and may the caller decide it?
+  if v_request.status = 'pending_hod' then
+    v_stage := 'hod';
+    if not has_permission('leave.approve_department') then
+      raise exception 'This request is waiting on a head of department'
+        using errcode = 'insufficient_privilege';
+    end if;
+    if not exists (
+      select 1 from employees e
+      where e.id = v_request.employee_id
+        and e.department_id in (select headed_department_ids())
+    ) then
+      raise exception 'You do not head this employee''s department'
+        using errcode = 'insufficient_privilege';
+    end if;
+  elsif v_request.status = 'pending_hr' then
+    v_stage := 'hr';
+    if not has_permission('leave.approve_hr') then
+      raise exception 'This request is waiting on HR'
+        using errcode = 'insufficient_privilege';
+    end if;
+  else
+    raise exception 'This request is already %', v_request.status
+      using errcode = 'check_violation';
+  end if;
+
+  -- Nobody signs off their own leave, whatever permissions they hold.
+  if exists (
+    select 1 from employees e
+    where e.id = v_request.employee_id and e.user_id = auth.uid()
+  ) then
+    raise exception 'You cannot decide your own leave request'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if not p_approve and coalesce(length(trim(p_note)), 0) < 10 then
+    raise exception 'Declining a request needs a reason the employee can read'
+      using errcode = 'check_violation';
+  end if;
+
+  insert into leave_approvals (organization_id, leave_request_id, stage,
+                               decision, approver_id, note)
+  values (v_org, p_request_id, v_stage,
+          (case when p_approve then 'approved' else 'declined' end)::approval_decision,
+          auth.uid(), p_note);
+
+  if not p_approve then
+    update leave_requests
+    set status = 'declined', decided_at = now()
+    where id = p_request_id
+    returning * into v_request;
+
+  elsif v_stage = 'hod' then
+    -- HOD approval advances the request; it does not grant the leave, and it
+    -- deliberately does not touch the balance.
+    update leave_requests
+    set status = 'pending_hr'
+    where id = p_request_id
+    returning * into v_request;
+
+  else
+    -- Final approval. This is the only place a balance moves.
+    update leave_requests
+    set status = 'approved', decided_at = now()
+    where id = p_request_id
+    returning * into v_request;
+
+    v_year := extract(year from v_request.starts_on)::smallint;
+
+    insert into leave_balances (organization_id, employee_id, leave_type_id,
+                                leave_year, entitled_days, taken_days)
+    values (v_org, v_request.employee_id, v_request.leave_type_id, v_year,
+            0, v_request.days_requested)
+    on conflict (employee_id, leave_type_id, leave_year)
+    do update set taken_days = leave_balances.taken_days + excluded.taken_days;
+  end if;
+
+  perform write_audit(
+    'leave.' || v_stage::text || '.' || (case when p_approve then 'approve' else 'decline' end),
+    'leave_request', p_request_id::text,
+    jsonb_build_object('note', p_note, 'status', v_request.status,
+                       'days', v_request.days_requested));
+
+  return v_request;
+end;
+$$;
+
+-- An employee may withdraw their own request while it is still pending.
+-- After approval it is a new request, not an edit — the design is explicit.
+create or replace function cancel_leave_request(p_request_id uuid)
+returns leave_requests
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_request leave_requests;
+begin
+  select * into v_request from leave_requests
+  where id = p_request_id
+    and organization_id = current_org_id()
+    and employee_id = my_employee_id();
+
+  if not found then
+    raise exception 'Not your request' using errcode = 'insufficient_privilege';
+  end if;
+
+  if v_request.status not in ('draft', 'pending_hod', 'pending_hr') then
+    raise exception
+      'A % request cannot be cancelled — submit a new request instead',
+      v_request.status
+      using errcode = 'check_violation';
+  end if;
+
+  update leave_requests set status = 'cancelled', decided_at = now()
+  where id = p_request_id returning * into v_request;
+
+  perform write_audit('leave.cancel', 'leave_request', p_request_id::text, '{}'::jsonb);
+  return v_request;
+end;
+$$;
+
+grant execute on function submit_leave_request(uuid, date, date, text, text) to authenticated;
+grant execute on function decide_leave_request(uuid, boolean, text) to authenticated;
+grant execute on function cancel_leave_request(uuid) to authenticated;
+grant execute on function leave_days_remaining(uuid, uuid, smallint) to authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- 0021_leave_rls.sql
+-- ---------------------------------------------------------------------------
+
+-- 0021_leave_rls
+--
+-- Leave policies.
+--
+-- Everything that advances a request goes through the functions in 0020, so
+-- there is no update policy on leave_requests at all: the two-stage chain,
+-- the self-approval block and the balance rule cannot be routed around by a
+-- direct write.
+
+alter table leave_types     enable row level security;
+alter table leave_balances  enable row level security;
+alter table leave_requests  enable row level security;
+alter table leave_approvals enable row level security;
+
+alter table leave_types     force row level security;
+alter table leave_balances  force row level security;
+alter table leave_requests  force row level security;
+alter table leave_approvals force row level security;
+
+-- Leave types are readable by everyone in the tenant — you cannot request
+-- leave without knowing what kinds exist. HR owns them, per "Some areas".
+create policy leave_types_select on leave_types
+  for select to authenticated
+  using (organization_id = current_org_id());
+
+create policy leave_types_manage on leave_types
+  for all to authenticated
+  using (
+    organization_id = current_org_id()
+    and (has_permission('leave.manage_policy') or has_permission('settings.manage_structure'))
+  )
+  with check (
+    organization_id = current_org_id()
+    and (has_permission('leave.manage_policy') or has_permission('settings.manage_structure'))
+  );
+
+-- Balances: your own always; everyone's needs the org-wide scope. An HOD sees
+-- their department's, because coverage is their judgement to make.
+create policy leave_balances_select_self on leave_balances
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('leave.view_self')
+    and employee_id = my_employee_id()
+  );
+
+create policy leave_balances_select_all on leave_balances
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('leave.view_all'));
+
+create policy leave_balances_select_department on leave_balances
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('leave.view_department')
+    and exists (
+      select 1 from employees e
+      where e.id = leave_balances.employee_id
+        and e.department_id in (select headed_department_ids())
+    )
+  );
+
+create policy leave_balances_manage on leave_balances
+  for all to authenticated
+  using (organization_id = current_org_id() and has_permission('leave.manage_policy'))
+  with check (organization_id = current_org_id() and has_permission('leave.manage_policy'));
+
+-- Requests, three scopes as usual.
+create policy leave_requests_select_self on leave_requests
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('leave.view_self')
+    and employee_id = my_employee_id()
+  );
+
+create policy leave_requests_select_all on leave_requests
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('leave.view_all'));
+
+create policy leave_requests_select_department on leave_requests
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and has_permission('leave.view_department')
+    and exists (
+      select 1 from employees e
+      where e.id = leave_requests.employee_id
+        and e.department_id in (select headed_department_ids())
+    )
+  );
+
+-- No insert, update or delete policy. submit_leave_request(),
+-- decide_leave_request() and cancel_leave_request() are the only ways in, and
+-- they are security definer.
+
+-- The decision history is visible to anyone who can see the request it
+-- belongs to. An employee sees who approved their leave and what was said.
+create policy leave_approvals_select on leave_approvals
+  for select to authenticated
+  using (
+    organization_id = current_org_id()
+    and exists (
+      select 1 from leave_requests r where r.id = leave_approvals.leave_request_id
+    )
+  );
+
+-- Written only by decide_leave_request(). Never edited, never deleted.
+
+grant select on leave_types, leave_balances, leave_requests, leave_approvals
+  to authenticated;
+grant insert, update, delete on leave_types, leave_balances to authenticated;
+
+
 commit;

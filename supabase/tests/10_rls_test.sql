@@ -90,6 +90,33 @@ begin
 end
 $$;
 
+-- How many rows did this statement actually change, running as `as_role`?
+--
+-- Needed because RLS refuses a write in two different ways. Missing a table
+-- privilege raises; a policy that simply matches no rows does not — the
+-- statement succeeds having changed nothing. Both are correct outcomes, but
+-- only denies() sees the first, so asserting a write was refused with
+-- denies() alone gives a false pass on the second.
+--
+-- Assert on the effect instead: zero rows changed is the guarantee.
+create or replace function rows_changed_by(
+  claims jsonb, statement text, as_role text default 'authenticated'
+)
+returns integer language plpgsql as $$
+declare n integer;
+begin
+  perform set_config('request.jwt.claims', claims::text, true);
+  execute format('set local role %I', as_role);
+  execute statement;
+  get diagnostics n = row_count;
+  execute 'reset role';
+  return n;
+exception when insufficient_privilege or check_violation then
+  execute 'reset role';
+  return 0;  -- refused outright, which is also zero rows changed
+end;
+$$;
+
 -- Build a claims blob the way the access token hook would, for a given user.
 create or replace function claims_for(p_user uuid, p_org uuid)
 returns jsonb language sql stable as $$

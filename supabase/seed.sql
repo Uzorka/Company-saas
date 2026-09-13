@@ -114,3 +114,25 @@ values
   ('00000000-0000-4000-8000-000000000001', 'Warehouse · 08:00-16:00', time '08:00', time '16:00', '{1,2,3,4,5,6}', 10),
   ('00000000-0000-4000-8000-000000000001', 'Field · 08:30-17:30',     time '08:30', time '17:30', '{1,2,3,4,5,6}', 30)
 on conflict (organization_id, name) do nothing;
+
+
+-- ---------------------------------------------------------------------------
+-- Phase 6: leave types. Source: Phase 7 settings, const LEAVE_TYPES.
+--
+-- Confirm these against the client's actual policy before anyone relies on
+-- them — they are the design's values, not a legal position (docs/BACKLOG.md).
+-- ---------------------------------------------------------------------------
+insert into leave_types (organization_id, name, description, annual_entitlement_days,
+                         accrual_days_per_month, document_required_after_days, paid)
+values
+  ('00000000-0000-4000-8000-000000000001', 'Annual leave',
+   'Accrues 1.67 days a month', 20, 1.67, null, true),
+  ('00000000-0000-4000-8000-000000000001', 'Sick leave',
+   '3+ consecutive days needs a certificate', 10, null, 3, true),
+  ('00000000-0000-4000-8000-000000000001', 'Compassionate',
+   'At HR discretion', 5, null, null, true),
+  ('00000000-0000-4000-8000-000000000001', 'Maternity',
+   'Statutory, full pay', 80, null, null, true),
+  ('00000000-0000-4000-8000-000000000001', 'Unpaid leave',
+   'Needs HOD and HR approval', null, null, null, false)
+on conflict (organization_id, name) do nothing;

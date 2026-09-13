@@ -226,3 +226,34 @@ to ignore the colour.
 `tasks.assign_any` or a department the caller heads. Without that pairing, the
 "Dept only" scope in the matrix would hold for reading tasks but not for
 creating them, which is the more consequential direction.
+
+## D42 — A leave balance moves only on final approval — **Accepted**
+Not at submission, and not at HOD approval. Deducting early would make a
+declined request cost the employee days, and deducting at the first stage
+would strand days in limbo if HR then declines. Three assertions guard the
+three moments.
+
+## D43 — A department head's own leave skips the HOD stage — **Accepted**
+`first_leave_stage()` routes to the HOD only when one exists *other than the
+requester*. Otherwise the two stages collapse into one person signing their
+own request, which is the thing the chain exists to prevent. The timeline
+renders three nodes rather than four in that case, so a stage that never
+applied does not look like a missing step.
+
+## D44 — Public holidays are not modelled — **Open**
+`working_days_between()` excludes weekends only. Nigerian public holidays need
+the client's calendar, and guessing them would silently miscount leave. The
+day count is *stored on the request*, so adding a holiday table later cannot
+retroactively change what an approved request cost. Flagged in BACKLOG.
+
+## D45 — Test the effect of a refused write, not just for an exception — **Accepted**
+RLS refuses a write two different ways. A missing table privilege raises; a
+policy that matches no rows does not — the statement succeeds having changed
+nothing. A test asserting only that an exception occurred gives a **false
+pass** on the second case, and would keep passing if the policy were later
+dropped.
+
+Found when "an employee cannot reset their own balance" failed: the data was
+safe (zero rows changed), but the assertion was looking for the wrong thing.
+Added `rows_changed_by()` to the shared fixtures and asserted on the effect.
+Any future write test should use it rather than `denies()`.

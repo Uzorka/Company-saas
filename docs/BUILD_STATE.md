@@ -1,7 +1,7 @@
 # Build state
 
-**Current phase:** Phase 5 — tasks and field visits. Complete and green.
-**Next phase:** Phase 6 — leave.
+**Current phase:** Phase 6 — leave. Complete and green.
+**Next phase:** Phase 7 — payroll and payslips.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the
 geofence default is the design's 150m (D33) and the position diagram is a
@@ -100,11 +100,33 @@ Phase 2: `/auth/login`, `/auth/forgot`, `/auth/reset`, `/auth/workspace`.
 Phase 3: `/[org]/employees`, `/[org]/departments`.
 Phase 4: `/[org]/attendance`, `/[org]/attendance/check-in`.
 Phase 5: `/[org]/tasks`, `/[org]/tasks/visits`.
+Phase 6: `/[org]/leave`, `/[org]/leave/approvals`.
+
+### Phase 6 — leave
+- **Three migrations.** `0019_leave` (types, balances, requests, approvals),
+  `0020_leave_actions` (the workflow), `0021_leave_rls`.
+- **A balance moves only on final approval.** Deducting at submission would
+  make a declined request cost the employee days; deducting at HOD approval
+  would strand them if HR declines. Both are covered by assertions.
+- **Two stages that ask different questions** — the HOD judges coverage, HR
+  judges policy. The chain collapses to HR alone when the requester has no
+  head of department, and a department head's own request skips the stage
+  they would be signing.
+- **Insufficient balance blocks submission**, stating the shortfall, rather
+  than being declined a week later.
+- Document requirement per type — sick leave over three consecutive days
+  needs a certificate.
+- **No insert or update policy on `leave_requests`.** Everything goes through
+  the three functions, so the chain, the self-approval block and the balance
+  rule cannot be routed around.
+- Timeline component, with the waiting stage marked active and how long it
+  has waited — measured from the previous decision, not from submission.
 
 ### Phase 5 — tasks and field visits
 - **Three migrations.** `0016_tasks` (tasks, assignees, target locations,
   comments, attachments, activity, field visits and their evidence),
-  `0017_tasks_rls`, `0018_field_visit_actions`.
+  `0017_tasks_rls`, `0018_field_visit_actions` `0019_leave` `0020_leave_actions`
+`0021_leave_rls`.
 - **Five verification modes**, chosen per task. `none` is a first-class mode
   and the default: the design is explicit that forcing proof on desk work is
   wrong.
@@ -134,7 +156,8 @@ Phase 5: `/[org]/tasks`, `/[org]/tasks/visits`.
 `0008_departments_positions` `0009_employees` `0010_employees_rls`
 `0011_attendance` `0012_geofence` `0013_attendance_rls`
 `0014_attendance_actions` `0015_storage` `0016_tasks` `0017_tasks_rls`
-`0018_field_visit_actions`
+`0018_field_visit_actions` `0019_leave` `0020_leave_actions`
+`0021_leave_rls`
 
 Audit was built as `0004` rather than the brief's `013` because the design
 requires audit writes alongside each module rather than retrofitted at the
@@ -146,12 +169,12 @@ end — the table has to exist before the first module does.
 A map provider key is pending the provider decision.
 
 ## Tests
-**81 unit and component tests** — status vocabulary, role navigation, motion
+**94 unit and component tests** — status vocabulary, role navigation, motion
 tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
 (absolute, protocol-relative, backslash, javascript: and data: targets), and
 the permission vocabulary.
 
-**114 database assertions** against real PostgreSQL, run as the `authenticated`
+**141 database assertions** against real PostgreSQL, run as the `authenticated`
 and `anon` roles with claims set the way PostgREST sets them:
 - Tenant isolation in both directions, including audit entries.
 - HR holds no payroll permission; Accounts holds no recruitment or HR

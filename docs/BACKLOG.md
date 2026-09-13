@@ -20,6 +20,13 @@
 - Logo and brand assets (SVG) plus a favicon set.
 - Production domain(s).
 
+## Needed for Phase 6 (leave)
+- **The public holiday calendar.** Leave day counts exclude weekends only.
+  Nigerian public holidays need the client's actual list — guessing would
+  miscount leave silently. Approved requests store their day count, so adding
+  this later is safe.
+- Confirmation that the seeded leave types match the client's real policy.
+
 ## Design gaps — no screen exists
 - Notifications centre (a bell with a count appears in the shell; no screen designed).
 - Announcements composer (required by the brief; the design shows announcements only as dashboard content).
