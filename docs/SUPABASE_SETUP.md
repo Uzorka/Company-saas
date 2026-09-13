@@ -216,3 +216,63 @@ to verify sign-in end to end rather than handing you a script to run, the
 environment's network policy has to allow `supabase.com` and
 `*.supabase.co`. Policies are chosen when an environment is created:
 [code.claude.com/docs/en/claude-code-on-the-web](https://code.claude.com/docs/en/claude-code-on-the-web).
+
+
+---
+
+# Deploying to Vercel
+
+The live deployment is **https://company-saas-nine.vercel.app**.
+
+## Environment variables
+
+| Name | Vercel "Type" | Value |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Config | `https://<ref>.supabase.co` — **no `/rest/v1/`** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Config | anon / publishable key |
+| `NEXT_PUBLIC_SITE_URL` | Config | the deployment's own address, no trailing slash |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Secret** | service_role / secret key |
+
+### Choose the Type at creation time
+
+Vercel **refuses to save** a `NEXT_PUBLIC_*` variable as Secret — the prefix
+means the value is sent to the browser, so "secret" is a contradiction. And a
+variable already saved as Secret **cannot be converted** to Config: saved
+secrets are write-only.
+
+Between those two rules you can deadlock: an existing Secret with a
+`NEXT_PUBLIC_` name can be neither saved nor converted. The only way out is to
+delete it and recreate it as Config.
+
+So pick the Type before the first save. Only `SUPABASE_SERVICE_ROLE_KEY`
+should be Secret.
+
+### Do not add the Vercel Supabase integration
+
+The import screen offers a Supabase integration under "Optional Integrations".
+It provisions a **new** Supabase project and injects its own variables, which
+will point the app at an empty database. Skip it and set the four variables by
+hand.
+
+### The URL trap
+
+Supabase's Data API page shows `https://<ref>.supabase.co/rest/v1/`. That is
+the REST endpoint, not the project URL. The client appends `/rest/v1/` itself,
+so pasting the longer form produces `/rest/v1/rest/v1/` and every request
+fails. Use the bare `https://<ref>.supabase.co`.
+
+## Supabase URL configuration
+
+**Authentication → URL Configuration**, once the deployment URL exists:
+
+- **Site URL:** `https://<your-app>.vercel.app`
+- **Redirect URLs:** `https://<your-app>.vercel.app/**`
+
+Supabase will not send an auth link to a domain it does not recognise, so
+without this password reset fails silently — the mail sends, the link bounces.
+
+## Free tier
+
+Supabase pauses a free project after roughly a week of inactivity. A dead-
+looking app is usually a paused database; there is a Restore button on the
+dashboard.
