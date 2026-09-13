@@ -1,29 +1,69 @@
 import Link from "next/link";
+import { company, hasContent } from "@/content/company";
 import { buttonVariants } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
- * Phase 1 placeholder for the public site. The designed marketing pages land
- * in Phase 8 with a real content layer — nothing here asserts company facts,
- * because the copy in the design pack is sample content pending the client's
- * own (see docs/BACKLOG.md).
+ * Home. Source: Phase 2.
+ *
+ * Sections render only when they have content, so the page is short and
+ * truthful rather than padded with invented claims. See src/content/company.ts.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  let openRoles = 0;
+
+  // The design's "live open-role count from /recruitment". Published jobs are
+  // readable by anon, so this works without a session.
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published");
+    openRoles = count ?? 0;
+  }
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-[68ch] flex-col justify-center gap-5 px-6 py-16">
-      <span className="grid size-[30px] place-items-center rounded-lg bg-brand-600 text-[13px] font-semibold text-white">
-        H
-      </span>
-      <h1 className="text-display">Heron</h1>
-      <p className="text-body text-text-2">
-        Multi-tenant company management — people, attendance verification,
-        field visits, leave, payroll and recruitment. The public site is built
-        in Phase 8.
-      </p>
-      <div>
-        <Link href="/chfheron/dashboard" className={buttonVariants()}>
-          Open the workspace
-        </Link>
-      </div>
-    </main>
+    <>
+      <section className="mx-auto max-w-content-max px-4 py-16 sm:px-6 sm:py-24">
+        <h1 className="max-w-[20ch] text-display">{company.heroHeading}</h1>
+        <p className="mt-4 max-w-[60ch] text-body text-text-2">
+          {company.heroBody}
+        </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/careers" className={buttonVariants({ size: "lg" })}>
+            {openRoles > 0
+              ? `See ${openRoles} open ${openRoles === 1 ? "role" : "roles"}`
+              : "Careers"}
+          </Link>
+          <Link
+            href="/contact"
+            className={buttonVariants({ variant: "secondary", size: "lg" })}
+          >
+            Get in touch
+          </Link>
+        </div>
+      </section>
+
+      {hasContent.services ? (
+        <section className="border-t border-border bg-surface">
+          <div className="mx-auto max-w-content-max px-4 py-14 sm:px-6">
+            <h2 className="text-h2">What we do</h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {company.services.map((service) => (
+                <div
+                  key={service.title}
+                  className="rounded-xl border border-border bg-bg p-5"
+                >
+                  <h3 className="text-h3">{service.title}</h3>
+                  <p className="mt-2 text-small text-text-2">{service.summary}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+    </>
   );
 }

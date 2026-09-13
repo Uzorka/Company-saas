@@ -4387,4 +4387,425 @@ grant insert, update on payroll_periods to authenticated;
 grant insert on payroll_adjustments to authenticated;
 
 
+-- ---------------------------------------------------------------------------
+-- 0025_recruitment.sql
+-- ---------------------------------------------------------------------------
+
+-- 0025_recruitment
+--
+-- Jobs, applications and the eight-stage pipeline. Source: Phase 6 -
+-- Recruitment.
+--
+-- The design's framing: "candidate dignity treated as a requirement rather
+-- than a nicety." Three things follow structurally:
+--
+--   * An applicant needs no account. They apply from the public site and are
+--     a row here, not a user.
+--   * Rejected and withdrawn candidates stay on the board and stay
+--     searchable. Nothing is deleted.
+--   * Conversion to an employee LINKS the application; it never consumes it.
+
+create type job_status as enum ('draft', 'published', 'closed');
+
+create type application_stage as enum (
+  'applied', 'screening', 'shortlisted', 'interview',
+  'offered', 'hired', 'rejected', 'withdrawn'
+);
+
+create table jobs (
+  id               uuid primary key default gen_random_uuid(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  title            text not null check (length(trim(title)) > 0),
+  slug             text not null check (slug ~ '^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$'),
+  department_id    uuid references departments(id) on delete set null,
+  location         text,
+  employment_type  employment_type not null default 'full_time',
+  summary          text,
+  description      text,
+  responsibilities text,
+  requirements     text,
+  status           job_status not null default 'draft',
+  closes_on        date,
+  published_at     timestamptz,
+  created_by       uuid references auth.users(id),
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  unique (organization_id, slug)
+);
+
+create index jobs_public_idx on jobs (organization_id, status) where status = 'published';
+
+create trigger jobs_updated_at
+  before update on jobs
+  for each row execute function set_updated_at();
+
+create table job_applications (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  job_id          uuid not null references jobs(id) on delete restrict,
+
+  -- The applicant. Deliberately not an auth user: someone applying for a job
+  -- should not have to create an account with a company that has not hired
+  -- them.
+  first_name      text not null check (length(trim(first_name)) > 0),
+  last_name       text not null check (length(trim(last_name)) > 0),
+  email           text not null check (email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'),
+  phone           text,
+  location        text,
+  cover_letter    text,
+  cv_path         text,
+  source          text,
+
+  stage           application_stage not null default 'applied',
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+
+  -- One application per person per role. A second attempt updates the first
+  -- rather than cluttering the pipeline with duplicates.
+  unique (job_id, email)
+);
+
+create index job_applications_job_idx on job_applications (job_id, stage);
+create index job_applications_org_idx on job_applications (organization_id, stage);
+
+create trigger job_applications_updated_at
+  before update on job_applications
+  for each row execute function set_updated_at();
+
+comment on table job_applications is
+  'Applicants are not users. Rejected and withdrawn rows stay — the design '
+  'keeps candidates searchable for 12 months and never deletes a history.';
+
+-- Every stage move, kept.
+create table application_stage_history (
+  id             uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  application_id uuid not null references job_applications(id) on delete cascade,
+  from_stage     application_stage,
+  to_stage       application_stage not null,
+  moved_by       uuid references auth.users(id),
+  note           text,
+  created_at     timestamptz not null default now()
+);
+
+create index application_stage_history_idx
+  on application_stage_history (application_id, created_at);
+
+create table application_notes (
+  id             uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  application_id uuid not null references job_applications(id) on delete cascade,
+  author_id      uuid not null references auth.users(id),
+  body           text not null check (length(trim(body)) > 0),
+  created_at     timestamptz not null default now()
+);
+
+create index application_notes_idx on application_notes (application_id, created_at);
+
+-- Conversion. The application is linked, never consumed.
+create table applicant_conversions (
+  id             uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  application_id uuid not null references job_applications(id) on delete restrict,
+  employee_id    uuid not null references employees(id) on delete restrict,
+  converted_by   uuid not null references auth.users(id),
+  created_at     timestamptz not null default now(),
+  -- Converting twice would create a second employee record for one person.
+  unique (application_id)
+);
+
+comment on table applicant_conversions is
+  'Links an application to the employee record it produced. The application '
+  'is kept and remains searchable; the unique constraint makes a duplicate '
+  'conversion impossible rather than merely discouraged.';
+
+
+-- ---------------------------------------------------------------------------
+-- 0026_recruitment_actions.sql
+-- ---------------------------------------------------------------------------
+
+-- 0026_recruitment_actions
+--
+-- Applying, moving stages, and converting an applicant to an employee.
+
+-- A public application.
+--
+-- Runs as the anonymous role, so it takes the organization from the job
+-- rather than from a claim, and it accepts only published jobs. Without that
+-- second check, a draft or closed role could be applied to by anyone who
+-- guessed its id.
+create or replace function apply_for_job(
+  p_job_id       uuid,
+  p_first_name   text,
+  p_last_name    text,
+  p_email        text,
+  p_phone        text default null,
+  p_location     text default null,
+  p_cover_letter text default null,
+  p_cv_path      text default null,
+  p_source       text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_job jobs;
+  v_id  uuid;
+begin
+  select * into v_job from jobs where id = p_job_id and status = 'published';
+  if not found then
+    raise exception 'That role is not open for applications'
+      using errcode = 'no_data_found';
+  end if;
+
+  if v_job.closes_on is not null and v_job.closes_on < current_date then
+    raise exception 'Applications for that role have closed'
+      using errcode = 'check_violation';
+  end if;
+
+  insert into job_applications (
+    organization_id, job_id, first_name, last_name, email,
+    phone, location, cover_letter, cv_path, source
+  )
+  values (
+    v_job.organization_id, p_job_id, trim(p_first_name), trim(p_last_name),
+    lower(trim(p_email)), p_phone, p_location, p_cover_letter, p_cv_path, p_source
+  )
+  on conflict (job_id, email) do update
+    set first_name = excluded.first_name,
+        last_name  = excluded.last_name,
+        phone      = coalesce(excluded.phone, job_applications.phone),
+        location   = coalesce(excluded.location, job_applications.location),
+        cover_letter = coalesce(excluded.cover_letter, job_applications.cover_letter),
+        cv_path    = coalesce(excluded.cv_path, job_applications.cv_path),
+        updated_at = now()
+  returning id into v_id;
+
+  insert into application_stage_history (organization_id, application_id, to_stage, note)
+  values (v_job.organization_id, v_id, 'applied', 'Applied through the careers site');
+
+  return v_id;
+end;
+$$;
+
+-- Move an applicant through the pipeline.
+--
+-- Hired is deliberately NOT reachable here. The design: "Dragging into Hired
+-- opens the convert flow rather than silently moving." Hiring someone is the
+-- creation of an employee record, not a status change.
+create or replace function move_application_stage(
+  p_application_id uuid,
+  p_to_stage       application_stage,
+  p_note           text default null
+)
+returns job_applications
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org uuid := current_org_id();
+  v_app job_applications;
+begin
+  if not has_permission('recruitment.move_pipeline') then
+    raise exception 'recruitment.move_pipeline is required'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_app from job_applications
+  where id = p_application_id and organization_id = v_org;
+  if not found then
+    raise exception 'Application not found' using errcode = 'no_data_found';
+  end if;
+
+  if p_to_stage = 'hired' then
+    raise exception
+      'Marking someone hired happens through Convert to employee, so their record is created properly'
+      using errcode = 'check_violation';
+  end if;
+
+  if v_app.stage = 'hired' then
+    raise exception 'This applicant has already been hired'
+      using errcode = 'check_violation';
+  end if;
+
+  -- Rejecting someone should say why, so the note is not optional there.
+  if p_to_stage = 'rejected' and coalesce(length(trim(p_note)), 0) < 10 then
+    raise exception 'Recording a rejection needs a brief reason'
+      using errcode = 'check_violation';
+  end if;
+
+  insert into application_stage_history
+    (organization_id, application_id, from_stage, to_stage, moved_by, note)
+  values (v_org, p_application_id, v_app.stage, p_to_stage, auth.uid(), p_note);
+
+  update job_applications set stage = p_to_stage
+  where id = p_application_id returning * into v_app;
+
+  perform write_audit('recruitment.stage', 'job_application', p_application_id::text,
+    jsonb_build_object('from', v_app.stage, 'to', p_to_stage, 'note', p_note));
+
+  return v_app;
+end;
+$$;
+
+-- Convert an applicant into an employee.
+--
+-- Creates the employee record and links it. The application is kept, its
+-- stage becomes 'hired', and the unique constraint on applicant_conversions
+-- makes a second conversion impossible.
+create or replace function convert_applicant_to_employee(
+  p_application_id uuid,
+  p_employee_no    text,
+  p_department_id  uuid default null,
+  p_position_id    uuid default null,
+  p_hire_date      date default null
+)
+returns employees
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_org      uuid := current_org_id();
+  v_app      job_applications;
+  v_employee employees;
+begin
+  if not has_permission('recruitment.convert_employee') then
+    raise exception 'recruitment.convert_employee is required'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_app from job_applications
+  where id = p_application_id and organization_id = v_org;
+  if not found then
+    raise exception 'Application not found' using errcode = 'no_data_found';
+  end if;
+
+  if exists (select 1 from applicant_conversions where application_id = p_application_id) then
+    raise exception 'This applicant has already been converted to an employee'
+      using errcode = 'unique_violation';
+  end if;
+
+  -- No auth account is created here. The employee record exists first; an
+  -- invitation follows separately, which is what lets HR complete someone's
+  -- employment details before they ever sign in.
+  insert into employees (
+    organization_id, employee_no, first_name, last_name,
+    work_email, phone, location, department_id, position_id, hire_date
+  )
+  values (
+    v_org, p_employee_no, v_app.first_name, v_app.last_name,
+    null, v_app.phone, v_app.location, p_department_id, p_position_id,
+    coalesce(p_hire_date, current_date)
+  )
+  returning * into v_employee;
+
+  insert into applicant_conversions (organization_id, application_id, employee_id, converted_by)
+  values (v_org, p_application_id, v_employee.id, auth.uid());
+
+  insert into application_stage_history
+    (organization_id, application_id, from_stage, to_stage, moved_by, note)
+  values (v_org, p_application_id, v_app.stage, 'hired', auth.uid(),
+          'Converted to employee ' || p_employee_no);
+
+  update job_applications set stage = 'hired' where id = p_application_id;
+
+  perform write_audit('recruitment.convert', 'job_application', p_application_id::text,
+    jsonb_build_object('employee_id', v_employee.id, 'employee_no', p_employee_no,
+                       'application_kept', true));
+
+  return v_employee;
+end;
+$$;
+
+grant execute on function apply_for_job(uuid, text, text, text, text, text, text, text, text)
+  to anon, authenticated;
+grant execute on function move_application_stage(uuid, application_stage, text) to authenticated;
+grant execute on function convert_applicant_to_employee(uuid, text, uuid, uuid, date) to authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- 0027_recruitment_rls.sql
+-- ---------------------------------------------------------------------------
+
+-- 0027_recruitment_rls
+--
+-- Recruitment policies.
+--
+-- The only place in this product where `anon` gets a read policy: published
+-- jobs are, by definition, public. Everything else about recruitment —
+-- applicants, CVs, notes — stays inside the tenant.
+
+alter table jobs                      enable row level security;
+alter table job_applications          enable row level security;
+alter table application_stage_history enable row level security;
+alter table application_notes         enable row level security;
+alter table applicant_conversions     enable row level security;
+
+alter table jobs                      force row level security;
+alter table job_applications          force row level security;
+alter table application_stage_history force row level security;
+alter table application_notes         force row level security;
+alter table applicant_conversions     force row level security;
+
+-- Published jobs are readable by the public careers site. Draft and closed
+-- roles are not: a role still being written should not be discoverable.
+create policy jobs_public_read on jobs
+  for select to anon, authenticated
+  using (status = 'published');
+
+create policy jobs_internal_read on jobs
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.view'));
+
+create policy jobs_manage on jobs
+  for all to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.manage_jobs'))
+  with check (organization_id = current_org_id() and has_permission('recruitment.manage_jobs'));
+
+-- Applicants are never public. There is no anon read policy here, and
+-- applications are written only through apply_for_job().
+create policy applications_read on job_applications
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.view'));
+
+create policy applications_manage on job_applications
+  for update to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.manage_applications'))
+  with check (organization_id = current_org_id() and has_permission('recruitment.manage_applications'));
+
+-- No delete policy: a rejected candidate stays searchable, per the design.
+
+create policy stage_history_read on application_stage_history
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.view'));
+
+create policy notes_read on application_notes
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.view'));
+
+create policy notes_insert on application_notes
+  for insert to authenticated
+  with check (
+    organization_id = current_org_id()
+    and has_permission('recruitment.view')
+    and author_id = auth.uid()
+  );
+
+create policy conversions_read on applicant_conversions
+  for select to authenticated
+  using (organization_id = current_org_id() and has_permission('recruitment.view'));
+
+grant select on jobs to anon, authenticated;
+grant select on job_applications, application_stage_history, application_notes,
+                applicant_conversions
+  to authenticated;
+grant insert, update, delete on jobs to authenticated;
+grant update on job_applications to authenticated;
+grant insert on application_notes to authenticated;
+
+
 commit;

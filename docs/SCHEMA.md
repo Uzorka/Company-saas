@@ -9,7 +9,8 @@ still planned. The full set is grouped by the migration that creates it.
 `0011_attendance` `0012_geofence` `0013_attendance_rls`
 `0014_attendance_actions` `0015_storage` `0016_tasks` `0017_tasks_rls`
 `0018_field_visit_actions` `0019_leave` `0020_leave_actions` `0021_leave_rls` `0022_payroll`
-`0023_payroll_actions` `0024_payroll_rls`.
+`0023_payroll_actions` `0024_payroll_rls` `0025_recruitment`
+`0026_recruitment_actions` `0027_recruitment_rls`.
 
 Two deliberate departures from the plan, both discovered while building:
 

@@ -1,7 +1,7 @@
 # Build state
 
-**Current phase:** Phase 7 — payroll and payslips. Complete and green.
-**Next phase:** Phase 8 — recruitment and the public website.
+**Current phase:** Phase 8 — recruitment and the public website. Complete and green.
+**Next phase:** Phase 9 — reports, settings and administration.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the
 geofence default is the design's 150m (D33) and the position diagram is a
@@ -102,11 +102,31 @@ Phase 4: `/[org]/attendance`, `/[org]/attendance/check-in`.
 Phase 5: `/[org]/tasks`, `/[org]/tasks/visits`.
 Phase 6: `/[org]/leave`, `/[org]/leave/approvals`.
 Phase 7: `/[org]/payroll`, `/[org]/payroll/[period]`, `/[org]/payslips`.
+Phase 8: public `/`, `/about`, `/services`, `/careers`, `/careers/[slug]`,
+`/contact`; workspace `/[org]/recruitment`.
+
+### Phase 8 — recruitment and the public website
+- **Three migrations.** `0025_recruitment` (jobs, applications, stage history,
+  notes, conversions), `0026_recruitment_actions`, `0027_recruitment_rls`.
+- **The one public read policy in the product**: `anon` may select from
+  `jobs`, filtered to `published` in the policy itself. The structural audit
+  names that exception and separately asserts the policy filters — so adding
+  a second public table is a decision someone has to make in that file.
+- **Applicants are not users.** Applying needs no account. `apply_for_job()`
+  runs as `anon`, takes the organization from the job, and accepts only
+  published roles — a draft cannot be applied to even with its id.
+- **Hired is unreachable by a stage move.** It happens through conversion,
+  which creates the employee record. The unique constraint on
+  `applicant_conversions` makes a duplicate conversion impossible.
+- Rejected and withdrawn stay on the board and stay searchable.
+- **A single content layer** at `src/content/company.ts` drives every public
+  page, per the brief's rule against hard-coded content.
 
 ### Phase 7 — payroll and payslips
 - **Three migrations.** `0022_payroll` (rates, bands, components, periods, run
   lines, adjustments, payslips), `0023_payroll_actions` (calculation and the
-  six-status pipeline), `0024_payroll_rls`.
+  six-status pipeline), `0024_payroll_rls` `0025_recruitment`
+`0026_recruitment_actions` `0027_recruitment_rls`.
 - **All arithmetic in SQL, in numeric.** Nothing about a payslip is computed
   in JavaScript. `src/lib/payroll/model.ts` formats and nothing more.
 - **A run line is a snapshot.** Employee name, number and department are
@@ -125,7 +145,8 @@ Phase 7: `/[org]/payroll`, `/[org]/payroll/[period]`, `/[org]/payslips`.
 ### Phase 6 — leave
 - **Three migrations.** `0019_leave` (types, balances, requests, approvals),
   `0020_leave_actions` (the workflow), `0021_leave_rls` `0022_payroll` `0023_payroll_actions`
-`0024_payroll_rls`.
+`0024_payroll_rls` `0025_recruitment`
+`0026_recruitment_actions` `0027_recruitment_rls`.
 - **A balance moves only on final approval.** Deducting at submission would
   make a declined request cost the employee days; deducting at HOD approval
   would strand them if HR declines. Both are covered by assertions.
@@ -148,7 +169,8 @@ Phase 7: `/[org]/payroll`, `/[org]/payroll/[period]`, `/[org]/payslips`.
   comments, attachments, activity, field visits and their evidence),
   `0017_tasks_rls`, `0018_field_visit_actions` `0019_leave` `0020_leave_actions`
 `0021_leave_rls` `0022_payroll` `0023_payroll_actions`
-`0024_payroll_rls`.
+`0024_payroll_rls` `0025_recruitment`
+`0026_recruitment_actions` `0027_recruitment_rls`.
 - **Five verification modes**, chosen per task. `none` is a first-class mode
   and the default: the design is explicit that forcing proof on desk work is
   wrong.
@@ -180,7 +202,8 @@ Phase 7: `/[org]/payroll`, `/[org]/payroll/[period]`, `/[org]/payslips`.
 `0014_attendance_actions` `0015_storage` `0016_tasks` `0017_tasks_rls`
 `0018_field_visit_actions` `0019_leave` `0020_leave_actions`
 `0021_leave_rls` `0022_payroll` `0023_payroll_actions`
-`0024_payroll_rls`
+`0024_payroll_rls` `0025_recruitment`
+`0026_recruitment_actions` `0027_recruitment_rls`
 
 Audit was built as `0004` rather than the brief's `013` because the design
 requires audit writes alongside each module rather than retrofitted at the
@@ -192,12 +215,12 @@ end — the table has to exist before the first module does.
 A map provider key is pending the provider decision.
 
 ## Tests
-**106 unit and component tests** — status vocabulary, role navigation, motion
+**111 unit and component tests** — status vocabulary, role navigation, motion
 tokens, the sidebar's restricted-not-hidden rule, open-redirect rejection
 (absolute, protocol-relative, backslash, javascript: and data: targets), and
 the permission vocabulary.
 
-**173 database assertions** against real PostgreSQL, run as the `authenticated`
+**193 database assertions** against real PostgreSQL, run as the `authenticated`
 and `anon` roles with claims set the way PostgREST sets them:
 - Tenant isolation in both directions, including audit entries.
 - HR holds no payroll permission; Accounts holds no recruitment or HR
@@ -249,6 +272,13 @@ themselves no-ops on the first try, which is exactly why they get checked.
   `employees.create`, and the slide-over shows the directory fields plus a
   note about what is still to come — no fake form, no dead button beyond the
   one the next phase fills in.
+- **The public site is mostly placeholders, deliberately.** The design pack
+  contains invented executives with invented biographies, a founding year and
+  coverage figures — sample content that made the mockups feel real. Those are
+  claims about a real business and named people, so the *structure* is built
+  and the *claims* are left empty. A section with no content does not render
+  at all: the site is smaller until it is filled in, rather than confidently
+  wrong. One file, `src/content/company.ts`, is the only edit needed.
 - **No employees are seeded.** Departments, positions and shifts are; people
   are not, because a person without attendance, tasks or leave is a row
   pretending to be a record. The demo population belongs to Phase 10.

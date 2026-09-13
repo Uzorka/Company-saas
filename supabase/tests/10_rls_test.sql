@@ -36,7 +36,14 @@ begin
   execute body;
   execute 'reset role';
   return false;
-exception when insufficient_privilege or check_violation then
+-- The four classes our own functions raise deliberately: a privilege refusal,
+-- a business-rule violation, an inapplicable or missing row, and a duplicate.
+-- Deliberately no wider than that — catching everything would let a typo or a
+-- dropped function read as a successful refusal.
+exception when insufficient_privilege
+             or check_violation
+             or no_data_found
+             or unique_violation then
   execute 'reset role';
   return true;
 end;

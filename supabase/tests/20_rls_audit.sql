@@ -77,15 +77,36 @@ begin
     coalesce('Every organization-owned table gates on current_org_id() (missing: ' || offender || ')',
              'Every organization-owned table gates on current_org_id()'));
 
-  -- 4. anon holds no table privileges at all. Nothing in the workspace is
-  --    public, so an anonymous caller should be refused before RLS is reached.
-  select string_agg(distinct table_name, ', ') into offender
+  -- 4. anon reaches exactly one table, and only for reading.
+  --
+  --    `jobs` is the single deliberate exception: the public careers site has
+  --    to list open roles, and a published job is public by definition. It is
+  --    named here rather than pattern-matched so adding a second public table
+  --    is a decision someone has to make in this file.
+  --
+  --    Applicants, CVs and notes are NOT public — there is no anon policy on
+  --    job_applications, and check 4b proves it.
+  select string_agg(distinct table_name || ':' || privilege_type, ', ') into offender
   from information_schema.role_table_grants
-  where grantee = 'anon' and table_schema = 'public';
+  where grantee = 'anon'
+    and table_schema = 'public'
+    and not (table_name = 'jobs' and privilege_type = 'SELECT');
 
   perform assert(offender is null,
-    coalesce('anon holds no privileges in public (found: ' || offender || ')',
-             'anon holds no privileges on any public table'));
+    coalesce('anon reaches only published jobs (also found: ' || offender || ')',
+             'anon reaches only jobs, and only to read'));
+
+  -- 4b. And what anon can see of that table is limited to published rows.
+  select string_agg(policyname, ', ') into offender
+  from pg_policies
+  where schemaname = 'public'
+    and tablename = 'jobs'
+    and 'anon' = any(roles)
+    and coalesce(qual, 'true') not like '%published%';
+
+  perform assert(offender is null,
+    coalesce('The public jobs policy filters to published only (offending: ' || offender || ')',
+             'The public jobs policy exposes published roles only'));
 
   -- 5. The audit log cannot be updated or deleted by anyone.
   select string_agg(grantee || ':' || privilege_type, ', ') into offender

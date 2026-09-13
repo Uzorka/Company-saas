@@ -296,3 +296,42 @@ so it is now tested as the table owner. Dropping it now fails.
 
 Same shape as D45: a passing test proves something, but not always the thing
 its name claims.
+
+## D51 — The public site ships with empty content, not invented content — **Accepted**
+The design pack contains a complete-looking company: six named executives with
+biographies, a founding year, coverage figures, client logos. All of it was
+invented to make the mockups feel real, which is the right thing for a mockup
+and the wrong thing for a live corporate website.
+
+Publishing invented executives would state things about a real business, and
+about named people, that nobody has verified. So `src/content/company.ts`
+holds the structure with empty arrays, and every section renders only when it
+has content. The site is smaller until the client supplies theirs, rather than
+plausible and false.
+
+This also satisfies the brief's own rule — "do not hard-code company content
+across many components" — with a single file to edit.
+
+## D52 — `anon` reaches exactly one table, and the audit says so by name — **Accepted**
+Published jobs are public by definition, so `anon` holds SELECT on `jobs` and
+nothing else. The structural audit was updated to name that exception rather
+than relax the rule, and gained a second check asserting the public policy
+filters to `published`. A behavioural test confirms an anonymous caller is
+refused on `job_applications`, `application_notes` and `employees`.
+
+## D53 — Hiring is a conversion, not a stage — **Accepted**
+`move_application_stage()` refuses `hired` outright. Hiring creates an
+employee record; offering it as a drag target would let someone mark a person
+hired with nothing behind it. `applicant_conversions` has a unique constraint
+on the application, so converting twice is impossible rather than discouraged.
+
+## D54 — A failed CV upload does not fail the application — **Accepted**
+The application row is written first, then the CV. If the upload fails the
+application still stands and HR can ask for the CV. Losing a document is
+recoverable; losing someone's application is not, and they would never know.
+
+## D55 — `denies()` catches four error classes, not everything — **Accepted**
+Broadened from two to include `no_data_found` and `unique_violation` — the
+other classes our functions raise deliberately. Deliberately not wider: a
+catch-all would let a typo or a dropped function read as a successful
+refusal, which is the same false-pass problem as D45 and D50 in a new place.
