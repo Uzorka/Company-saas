@@ -3,16 +3,16 @@
 Everything needed to take this project from "validated locally" to "running".
 Roughly 15 minutes.
 
-**Project:** `cqokclmrsyhydzbvgnje` — API URL `https://cqokclmrsyhydzbvgnje.supabase.co`
+**Project:** `xhnvlydfdocybzhhqkxa` — API URL `https://xhnvlydfdocybzhhqkxa.supabase.co`
 
 Direct links for this project:
 
 | Step | Link |
 |---|---|
-| SQL editor | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/sql/new |
-| Auth hooks | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/auth/hooks |
-| Auth users | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/auth/users |
-| API keys | https://supabase.com/dashboard/project/cqokclmrsyhydzbvgnje/settings/api |
+| SQL editor | https://supabase.com/dashboard/project/xhnvlydfdocybzhhqkxa/sql/new |
+| Auth hooks | https://supabase.com/dashboard/project/xhnvlydfdocybzhhqkxa/auth/hooks |
+| Auth users | https://supabase.com/dashboard/project/xhnvlydfdocybzhhqkxa/auth/users |
+| API keys | https://supabase.com/dashboard/project/xhnvlydfdocybzhhqkxa/settings/api |
 
 > **Note on the links.** This build environment's network policy blocks
 > `supabase.com`, so none of these could be checked against the live

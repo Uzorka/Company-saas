@@ -1015,7 +1015,10 @@ set search_path = public, pg_temp
 as $$
 declare
   claims       jsonb := coalesce(event -> 'claims', '{}'::jsonb);
-  user_id      uuid  := (event ->> 'user_id')::uuid;
+  -- Prefixed to keep it distinct from organization_members.user_id and
+  -- user_roles.user_id in the queries below. A bare `user_id` here silently
+  -- resolves to the column, not the variable.
+  v_user_id    uuid  := (event ->> 'user_id')::uuid;
   active_org   uuid;
   role_slugs   jsonb;
   perm_slugs   jsonb;
@@ -1028,7 +1031,7 @@ begin
   -- would be a tenant-crossing hole.
   select m.organization_id into active_org
   from organization_members m
-  where m.user_id = custom_access_token_hook.user_id
+  where m.user_id = v_user_id
     and m.status = 'active'
     and m.organization_id = nullif(
       coalesce(event -> 'user_metadata' ->> 'active_organization_id', ''), ''
@@ -1040,7 +1043,7 @@ begin
   if active_org is null then
     select m.organization_id into active_org
     from organization_members m
-    where m.user_id = custom_access_token_hook.user_id
+    where m.user_id = v_user_id
       and m.status = 'active'
     order by m.last_active_at desc nulls last, m.created_at asc
     limit 1;
@@ -1057,7 +1060,7 @@ begin
   select coalesce(jsonb_agg(distinct r.slug), '[]'::jsonb) into role_slugs
   from user_roles ur
   join roles r on r.id = ur.role_id
-  where ur.user_id = custom_access_token_hook.user_id
+  where ur.user_id = v_user_id
     and ur.organization_id = active_org;
 
   -- Effective permissions are the UNION across every role the user holds.
@@ -1065,7 +1068,7 @@ begin
   select coalesce(jsonb_agg(distinct rp.permission_slug), '[]'::jsonb) into perm_slugs
   from user_roles ur
   join role_permissions rp on rp.role_id = ur.role_id
-  where ur.user_id = custom_access_token_hook.user_id
+  where ur.user_id = v_user_id
     and ur.organization_id = active_org;
 
   claims := claims || jsonb_build_object(
