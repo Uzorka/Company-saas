@@ -2,8 +2,12 @@
 -- GENERATED FILE — do not edit.
 -- Rebuild with: scripts/build-setup-sql.sh
 --
--- Every migration in supabase/migrations/, in order, concatenated for pasting
--- into the Supabase SQL editor. Safe to run once on a fresh project.
+-- Every migration in supabase/migrations/, in order, for pasting into the
+-- Supabase SQL editor.
+--
+-- Safe to run more than once. Each migration records itself in
+-- schema_migrations and is skipped if it is already there, so re-pasting this
+-- file after new migrations are added applies only those.
 --
 -- This does NOT include supabase/seed.sql — run that separately, after
 -- registering the access token hook.
@@ -11,9 +15,21 @@
 
 begin;
 
+-- Which migrations this database already has. Created first so the guards
+-- below have something to read on a brand-new project.
+create table if not exists schema_migrations (
+  version    text primary key,
+  applied_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
--- 0001_organizations.sql
+-- 0001_organizations
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0001_organizations') then
+  raise notice 'already applied, skipping: %', '0001_organizations';
+else
 
 -- 0001_organizations
 --
@@ -123,9 +139,20 @@ create trigger offices_updated_at
   for each row execute function set_updated_at();
 
 
+insert into schema_migrations (version) values ('0001_organizations');
+raise notice 'applied: %', '0001_organizations';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0002_profiles.sql
+-- 0002_profiles
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0002_profiles') then
+  raise notice 'already applied, skipping: %', '0002_profiles';
+else
 
 -- 0002_profiles
 --
@@ -199,9 +226,20 @@ create trigger on_auth_user_created
   for each row execute function handle_new_user();
 
 
+insert into schema_migrations (version) values ('0002_profiles');
+raise notice 'applied: %', '0002_profiles';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0003_rbac.sql
+-- 0003_rbac
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0003_rbac') then
+  raise notice 'already applied, skipping: %', '0003_rbac';
+else
 
 -- 0003_rbac
 --
@@ -423,9 +461,20 @@ create trigger role_grant_requests_second_approver
   for each row execute function enforce_second_approver();
 
 
+insert into schema_migrations (version) values ('0003_rbac');
+raise notice 'applied: %', '0003_rbac';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0004_audit.sql
+-- 0004_audit
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0004_audit') then
+  raise notice 'already applied, skipping: %', '0004_audit';
+else
 
 -- 0004_audit
 --
@@ -529,9 +578,20 @@ $$;
 grant execute on function write_audit(text, text, text, jsonb) to authenticated, service_role;
 
 
+insert into schema_migrations (version) values ('0004_audit');
+raise notice 'applied: %', '0004_audit';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0005_rls.sql
+-- 0005_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0005_rls') then
+  raise notice 'already applied, skipping: %', '0005_rls';
+else
 
 -- 0005_rls
 --
@@ -814,9 +874,20 @@ grant insert, update on organizations, organization_settings, offices, profiles,
 grant delete on role_permissions, user_roles, organization_members to authenticated;
 
 
+insert into schema_migrations (version) values ('0005_rls');
+raise notice 'applied: %', '0005_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0006_permission_catalogue.sql
+-- 0006_permission_catalogue
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0006_permission_catalogue') then
+  raise notice 'already applied, skipping: %', '0006_permission_catalogue';
+else
 
 -- 0006_permission_catalogue
 --
@@ -997,9 +1068,20 @@ end;
 $$;
 
 
+insert into schema_migrations (version) values ('0006_permission_catalogue');
+raise notice 'applied: %', '0006_permission_catalogue';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0007_access_token_hook.sql
+-- 0007_access_token_hook
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0007_access_token_hook') then
+  raise notice 'already applied, skipping: %', '0007_access_token_hook';
+else
 
 -- 0007_access_token_hook
 --
@@ -1109,9 +1191,20 @@ create policy auth_admin_read_role_permissions on role_permissions
   for select to supabase_auth_admin using (true);
 
 
+insert into schema_migrations (version) values ('0007_access_token_hook');
+raise notice 'applied: %', '0007_access_token_hook';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0008_departments_positions.sql
+-- 0008_departments_positions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0008_departments_positions') then
+  raise notice 'already applied, skipping: %', '0008_departments_positions';
+else
 
 -- 0008_departments_positions
 --
@@ -1206,9 +1299,20 @@ as $$
 $$;
 
 
+insert into schema_migrations (version) values ('0008_departments_positions');
+raise notice 'applied: %', '0008_departments_positions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0009_employees.sql
+-- 0009_employees
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0009_employees') then
+  raise notice 'already applied, skipping: %', '0009_employees';
+else
 
 -- 0009_employees
 --
@@ -1397,9 +1501,20 @@ as $$
 $$;
 
 
+insert into schema_migrations (version) values ('0009_employees');
+raise notice 'applied: %', '0009_employees';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0010_employees_rls.sql
+-- 0010_employees_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0010_employees_rls') then
+  raise notice 'already applied, skipping: %', '0010_employees_rls';
+else
 
 -- 0010_employees_rls
 --
@@ -1659,9 +1774,20 @@ grant delete on department_heads, employee_emergency_contacts,
   to authenticated;
 
 
+insert into schema_migrations (version) values ('0010_employees_rls');
+raise notice 'applied: %', '0010_employees_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0011_attendance.sql
+-- 0011_attendance
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0011_attendance') then
+  raise notice 'already applied, skipping: %', '0011_attendance';
+else
 
 -- 0011_attendance
 --
@@ -1841,9 +1967,20 @@ create trigger attendance_check_in_immutable
   for each row execute function reject_check_in_time_edit();
 
 
+insert into schema_migrations (version) values ('0011_attendance');
+raise notice 'applied: %', '0011_attendance';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0012_geofence.sql
+-- 0012_geofence
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0012_geofence') then
+  raise notice 'already applied, skipping: %', '0012_geofence';
+else
 
 -- 0012_geofence
 --
@@ -2007,9 +2144,20 @@ as $$
 $$;
 
 
+insert into schema_migrations (version) values ('0012_geofence');
+raise notice 'applied: %', '0012_geofence';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0013_attendance_rls.sql
+-- 0013_attendance_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0013_attendance_rls') then
+  raise notice 'already applied, skipping: %', '0013_attendance_rls';
+else
 
 -- 0013_attendance_rls
 --
@@ -2141,9 +2289,20 @@ grant insert, update, delete on attendance_breaks to authenticated;
 grant insert on attendance_corrections to authenticated;
 
 
+insert into schema_migrations (version) values ('0013_attendance_rls');
+raise notice 'applied: %', '0013_attendance_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0014_attendance_actions.sql
+-- 0014_attendance_actions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0014_attendance_actions') then
+  raise notice 'already applied, skipping: %', '0014_attendance_actions';
+else
 
 -- 0014_attendance_actions
 --
@@ -2374,9 +2533,20 @@ grant execute on function check_out(numeric, numeric, numeric) to authenticated;
 revoke execute on function auto_close_stale_attendance() from public, authenticated, anon;
 
 
+insert into schema_migrations (version) values ('0014_attendance_actions');
+raise notice 'applied: %', '0014_attendance_actions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0015_storage.sql
+-- 0015_storage
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0015_storage') then
+  raise notice 'already applied, skipping: %', '0015_storage';
+else
 
 -- 0015_storage
 --
@@ -2456,9 +2626,20 @@ end
 $$;
 
 
+insert into schema_migrations (version) values ('0015_storage');
+raise notice 'applied: %', '0015_storage';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0016_tasks.sql
+-- 0016_tasks
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0016_tasks') then
+  raise notice 'already applied, skipping: %', '0016_tasks';
+else
 
 -- 0016_tasks
 --
@@ -2666,9 +2847,20 @@ as $$
 $$;
 
 
+insert into schema_migrations (version) values ('0016_tasks');
+raise notice 'applied: %', '0016_tasks';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0017_tasks_rls.sql
+-- 0017_tasks_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0017_tasks_rls') then
+  raise notice 'already applied, skipping: %', '0017_tasks_rls';
+else
 
 -- 0017_tasks_rls
 --
@@ -2897,9 +3089,20 @@ grant insert, update, delete on task_target_locations to authenticated;
 grant insert on task_comments, task_attachments, field_visit_evidence to authenticated;
 
 
+insert into schema_migrations (version) values ('0017_tasks_rls');
+raise notice 'applied: %', '0017_tasks_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0018_field_visit_actions.sql
+-- 0018_field_visit_actions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0018_field_visit_actions') then
+  raise notice 'already applied, skipping: %', '0018_field_visit_actions';
+else
 
 -- 0018_field_visit_actions
 --
@@ -3105,9 +3308,20 @@ grant execute on function submit_field_visit(uuid, numeric, numeric, numeric, te
 grant execute on function review_field_visit(uuid, boolean, text) to authenticated;
 
 
+insert into schema_migrations (version) values ('0018_field_visit_actions');
+raise notice 'applied: %', '0018_field_visit_actions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0019_leave.sql
+-- 0019_leave
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0019_leave') then
+  raise notice 'already applied, skipping: %', '0019_leave';
+else
 
 -- 0019_leave
 --
@@ -3231,9 +3445,20 @@ comment on table leave_approvals is
   'request, never an edit — so this table is the record of what was agreed.';
 
 
+insert into schema_migrations (version) values ('0019_leave');
+raise notice 'applied: %', '0019_leave';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0020_leave_actions.sql
+-- 0020_leave_actions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0020_leave_actions') then
+  raise notice 'already applied, skipping: %', '0020_leave_actions';
+else
 
 -- 0020_leave_actions
 --
@@ -3551,9 +3776,20 @@ grant execute on function cancel_leave_request(uuid) to authenticated;
 grant execute on function leave_days_remaining(uuid, uuid, smallint) to authenticated;
 
 
+insert into schema_migrations (version) values ('0020_leave_actions');
+raise notice 'applied: %', '0020_leave_actions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0021_leave_rls.sql
+-- 0021_leave_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0021_leave_rls') then
+  raise notice 'already applied, skipping: %', '0021_leave_rls';
+else
 
 -- 0021_leave_rls
 --
@@ -3669,9 +3905,20 @@ grant select on leave_types, leave_balances, leave_requests, leave_approvals
 grant insert, update, delete on leave_types, leave_balances to authenticated;
 
 
+insert into schema_migrations (version) values ('0021_leave_rls');
+raise notice 'applied: %', '0021_leave_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0022_payroll.sql
+-- 0022_payroll
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0022_payroll') then
+  raise notice 'already applied, skipping: %', '0022_payroll';
+else
 
 -- 0022_payroll
 --
@@ -3932,9 +4179,20 @@ create trigger payslips_immutable
 revoke update, delete, truncate on payslips from public, anon, authenticated, service_role;
 
 
+insert into schema_migrations (version) values ('0022_payroll');
+raise notice 'applied: %', '0022_payroll';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0023_payroll_actions.sql
+-- 0023_payroll_actions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0023_payroll_actions') then
+  raise notice 'already applied, skipping: %', '0023_payroll_actions';
+else
 
 -- 0023_payroll_actions
 --
@@ -4231,9 +4489,20 @@ grant execute on function advance_payroll(uuid, payroll_status) to authenticated
 grant execute on function calculate_paye_annual(uuid, numeric, date) to authenticated;
 
 
+insert into schema_migrations (version) values ('0023_payroll_actions');
+raise notice 'applied: %', '0023_payroll_actions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0024_payroll_rls.sql
+-- 0024_payroll_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0024_payroll_rls') then
+  raise notice 'already applied, skipping: %', '0024_payroll_rls';
+else
 
 -- 0024_payroll_rls
 --
@@ -4387,9 +4656,20 @@ grant insert, update on payroll_periods to authenticated;
 grant insert on payroll_adjustments to authenticated;
 
 
+insert into schema_migrations (version) values ('0024_payroll_rls');
+raise notice 'applied: %', '0024_payroll_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0025_recruitment.sql
+-- 0025_recruitment
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0025_recruitment') then
+  raise notice 'already applied, skipping: %', '0025_recruitment';
+else
 
 -- 0025_recruitment
 --
@@ -4520,9 +4800,20 @@ comment on table applicant_conversions is
   'conversion impossible rather than merely discouraged.';
 
 
+insert into schema_migrations (version) values ('0025_recruitment');
+raise notice 'applied: %', '0025_recruitment';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0026_recruitment_actions.sql
+-- 0026_recruitment_actions
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0026_recruitment_actions') then
+  raise notice 'already applied, skipping: %', '0026_recruitment_actions';
+else
 
 -- 0026_recruitment_actions
 --
@@ -4727,9 +5018,20 @@ grant execute on function move_application_stage(uuid, application_stage, text) 
 grant execute on function convert_applicant_to_employee(uuid, text, uuid, uuid, date) to authenticated;
 
 
+insert into schema_migrations (version) values ('0026_recruitment_actions');
+raise notice 'applied: %', '0026_recruitment_actions';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0027_recruitment_rls.sql
+-- 0027_recruitment_rls
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0027_recruitment_rls') then
+  raise notice 'already applied, skipping: %', '0027_recruitment_rls';
+else
 
 -- 0027_recruitment_rls
 --
@@ -4808,9 +5110,20 @@ grant update on job_applications to authenticated;
 grant insert on application_notes to authenticated;
 
 
+insert into schema_migrations (version) values ('0027_recruitment_rls');
+raise notice 'applied: %', '0027_recruitment_rls';
+end if;
+end
+$mig$;
+
 -- ---------------------------------------------------------------------------
--- 0028_create_paths.sql
+-- 0028_create_paths
 -- ---------------------------------------------------------------------------
+do $mig$
+begin
+if exists (select 1 from schema_migrations where version = '0028_create_paths') then
+  raise notice 'already applied, skipping: %', '0028_create_paths';
+else
 
 -- Create paths.
 --
@@ -4833,5 +5146,11 @@ alter table tasks
 -- inserting role. Without this the default raises instead of filling in.
 grant usage on sequence task_reference_seq to authenticated;
 
+
+insert into schema_migrations (version) values ('0028_create_paths');
+raise notice 'applied: %', '0028_create_paths';
+end if;
+end
+$mig$;
 
 commit;

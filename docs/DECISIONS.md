@@ -474,3 +474,38 @@ was flagged. Suppressing the rule was not the fix; it was right.
 So the panel calls the action inside a transition and acts on the result in
 the submit handler. Same behaviour, no state set from an effect, and the
 pending flag still comes from React rather than being tracked by hand.
+
+## D62 — install.sql is re-runnable, and proves it against a replica — **Accepted**
+The generated bundle carried the note "safe to run once on a fresh project",
+which was true, and I told the user it was idempotent, which was not. Adding
+migration 0028 meant re-pasting it, and it stopped at
+`create type organization_status already exists` — Postgres has no
+`create type if not exists`, and the whole file is one transaction, so nothing
+was half-applied but nothing was applied either.
+
+Handing over a single statement for 0028 would have fixed that afternoon and
+left the same trap set for the next migration. So the bundle now carries a
+`schema_migrations` ledger: every migration is wrapped in a guard that records
+itself and is skipped when already present. Re-pasting after new migrations
+applies only the new ones. The wrapper uses the `$mig$` dollar tag, which the
+migrations themselves never use (`$$` and `$p$` are theirs), so nested
+function bodies still quote correctly.
+
+That alone does not help an existing project, which has the tables and an
+empty ledger — it would try migration 0001 again and fail identically. Hence
+`adopt.sql`, generated alongside: for each migration it looks for an object
+that migration creates and records it only if present. Detection rather than a
+hardcoded list of what someone probably has, because such a list is wrong
+precisely on the database that matters.
+
+Verified by building a replica of the live project — migrations 0001–0027
+applied the old way, no ledger, 0028 absent — then running adopt (26 recorded,
+0015 and 0028 correctly reported absent), install (applied exactly those two),
+confirming `tasks.reference` gained its default, and running install a third
+time for zero applications and zero errors.
+
+That replica caught a real bug: the first sentinel for 0015 read
+`storage.buckets` directly, and plpgsql resolves the whole expression before
+`and` can short-circuit, so it raised wherever the storage schema is absent.
+It now checks `pg_policies`, a catalogue view that is empty rather than
+missing.

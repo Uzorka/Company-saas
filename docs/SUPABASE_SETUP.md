@@ -46,9 +46,26 @@ Paste the entire contents of **`supabase/setup/install.sql`** and run it.
 
 That file is generated from `supabase/migrations/` by
 `scripts/build-setup-sql.sh` — the migrations remain the source of truth, and
-the bundle is just all seven of them concatenated and wrapped in a
-transaction. If anything fails, the whole thing rolls back and nothing is left
-half-applied.
+the bundle is every migration in order, wrapped in a transaction. If anything
+fails, the whole thing rolls back and nothing is left half-applied.
+
+**It is safe to run again.** Each migration records itself in
+`schema_migrations` and is skipped if it is already there, so when new
+migrations are added you paste the same file and only the new ones apply.
+
+### Upgrading a project set up before the ledger existed
+
+A project installed from an earlier `install.sql` has the tables but no
+`schema_migrations` table, so a re-run would try to apply migration 0001 again
+and stop at `create type` — Postgres has no `create type if not exists`.
+
+Run **`supabase/setup/adopt.sql`** once first. It changes no schema: for each
+migration it checks whether an object that migration creates is actually
+present, and records it as applied only if it is. Anything genuinely missing
+is left unrecorded for `install.sql` to apply. Then run `install.sql` as
+above.
+
+You do not need `adopt.sql` on a new project.
 
 ---
 
