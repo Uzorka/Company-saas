@@ -242,6 +242,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0029_audit_creates';
   end if;
 
+  if exists (select 1 from pg_policies where schemaname = 'public' and policyname = 'org_settings_update') then
+    insert into schema_migrations (version) values ('0030_settings_scope') on conflict do nothing;
+    raise notice 'present, recorded: %', '0030_settings_scope';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0030_settings_scope';
+  end if;
+
 end
 $adopt$;
 

@@ -351,3 +351,78 @@ begin
   raise notice '--- audit coverage assertions passed ---';
 end
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Settings are writable by settings.manage alone.
+--
+-- The original policy admitted all three settings scopes and left the choice
+-- of columns to the server action. A server action is not a boundary: the anon
+-- key is public and the session JWT is in the browser, so anyone with a login
+-- can call PostgREST directly and write whatever the policy admits.
+--
+-- HR's real area is leave_types and Accounts' is statutory_rates and
+-- paye_bands, each with its own policy. Neither has a legitimate column here.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  org_a uuid;
+  n integer;
+begin
+  select * into f from fixture;
+  org_a := f.org_a;
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, org_a),
+      'update organization_settings set password_min_length = 8, session_timeout_minutes = 999'
+    ) = 0,
+    'HR cannot weaken the password or session policy, settings.manage_structure notwithstanding'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_acct, org_a),
+      'update organization_settings set audit_retention_years = 1'
+    ) = 0,
+    'Accounts cannot shorten audit retention'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, org_a),
+      'update organization_settings set default_geofence_radius_m = 5000'
+    ) = 0,
+    'An ordinary employee cannot widen the geofence'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      'update organization_settings set default_geofence_radius_m = 120'
+    ) = 1,
+    'Management can change a company setting'
+  );
+
+  -- Each role keeps its own area, which is the reason tightening this table
+  -- costs nothing.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, org_a),
+      format($q$insert into leave_types (organization_id, name, annual_entitlement_days)
+               values (%L, 'Study leave', 5)$q$, org_a)
+    ) = 1,
+    'HR still manages leave types — their actual settings area'
+  );
+
+  -- And the change is recorded.
+  select count(*) into n from audit_logs
+   where organization_id = org_a
+     and action = 'settings.update'
+     and metadata -> 'fields' ? 'default_geofence_radius_m';
+  perform assert(n >= 1,
+    'A settings change is audited, naming the fields that changed');
+
+  raise notice '--- settings scope assertions passed ---';
+end
+$$;

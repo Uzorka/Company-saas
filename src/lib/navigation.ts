@@ -77,7 +77,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Recruitment", "/recruitment", UserPlus, "recruitment.view"),
     planned("Reports", "/reports", BarChart3, "reports.management"),
     item("Audit", "/audit", ShieldCheck, "audit.view"),
-    planned("Settings", "/settings", Settings, "settings.manage"),
+    item("Settings", "/settings", Settings, "settings.manage"),
   ],
   hr: [
     item("Dashboard", "/dashboard", LayoutDashboard),
@@ -88,7 +88,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Recruitment", "/recruitment", UserPlus, "recruitment.view"),
     planned("Documents", "/documents", Folder, "documents.view"),
     planned("Reports", "/reports", BarChart3, "reports.hr"),
-    planned("Settings", "/settings", Settings),
+    item("Settings", "/settings", Settings),
   ],
   accounts: [
     item("Dashboard", "/dashboard", LayoutDashboard),
@@ -96,7 +96,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Payslips", "/payslips", Receipt, "payroll.view_all"),
     item("Employees", "/employees", Users, "employees.view_all"),
     planned("Reports", "/reports", BarChart3, "reports.payroll"),
-    planned("Settings", "/settings", Settings),
+    item("Settings", "/settings", Settings),
   ],
   hod: [
     item("Dashboard", "/dashboard", LayoutDashboard),

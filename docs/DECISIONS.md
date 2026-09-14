@@ -808,3 +808,63 @@ Tone is assigned by consequence rather than by module: publishing and approving
 read as significant, declines and returns as negative, routine traffic as
 neutral. Colouring by module would make the entire payroll section red and
 teach people to stop looking at it.
+
+## D72 — A server action is not a security boundary — **Accepted**
+`org_settings_update` admitted all three settings scopes and left the choice of
+*columns* to the server action, on the reasoning that column-level policies
+would duplicate the permission vocabulary in SQL.
+
+The reasoning was wrong in one specific way. The anon key is public and the
+session JWT sits in the browser, so anyone with a login can call PostgREST
+directly and write whatever the policy admits — no server action in the path.
+Confirmed against the running database before changing anything: HR could set
+`password_min_length` to 8 and `session_timeout_minutes` to 999; Accounts could
+cut `audit_retention_years` to 1.
+
+Tightened to `settings.manage` alone, and nothing is lost. HR's actual area is
+`leave_types`, whose own policy admits `settings.manage_structure`. Accounts'
+area is `statutory_rates` and `paye_bands`, whose policies admit
+`settings.manage_payroll`. Neither role has a legitimate column in this table:
+the split belongs in the tables it describes, which is where a reader would
+look for it.
+
+Six assertions cover it, and restoring the old policy fails the suite. This is
+the same class of mistake as D45 and D50 — a check that looks like enforcement
+but is not reached by every path — found the same way, by exercising it rather
+than reading it.
+
+## D73 — Settings open wider than they save — **Accepted**
+Opening the settings screen needs any settings permission; saving needs
+`settings.manage`. HR and Accounts see the values their colleagues work under,
+rendered disabled, rather than a permission screen.
+
+That follows the nav's "restricted, not hidden" rule for the same reason: a
+blank panel makes the product look unfinished, while a visible read-only value
+answers the question people came with. The boundary is stated in the page's own
+subheading, and enforced in the database regardless.
+
+## D74 — The roles matrix reads, and does not edit — **Accepted**
+It answers "who can see payroll?" by module, per role — the question people
+actually bring to a permissions screen.
+
+It does not offer toggles. `role_grant_requests` exists because a grant
+touching Payroll, Documents, Settings or Audit needs a written reason and a
+second approver, enforced by a table constraint and a trigger. A matrix of
+checkboxes that wrote directly to `role_permissions` would route around the one
+control the schema was built to provide, while looking like a feature. The
+approval flow is in `BACKLOG.md`; until it is built, this screen tells the
+truth rather than offering a shortcut past it.
+
+Partial grants show as "3 of 9" rather than a tick. A tick would say "yes" for
+a role holding one permission out of nine, which is exactly the reading someone
+checking an access question must not take away.
+
+## D75 — Office geofences are edited as numbers, not on a map — **Accepted**
+A radius decides whether someone standing at a site is recorded as present or
+as remote, and a check-in is evidence in a pay dispute. So each office shows
+its own radius plainly rather than inheriting a company default invisibly, and
+the form asks for decimal degrees.
+
+A map picker would be kinder and the product has no tile provider — that
+decision is still open (C6, `BACKLOG.md`). A drawn map that was not actually
+positioning anything would be worse than an honest pair of numbers.
