@@ -3,6 +3,7 @@ import { company } from "@/content/company";
 import { buttonVariants } from "@/components/ui/button";
 import { DemoNotice } from "@/components/demo-notice";
 import { NavProgress } from "@/components/shell/nav-progress";
+import { BrandMark } from "@/components/brand-mark";
 
 /**
  * Public site shell. Source: Phase 2 - Public Website.
@@ -30,11 +31,8 @@ export default function PublicLayout({
 
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-content-max flex-wrap items-center gap-4 px-4 py-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid size-[30px] place-items-center rounded-lg bg-brand-600 text-[13px] font-semibold text-white">
-              {company.name.charAt(0)}
-            </span>
-            <span className="text-small font-semibold">{company.name}</span>
+          <Link href="/" className="flex items-center">
+            <BrandMark />
           </Link>
 
           <nav className="ml-auto flex flex-wrap items-center gap-1">
@@ -62,7 +60,8 @@ export default function PublicLayout({
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-content-max flex-wrap gap-6 px-4 py-8 sm:px-6">
           <div className="min-w-[200px] flex-1">
-            <p className="text-small font-semibold">{company.legalName}</p>
+            <BrandMark size="sm" />
+            <p className="mt-2 text-small font-semibold">{company.legalName}</p>
             <p className="mt-1 text-small text-text-2">{company.tagline}</p>
             <p className="mt-1 text-small text-text-2">
               Distributing in Nigeria since {company.foundedYear}.

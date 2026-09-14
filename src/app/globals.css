@@ -52,11 +52,21 @@
   --color-success-border: #bfe3d3;
   --color-warn-surface: #fffdf7;
   --color-warn-border: #f6e3bf;
+  /* Tenant accent — see src/content/brand.ts for why two oranges exist.
+     --color-accent is theirs exactly and never sits behind text;
+     --color-accent-ink is the same hue at 4.69:1 for white labels. */
+  --color-accent: #e87722;
+  --color-accent-ink: #b8590f;
+  --color-accent-soft: #fdf0e6;
+  --color-brand-ink: #0f2747;
+
   --color-disabled-bg: #f1f4f8;
   --color-disabled-fg: #a6b0be;
 
   /* Type families */
-  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-sans: var(--font-sans-tenant), system-ui, sans-serif;
+  /* Headings carry the display face; body text does not. */
+  --font-display: var(--font-display-tenant), var(--font-sans-tenant), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   /* Type scale — size/line-height/weight/tracking per the design */
@@ -155,6 +165,13 @@
   }
 
   /* Every comparable figure is tabular. */
+  .text-display,
+  .text-h1,
+  .text-h2,
+  .text-h3 {
+    font-family: var(--font-display);
+  }
+
   .font-mono,
   [data-numeric] {
     font-variant-numeric: tabular-nums;

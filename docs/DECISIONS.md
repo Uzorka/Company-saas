@@ -1049,3 +1049,58 @@ and someone who cannot distinguish the hue has nothing to hover toward.
 The workspace screens are still unaudited: they need a signed-in session
 against a real Supabase project, which this environment has no way to provide.
 That gap is named in `BACKLOG.md` rather than hidden behind a lower standard.
+
+## D84 — The product has never used its own typeface — **Accepted**
+Found while applying CHF Heron's brand, by measuring the computed font-family
+rather than looking at the page.
+
+`@theme` emits its variables at `:root`. `--font-sans` was declared there as
+`var(--font-plex-sans), system-ui, sans-serif`, and `--font-plex-sans` was set
+by `next/font` on `<body>`. A custom property containing `var()` is resolved
+where it is *declared*, so `--font-sans` resolved at `:root` against a variable
+that was not there, became invalid at computed-value time, and every element
+fell back to the browser's stack. The computed family was `-apple-system`.
+
+IBM Plex Sans was specified in Phase 1, loaded on every request since, and
+never applied to a single element. Nothing errored. The build passed, the
+fonts downloaded, the page looked entirely plausible — a system sans is a
+perfectly reasonable-looking typeface, which is exactly why nobody caught it.
+
+The fix is placement: the font variables go on `<html>`, so `:root` has them
+when `--font-sans` resolves. One line, nine phases late.
+
+This is the third bug in this phase of the same shape — `text-white` dropped by
+a class merger, `current_org_id()` raising on an empty string, and now this.
+All three were invisible to typecheck, lint and build; all three needed the
+thing to be run and measured. The lesson is not "add a test for fonts", it is
+that a build passing says the code compiles, and nothing more.
+
+## D85 — The tenant's brand is a layer, and one of its colours is not adopted — **Accepted**
+`src/content/brand.ts` holds CHF Heron's palette, typefaces and mark. The
+product's own design system — spacing, layout, component shapes, motion —
+does not change per tenant; what changes is the surface a customer recognises.
+A second tenant is a second file.
+
+Their primary blue `#1B4F8C` needed nothing: it is already this product's
+`brand-600`, arrived at independently from the design pack.
+
+Their accent orange `#E87722` is adopted, with one exception that is the point
+of the file. Their own site uses it behind white 14px button text. Measured,
+that is **2.96:1** — below the 4.5:1 minimum for body text and below even the
+3:1 floor for large text and UI components. So the exact orange is kept
+wherever it carries no text, and `accentInk` (`#B8590F`, 4.69:1) is used where
+white sits on it. Their `--ink-3` has the same problem at small sizes (4.02:1)
+and is not adopted at all.
+
+Copying a contrast failure into a product that gates on accessibility would be
+inheriting a bug deliberately. The alternative — dropping their accent — would
+lose the brand. Same hue, dark enough to read, and the reason is written where
+someone will find it.
+
+The mark is a typographic wordmark, not their logo. The real asset sits on
+their server; this environment cannot fetch it to vendor a copy, and hotlinking
+a client's server for a logo is fragile and impolite. The wordmark follows the
+structure their own brand description gives — "CHF" in the brand blue with an
+orange accent, a smaller "HERON" beside it — without pretending to be artwork
+nobody here has seen. Supplying the file and pointing `brand.logo.assetPath` at
+it retires the fallback.

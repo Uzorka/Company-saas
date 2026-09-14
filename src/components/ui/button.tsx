@@ -27,6 +27,11 @@ const buttonVariants = cva(
           "bg-transparent text-text-2 border border-transparent hover:bg-canvas hover:text-text",
         destructive:
           "bg-danger-fg text-white border border-danger-fg hover:brightness-110 active:brightness-95",
+        // The tenant's accent. accent-ink, not accent: their exact orange is
+        // 2.96:1 behind white text, below even the large-text floor. Same hue,
+        // dark enough to read. See src/content/brand.ts.
+        accent:
+          "bg-accent-ink text-white border border-accent-ink hover:brightness-110 active:brightness-95",
       },
       size: {
         sm: "h-[30px] px-3 text-small",

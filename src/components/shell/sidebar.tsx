@@ -9,6 +9,7 @@ import { duration, ease } from "@/lib/motion";
 import type { NavItem } from "@/lib/navigation";
 import type { Permission } from "@/lib/auth/permissions";
 import { LinkPending } from "./nav-progress";
+import { BrandMark } from "@/components/brand-mark";
 
 /**
  * Desktop sidebar. Source: Developer Handoff section 07.
@@ -49,18 +50,27 @@ export function Sidebar({
       className="hidden sm:flex sticky top-0 h-screen shrink-0 flex-col border-r border-border bg-bg"
       aria-label="Main navigation"
     >
-      <div className="flex h-[58px] items-center gap-2.5 px-3.5">
-        <span className="grid size-[30px] shrink-0 place-items-center rounded-lg bg-brand-600 text-[13px] font-semibold text-white">
-          {orgInitial}
-        </span>
-        <motion.span
-          animate={{ opacity: collapsed ? 0 : 1 }}
-          transition={{ duration: duration.fast, ease: ease.standard }}
-          className="truncate text-small font-semibold"
-          aria-hidden={collapsed}
-        >
-          {orgName}
-        </motion.span>
+      {/* The workspace name is the title rather than visible text: the mark
+          carries the identity, and this is still a multi-tenant product where
+          knowing which tenant you are in matters. */}
+      <div
+        className="flex h-[58px] items-center gap-2.5 overflow-hidden px-3.5"
+        title={orgName}
+      >
+        {collapsed ? (
+          // At 58px there is no room for a wordmark; the initial is the mark.
+          <span className="grid size-[30px] shrink-0 place-items-center rounded-lg bg-brand-600 text-[13px] font-semibold text-white">
+            {orgInitial}
+          </span>
+        ) : (
+          <motion.span
+            animate={{ opacity: 1 }}
+            transition={{ duration: duration.fast, ease: ease.standard }}
+            className="truncate"
+          >
+            <BrandMark size="sm" />
+          </motion.span>
+        )}
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">

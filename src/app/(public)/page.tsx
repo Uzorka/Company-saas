@@ -32,7 +32,10 @@ export default async function HomePage() {
           {company.heroBody}
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/careers" className={buttonVariants({ size: "lg" })}>
+          <Link
+            href="/careers"
+            className={buttonVariants({ variant: "accent", size: "lg" })}
+          >
             {openRoles > 0
               ? `See ${openRoles} open ${openRoles === 1 ? "role" : "roles"}`
               : "Careers"}
