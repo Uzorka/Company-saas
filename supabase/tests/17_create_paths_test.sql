@@ -268,3 +268,86 @@ begin
   perform assert(n = 0, 'No leave was filed against anyone else');
 end
 $$;
+
+-- ---------------------------------------------------------------------------
+-- The create paths leave a trace.
+--
+-- Every database function has called write_audit() since it was written; the
+-- plain inserts behind the create UI did not, so creating an employee or a job
+-- left no record at all. An audit log that silently omits a whole class of
+-- action is worse than no audit log — someone reading it concludes nothing
+-- happened.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  org_a uuid;
+  n integer;
+  v_label text;
+  v_org uuid;
+begin
+  select * into f from fixture;
+  org_a := f.org_a;
+
+  -- An empty claims setting is not the same as an absent one. current_org_id()
+  -- cast the setting straight to jsonb, and ''::jsonb raises rather than
+  -- returning null — which turned every policy evaluation into an error
+  -- instead of a denial. Nothing reached that path until the insert triggers
+  -- started calling it on every row.
+  perform set_config('request.jwt.claims', '', true);
+  v_org := current_org_id();
+  perform assert(v_org is null,
+    'An empty claims setting resolves to no organization, rather than raising');
+
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, org_a)::text, true);
+  set local role authenticated;
+  insert into employees (organization_id, employee_no, first_name, last_name, hire_date)
+  values (org_a, 'CHF-950', 'Audited', 'Hire', current_date);
+  reset role;
+
+  select count(*) into n from audit_logs
+   where organization_id = org_a
+     and action = 'employees.create'
+     and metadata ->> 'label' like '%CHF-950%';
+  perform assert(n = 1, 'Creating an employee writes one audit entry, with a readable label');
+
+  select actor_user_id::text into v_label from audit_logs
+   where organization_id = org_a and action = 'employees.create'
+     and metadata ->> 'label' like '%CHF-950%';
+  perform assert(v_label = f.u_hr::text,
+    'The audit entry names the person who did it, from the session rather than an argument');
+
+  -- Publishing is the one workspace action that puts text on the public
+  -- internet, so it is logged as its own event rather than folded into a
+  -- generic update.
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, org_a)::text, true);
+  set local role authenticated;
+  insert into jobs (organization_id, title, slug, status, created_by)
+  values (org_a, 'Audited Role', 'audited-role', 'draft', f.u_hr);
+  update jobs set status = 'published', published_at = now() where slug = 'audited-role';
+  reset role;
+
+  perform assert(
+    (select count(*) from audit_logs where organization_id = org_a and action = 'jobs.create') >= 1,
+    'Creating a job is audited'
+  );
+  perform assert(
+    (select count(*) from audit_logs
+      where organization_id = org_a and action = 'jobs.published'
+        and metadata ->> 'title' = 'Audited Role') = 1,
+    'Publishing a job is audited as its own event, not as a generic update'
+  );
+
+  -- A seed or a migration has no session. Refusing an insert because it could
+  -- not be logged would be the tail wagging the dog.
+  perform set_config('request.jwt.claims', '', true);
+  insert into departments (organization_id, code, name)
+  values (org_a, 'DPT-SEED', 'Seeded With No Session');
+  perform assert(
+    (select count(*) from departments where code = 'DPT-SEED') = 1,
+    'An insert with no organization-scoped session still succeeds, unlogged'
+  );
+
+  raise notice '--- audit coverage assertions passed ---';
+end
+$$;

@@ -235,6 +235,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0028_create_paths';
   end if;
 
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'current_org_id') then
+    insert into schema_migrations (version) values ('0029_audit_creates') on conflict do nothing;
+    raise notice 'present, recorded: %', '0029_audit_creates';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0029_audit_creates';
+  end if;
+
 end
 $adopt$;
 

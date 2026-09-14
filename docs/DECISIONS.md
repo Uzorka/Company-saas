@@ -742,3 +742,69 @@ row, bottom-nav icon, dashboard card, table row. That was wrong for the reason
 above, and the markers that drove it are now headless: they still call
 `useLinkStatus()`, because it is only valid inside the `<Link>` it describes,
 and they render nothing. Seven of them report; one overlay draws.
+
+## D70 — The create paths are audited by trigger, not by remembering — **Accepted**
+Every database function had called `write_audit()` since it was written. The
+plain inserts behind the create UI (D60) did not: creating an employee, a
+department, a position, a task, a payroll period, an office or a job left no
+trace at all.
+
+That had to be closed before the audit screen existed. An audit log that
+silently omits a whole class of action is worse than no audit log, because
+someone reading it concludes nothing happened.
+
+Triggers rather than calls in the server actions. A caller can forget; a
+trigger cannot, and it also covers rows created by a future import, an admin
+working in the SQL editor, or a second client. Publishing a job is logged as
+its own event rather than folded into a generic update, because it is the one
+workspace action that puts text on the public internet.
+
+Two bugs, both found by running rather than reading:
+
+`plpgsql` compiles every branch of a `CASE` against the actual row type, so
+`new.name` in the departments branch raised on a `jobs` row even though that
+branch is never taken. Fields are now read through `to_jsonb(new)`, where a
+missing key is simply NULL.
+
+And `current_org_id()` cast `current_setting('request.jwt.claims', true)`
+straight to `jsonb`. That is NULL-safe when the setting was never set, but an
+empty *string* is not NULL, and `''::jsonb` raises. Nothing had reached that
+path, because every caller already had claims by the time a policy ran; a
+trigger on every insert reaches it immediately. It matters well beyond the
+triggers — every RLS policy in the product calls this function, so an empty
+claims header turned what should be a clean denial into a database error.
+Returning NULL is the right answer to "which organization is this?" when there
+is no usable claim, and NULL fails every policy closed exactly as an absent
+claim already did.
+
+Six new assertions, two of them mutation-tested: dropping the employees
+trigger, and reverting the `current_org_id()` hardening, each fail the suite.
+An insert with no session still succeeds and goes unlogged — refusing a write
+because it could not be *logged* would be the tail wagging the dog, and seeds
+and migrations have no session by definition.
+
+## D71 — The audit screen has no controls, because there is nothing to offer — **Accepted**
+`audit_logs` has no insert policy for any application role, and a trigger
+rejects every update and delete. So the screen carries no edit, delete or
+resolve control — not because they were left out, but because the product has
+nothing it could truthfully put there.
+
+It pages rather than scrolls: the log is append-only and unbounded, and it is
+read by someone looking for a specific thing on a specific day. Filters plus
+fifty rows answer that better than an infinite scroll nobody reaches the end
+of. Ordering is by timestamp *and* id, because two entries written in the same
+millisecond would otherwise come back in arbitrary order, and sequence is the
+one thing an audit reader must be able to trust.
+
+Filters submit as a plain GET form so the filtered view has its own URL. An
+auditor's job includes being able to say "this is what I looked at", which
+component state cannot express.
+
+The filter options are read from the log itself rather than hard-coded, since
+the set of audited actions grows whenever an audited operation is added, and a
+hand-maintained list goes stale silently.
+
+Tone is assigned by consequence rather than by module: publishing and approving
+read as significant, declines and returns as negative, routine traffic as
+neutral. Colouring by module would make the entire payroll section red and
+teach people to stop looking at it.

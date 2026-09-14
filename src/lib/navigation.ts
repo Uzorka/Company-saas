@@ -76,7 +76,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Payroll", "/payroll", Wallet, "payroll.view_all"),
     item("Recruitment", "/recruitment", UserPlus, "recruitment.view"),
     planned("Reports", "/reports", BarChart3, "reports.management"),
-    planned("Audit", "/audit", ShieldCheck, "audit.view"),
+    item("Audit", "/audit", ShieldCheck, "audit.view"),
     planned("Settings", "/settings", Settings, "settings.manage"),
   ],
   hr: [
