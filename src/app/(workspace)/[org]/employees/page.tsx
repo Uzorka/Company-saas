@@ -72,7 +72,6 @@ export default async function EmployeesPage({
     <EmployeeDirectory
       rows={rows}
       departments={departments}
-      canCreate={can(session, "employees.create")}
       orgSlug={org}
       filters={{ q: q ?? "", department: department ?? "", status: status ?? "" }}
     />

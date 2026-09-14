@@ -52,6 +52,29 @@ from the build environment, so the content in `src/content/company.ts` marked
   this later is safe.
 - Confirmation that the seeded leave types match the client's real policy.
 
+## Found by the Phase-8 system review — still open
+The structural repairs are done (see `DECISIONS.md` D57-D59). These remain:
+
+**No record can be created through the UI.** Every module is a review-and-
+approve screen with its first step missing. Server actions exist for check in,
+check out, selfie, review visit, set task status, advance/recalculate payroll,
+decide leave, cancel leave and apply for a job. There is no action to create an
+employee, department, position or office; no way to submit a leave request; no
+way to create a task, a payroll period or a job posting. An employee cannot
+request leave; Accounts cannot open a pay run; HR cannot post a vacancy, so
+`/careers` stays empty permanently.
+
+**Five screens do not exist**: reports, settings, audit log, documents,
+notifications. They render as "Soon" in the nav.
+
+**No demo data.** `supabase/seed.sql` creates the organization, offices,
+departments, positions, shift patterns, leave types, PAYE bands and roles —
+and no employees, attendance, tasks, leave, payroll or jobs. Every screen is
+empty, and with no create flow there is no way to fill it.
+
+**The notification bell is removed** until a notifications screen and table
+exist. The "Add employee" button is removed until the create flow exists.
+
 ## Design gaps — no screen exists
 - Notifications centre (a bell with a count appears in the shell; no screen designed).
 - Announcements composer (required by the brief; the design shows announcements only as dashboard content).

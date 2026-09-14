@@ -1,35 +1,40 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, ChevronDown, Search } from "lucide-react";
+import { ChevronDown, LogOut, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/app/(auth)/auth/actions";
 
 export type Crumb = { label: string; href?: string };
 
 /**
  * Topbar. Source: Developer Handoff section 07.
  *
- * Breadcrumb, search, notification bell with count, avatar menu. The org
- * switcher is present from day one — this is a multi-tenant product and the
- * shell says so before there is a second tenant.
+ * Breadcrumb, search, account menu. The org switcher is present from day one —
+ * this is a multi-tenant product and the shell says so before there is a
+ * second tenant.
  *
  * Breadcrumb is two levels maximum and the last segment is the current screen,
  * never a link.
+ *
+ * The design also specifies a notification bell. It is not here: there is no
+ * notifications screen for it to open and no notifications table to count, so
+ * it would be an icon with a permanently empty badge that leads nowhere. It
+ * returns with the screen — see docs/BACKLOG.md.
  */
 export function Topbar({
   crumbs,
   userName,
   roleLabel,
   orgName,
-  notificationCount = 0,
   onOpenPalette,
 }: {
   crumbs: Crumb[];
   userName: string;
   roleLabel: string;
   orgName: string;
-  notificationCount?: number;
   onOpenPalette: () => void;
 }) {
   const trail = crumbs.slice(-2);
@@ -81,30 +86,60 @@ export function Topbar({
         </kbd>
       </button>
 
-      <Link
-        href="notifications"
-        className="relative grid size-[38px] place-items-center rounded-md text-text-2 hover:bg-canvas hover:text-text"
-        aria-label={
-          notificationCount > 0
-            ? `Notifications, ${notificationCount} unread`
-            : "Notifications"
-        }
-      >
-        <Bell className="size-[18px]" aria-hidden />
-        {notificationCount > 0 ? (
-          <span
-            className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-pill bg-danger-fg px-1 font-mono text-[10px] leading-4 text-white"
-            aria-hidden
-          >
-            {notificationCount > 9 ? "9+" : notificationCount}
-          </span>
-        ) : null}
-      </Link>
+      <AccountMenu
+        userName={userName}
+        roleLabel={roleLabel}
+        orgName={orgName}
+      />
+    </header>
+  );
+}
 
+/**
+ * Account menu. Previously this was an avatar, a chevron and no handler — the
+ * one control every signed-in user reaches for, wired to nothing. Sign-out is
+ * a server action, so the item is a form submit rather than an onClick.
+ */
+function AccountMenu({
+  userName,
+  roleLabel,
+  orgName,
+}: {
+  userName: string;
+  roleLabel: string;
+  orgName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
       <button
         type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className={cn(
           "flex items-center gap-2 rounded-md px-2 h-[38px] hover:bg-canvas",
+          open && "bg-canvas",
         )}
         aria-label={`${userName}, ${roleLabel} at ${orgName}. Open account menu`}
       >
@@ -119,6 +154,30 @@ export function Topbar({
         </span>
         <ChevronDown className="size-4 text-text-3" aria-hidden />
       </button>
-    </header>
+
+      {open ? (
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+6px)] z-40 w-[236px] overflow-hidden rounded-lg border border-border bg-bg shadow-e3"
+        >
+          <div className="border-b border-border px-3 py-2.5">
+            <p className="truncate text-small font-medium">{userName}</p>
+            <p className="truncate text-[11px] text-text-3">
+              {roleLabel} · {orgName}
+            </p>
+          </div>
+          <form action={signOut}>
+            <button
+              type="submit"
+              role="menuitem"
+              className="flex h-[38px] w-full items-center gap-2.5 px-3 text-left text-small text-text-2 hover:bg-canvas hover:text-text"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Sign out
+            </button>
+          </form>
+        </div>
+      ) : null}
+    </div>
   );
 }

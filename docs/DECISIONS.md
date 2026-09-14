@@ -376,3 +376,46 @@ pitch is worse than no address.
 This supersedes D51's "empty until the client supplies content" only for
 business-level facts. D51's rule about invented people stands, and now
 extends to real ones.
+
+## D57 — An unbuilt screen stays in the nav, marked, and is not a link — **Accepted**
+A review found `/reports`, `/settings`, `/audit`, `/documents` and
+`/notifications` in the sidebar as ordinary links to routes that do not exist.
+Every one 404'd. The bell in the topbar did the same, and the HOD "Field
+visits" item pointed at `/tasks?view=visits`, a query parameter the tasks page
+ignores.
+
+Two ways out: drop them, or mark them. Marked, because the modules are real,
+named in the brief, and part of what is being pitched — removing them would
+make the product look smaller than it is. So `NavItem.built` is now a required
+field. An item with `built: false` renders as plain text with a "Soon" marker
+in the sidebar and the mobile sheet, and is excluded from the command palette
+entirely, because the palette exists to go somewhere.
+
+The bell was removed outright rather than marked: it had no screen to open and
+no table to count, so it was an icon with a permanently empty badge. It comes
+back with the notifications screen.
+
+Three tests guard the regression — no anchor on an unbuilt item, a "Soon"
+marker on each, and a working link on every built one.
+
+## D58 — Sign-out exists in the UI — **Accepted**
+The topbar avatar was a `<button>` with no `onClick` and no menu. `signOut()`
+had been written in Phase 3 and never called from anywhere. It is now an
+account menu: the user's name, role and organization, and a Sign out item.
+
+It is a `<form action={signOut}>` submit rather than a click handler, because
+sign-out is a server action and a form is the path that works without
+client-side JavaScript having to succeed first.
+
+## D59 — The dashboard is a launcher until it has real figures — **Accepted**
+`/[org]/dashboard` was still the Phase 1 component gallery: a heading reading
+"Phase 1 / Foundation", a row of status pills, six buttons labelled Primary,
+Secondary, Ghost, Destructive, Loading and Disabled, and an empty state saying
+"No modules yet". Every user saw it on landing, through Phases 4 to 8.
+
+The brief specifies five role dashboards. Those need figures — today's
+attendance, pending approvals, the payroll position — and the honest version of
+a figure nobody has computed is not a zero on a card, it is no card. So the
+dashboard is now a role-filtered launcher: the modules this user can open, and
+a plainly labelled list of the ones that are not built. It stops lying without
+inventing statistics to replace the lie.

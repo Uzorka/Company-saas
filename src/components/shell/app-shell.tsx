@@ -8,6 +8,7 @@ import { BottomNav } from "./bottom-nav";
 import { CommandPalette } from "./command-palette";
 import { bottomSheet, duration, ease } from "@/lib/motion";
 import { navByRole, type RoleSlug } from "@/lib/navigation";
+import type { Permission } from "@/lib/auth/permissions";
 import Link from "next/link";
 
 /**
@@ -30,7 +31,6 @@ export function AppShell({
   userName,
   roleLabel,
   crumbs,
-  notificationCount,
   children,
 }: {
   org: string;
@@ -40,7 +40,6 @@ export function AppShell({
   userName: string;
   roleLabel: string;
   crumbs: Crumb[];
-  notificationCount?: number;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -49,8 +48,8 @@ export function AppShell({
 
   const basePath = `/${org}`;
   const items = navByRole[role];
-  const granted = new Set(permissions);
-  const can = (permission?: string) =>
+  const granted = new Set<string>(permissions);
+  const can = (permission?: Permission) =>
     permission === undefined || granted.has(permission);
 
   return (
@@ -75,7 +74,6 @@ export function AppShell({
           userName={userName}
           roleLabel={roleLabel}
           orgName={orgName}
-          notificationCount={notificationCount}
           onOpenPalette={() => setPaletteOpen(true)}
         />
 
@@ -126,14 +124,24 @@ export function AppShell({
                   const Icon = item.icon;
                   return (
                     <li key={item.label}>
-                      <Link
-                        href={`${basePath}${item.href}`}
-                        onClick={() => setMoreOpen(false)}
-                        className="flex h-[44px] items-center gap-2.5 rounded-md px-3 text-small text-text-2"
-                      >
-                        <Icon className="size-[18px]" aria-hidden />
-                        {item.label}
-                      </Link>
+                      {item.built ? (
+                        <Link
+                          href={`${basePath}${item.href}`}
+                          onClick={() => setMoreOpen(false)}
+                          className="flex h-[44px] items-center gap-2.5 rounded-md px-3 text-small text-text-2"
+                        >
+                          <Icon className="size-[18px]" aria-hidden />
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <div className="flex h-[44px] items-center gap-2.5 rounded-md px-3 text-small text-text-3">
+                          <Icon className="size-[18px]" aria-hidden />
+                          {item.label}
+                          <span className="ml-auto rounded-pill bg-canvas px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                            Soon
+                          </span>
+                        </div>
+                      )}
                     </li>
                   );
                 })}

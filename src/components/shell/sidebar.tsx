@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { duration, ease } from "@/lib/motion";
 import type { NavItem } from "@/lib/navigation";
+import type { Permission } from "@/lib/auth/permissions";
 
 /**
  * Desktop sidebar. Source: Developer Handoff section 07.
@@ -15,6 +16,10 @@ import type { NavItem } from "@/lib/navigation";
  * 140ms so text never squashes. Items a role cannot open remain visible with a
  * lock glyph and muted ink — clicking one lands on the permission state, not a
  * 404.
+ *
+ * Items whose screen does not exist yet (`built: false`) render as plain text
+ * with a "Soon" marker. They are not links, because a link that 404s is a
+ * broken promise; they stay listed, because the module is real and planned.
  */
 export function Sidebar({
   items,
@@ -30,7 +35,7 @@ export function Sidebar({
   orgInitial: string;
   collapsed: boolean;
   onToggle: () => void;
-  can: (permission?: string) => boolean;
+  can: (permission?: Permission) => boolean;
   basePath: string;
 }) {
   const pathname = usePathname();
@@ -65,6 +70,40 @@ export function Sidebar({
             pathname === href || pathname.startsWith(`${href}/`);
           const Icon = navItem.icon;
 
+          const label = (
+            <motion.span
+              animate={{ opacity: collapsed ? 0 : 1 }}
+              transition={{ duration: duration.fast, ease: ease.standard }}
+              className="flex-1 truncate text-small"
+              aria-hidden={collapsed}
+            >
+              {navItem.label}
+            </motion.span>
+          );
+
+          if (!navItem.built) {
+            return (
+              <div
+                key={navItem.label}
+                title={collapsed ? `${navItem.label} — not built yet` : undefined}
+                className="flex h-[38px] cursor-default items-center gap-2.5 rounded-md px-2.5 text-text-3"
+              >
+                <Icon className="size-[18px] shrink-0" aria-hidden />
+                {label}
+                <motion.span
+                  animate={{ opacity: collapsed ? 0 : 1 }}
+                  transition={{ duration: duration.fast, ease: ease.standard }}
+                  className={cn(
+                    "shrink-0 rounded-pill bg-canvas px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-3",
+                    collapsed && "hidden",
+                  )}
+                >
+                  Soon
+                </motion.span>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={navItem.label}
@@ -83,14 +122,7 @@ export function Sidebar({
               )}
             >
               <Icon className="size-[18px] shrink-0" aria-hidden />
-              <motion.span
-                animate={{ opacity: collapsed ? 0 : 1 }}
-                transition={{ duration: duration.fast, ease: ease.standard }}
-                className="flex-1 truncate text-small"
-                aria-hidden={collapsed}
-              >
-                {navItem.label}
-              </motion.span>
+              {label}
               {!allowed ? (
                 <Lock
                   className={cn("size-3.5 shrink-0", collapsed && "hidden")}

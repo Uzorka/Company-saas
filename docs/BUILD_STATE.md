@@ -1,6 +1,10 @@
 # Build state
 
-**Current phase:** Phase 8 — recruitment and the public website. Complete and green.
+**Current phase:** Phase 8 complete. A system review then found that the
+read-side screens shipped without their write paths, the dashboard was never
+replaced, and five nav items pointed at routes that do not exist. The
+structural repairs are done (D57-D59); the create flows, the five missing
+screens and demo data are open — see `BACKLOG.md`.
 **Next phase:** Phase 9 — reports, settings and administration.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the

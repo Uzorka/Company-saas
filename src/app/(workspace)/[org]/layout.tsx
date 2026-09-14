@@ -3,8 +3,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
 import { requireOrg } from "@/lib/auth/session";
 import { AppShell } from "@/components/shell/app-shell";
-import { ROLE_LABELS, type Role } from "@/lib/auth/permissions";
-import type { RoleSlug } from "@/lib/navigation";
+import { ROLE_LABELS } from "@/lib/auth/permissions";
+import { pickPrimaryRole } from "@/lib/navigation";
 
 /**
  * Workspace layout.
@@ -34,7 +34,7 @@ export default async function WorkspaceLayout({
 
   const supabase = await createClient();
 
-  const [{ data: organization }, { data: profile }, { count: unread }] =
+  const [{ data: organization }, { data: profile }] =
     await Promise.all([
       supabase
         .from("organizations")
@@ -46,9 +46,6 @@ export default async function WorkspaceLayout({
         .select("full_name")
         .eq("id", session.userId)
         .maybeSingle(),
-      // Notifications land in Phase 5; until the table exists this stays 0
-      // rather than showing an invented badge count.
-      Promise.resolve({ count: 0 }),
     ]);
 
   // A user may hold several roles — the union decides what they can do. The
@@ -63,7 +60,6 @@ export default async function WorkspaceLayout({
       roleLabel={ROLE_LABELS[primaryRole]}
       permissions={[...session.permissions]}
       userName={profile?.full_name ?? session.email ?? "Your account"}
-      notificationCount={unread ?? 0}
       crumbs={[
         {
           label: organization?.name ?? org,
@@ -76,24 +72,3 @@ export default async function WorkspaceLayout({
   );
 }
 
-/**
- * Which sidebar to show when a user holds more than one role.
- *
- * Permissions are always the union — this only picks a nav layout, never what
- * the user may do. Ordered most to least privileged so someone who is both an
- * HOD and an employee gets the fuller navigation, not the narrower one.
- */
-const ROLE_PRECEDENCE: Role[] = [
-  "management",
-  "hr",
-  "accounts",
-  "hod",
-  "employee",
-];
-
-function pickPrimaryRole(roles: Role[]): RoleSlug {
-  for (const candidate of ROLE_PRECEDENCE) {
-    if (roles.includes(candidate)) return candidate;
-  }
-  return "employee";
-}

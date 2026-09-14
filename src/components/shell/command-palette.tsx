@@ -67,8 +67,12 @@ function PaletteDialog({
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const results = items.filter((item) =>
-    item.label.toLowerCase().includes(query.trim().toLowerCase()),
+  // Unbuilt screens are excluded rather than listed and refused: the palette
+  // exists to go somewhere, and an entry that cannot be run is noise.
+  const results = items.filter(
+    (item) =>
+      item.built &&
+      item.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
   useEffect(() => {

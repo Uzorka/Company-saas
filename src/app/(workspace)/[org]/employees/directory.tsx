@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, UserPlus, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { SlideOver } from "@/components/ui/slide-over";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -30,12 +30,10 @@ import { cn } from "@/lib/utils";
 export function EmployeeDirectory({
   rows,
   departments,
-  canCreate,
   filters,
 }: {
   rows: EmployeeRow[];
   departments: DepartmentRow[];
-  canCreate: boolean;
   orgSlug: string;
   filters: { q: string; department: string; status: string };
 }) {
@@ -158,12 +156,11 @@ export function EmployeeDirectory({
             {isFiltered ? " matching your filters" : ""}
           </p>
         </div>
-        {canCreate ? (
-          <Button>
-            <UserPlus aria-hidden />
-            Add employee
-          </Button>
-        ) : null}
+        {/*
+          "Add employee" belonged here and rendered as a button with no
+          handler and no form behind it. Removed rather than left looking
+          real. It returns with the create flow — see docs/BACKLOG.md.
+        */}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
