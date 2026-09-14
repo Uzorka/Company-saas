@@ -5,15 +5,14 @@ import type { RoleWithPermissions, PermissionRow } from "@/lib/settings/queries"
 /**
  * Roles and what each can do.
  *
- * Read-only, and deliberately so for now. Changing a grant is not a checkbox:
- * `role_grant_requests` exists precisely because a grant touching Payroll,
- * Documents, Settings or Audit needs a written reason and a second approver,
- * and shipping a matrix of toggles that silently skipped that flow would
+ * Read-only, and deliberately so. Changing a grant is not a checkbox: a role
+ * touching Payroll, Documents, Settings or Audit needs a written reason and a
+ * second approver, and a matrix of toggles that silently skipped that would
  * quietly remove the control the schema was built to enforce.
  *
- * So this answers the question people actually bring to a permissions screen —
- * "who can see payroll?" — without pretending to offer an edit the product has
- * not built the approval path for. See docs/BACKLOG.md.
+ * That flow now exists — it is the Role grants card directly above this one.
+ * This table answers the different question people bring to a permissions
+ * screen: "who can see payroll?"
  */
 export function RolesMatrix({
   roles,
@@ -31,8 +30,8 @@ export function RolesMatrix({
           <h2 className="text-h3">Roles and permissions</h2>
           <p className="mt-1 max-w-[70ch] text-small text-text-2">
             What each role can reach. Permissions are the union across every
-            role a person holds. Changing a grant needs a written reason and a
-            second approver, so it is not editable here yet.
+            role a person holds. To give someone a role, use Role grants
+            above — it needs a written reason and a second approver.
           </p>
         </div>
 

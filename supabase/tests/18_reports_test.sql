@@ -211,3 +211,173 @@ begin
   raise notice '--- public form rate limit assertions passed ---';
 end
 $$;
+
+-- ---------------------------------------------------------------------------
+-- High-risk role grants need a second approver, wherever they are written.
+--
+-- enforce_second_approver() guarded role_grant_requests from the start, but
+-- nothing required anyone to go through that table: roles.manage allowed a
+-- direct insert into user_roles, so the control was advisory. Confirmed
+-- bypassable against the running database before 0033 closed it.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  org_a uuid;
+  r_mgmt uuid;
+  r_hod uuid;
+  ok boolean;
+  n integer;
+begin
+  select * into f from fixture;
+  org_a := f.org_a;
+  select id into r_mgmt from roles where organization_id = org_a and slug = 'management';
+  select id into r_hod  from roles where organization_id = org_a and slug = 'hod';
+
+  perform assert(
+    (select high_risk from roles where id = r_mgmt),
+    'Management is flagged high risk'
+  );
+  perform assert(
+    not (select high_risk from roles where id = r_hod),
+    'Head of Department is not — the rule must not block ordinary grants'
+  );
+
+  -- The bypass, closed.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      format('insert into user_roles (organization_id, user_id, role_id) values (%L, %L, %L)',
+             org_a, f.u_other, r_mgmt)
+    ) = 0,
+    'A high-risk role cannot be granted directly, even by roles.manage'
+  );
+
+  -- A non-high-risk role still goes through without ceremony.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      format('insert into user_roles (organization_id, user_id, role_id) values (%L, %L, %L)',
+             org_a, f.u_other, r_hod)
+    ) = 1,
+    'An ordinary role is granted without a second approver'
+  );
+
+  -- The legitimate path: a request, approved by a second person, then the
+  -- grant. Written as the table owner because the fixture has no third user
+  -- holding roles.manage — the rule under test is the trigger, not the policy.
+  insert into role_grant_requests
+    (organization_id, target_user_id, role_id, status, reason,
+     requested_by, second_approver_id, second_approved_at)
+  values
+    (org_a, f.u_other, r_mgmt, 'active',
+     'Covering the MD during parental leave, agreed at the board meeting.',
+     f.u_mgmt, f.u_hr, now());
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      format('insert into user_roles (organization_id, user_id, role_id) values (%L, %L, %L)',
+             org_a, f.u_other, r_mgmt)
+    ) = 1,
+    'With an approved request and a second approver, the grant goes through'
+  );
+
+  -- And the grant is on the record.
+  select count(*) into n from audit_logs
+   where organization_id = org_a and action = 'roles.grant';
+  perform assert(n >= 1, 'Granting a role is audited');
+
+  raise notice '--- high-risk grant assertions passed ---';
+end
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- The two-stage grant path itself.
+--
+-- 0033 made the high-risk guard real; these assert the route through it that
+-- the Role grants screen drives. Each rule is checked where it is enforced —
+-- a CHECK constraint, a trigger and a policy — rather than in the action that
+-- calls them, so the guarantee survives a rewrite of that action.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  org_a uuid;
+  r_hr uuid;
+  req uuid;
+  failed boolean;
+begin
+  select * into f from fixture;
+  org_a := f.org_a;
+  select id into r_hr from roles where organization_id = org_a and slug = 'hr';
+
+  -- A request that has not been approved grants nothing.
+  insert into role_grant_requests
+    (organization_id, target_user_id, role_id, status, reason, requested_by)
+  values
+    (org_a, f.u_emp, r_hr, 'awaiting_second_approver',
+     'Taking over payroll administration from the end of the quarter.',
+     f.u_mgmt)
+  returning id into req;
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      format('insert into user_roles (organization_id, user_id, role_id) values (%L, %L, %L)',
+             org_a, f.u_emp, r_hr)
+    ) = 0,
+    'A request awaiting approval does not let the grant through'
+  );
+
+  -- It cannot become active without naming an approver.
+  failed := false;
+  begin
+    update role_grant_requests set status = 'active' where id = req;
+  exception when others then
+    failed := true;
+  end;
+  perform assert(failed, 'A request cannot go active with no second approver');
+
+  -- Nor can the person who raised it approve their own request.
+  failed := false;
+  begin
+    update role_grant_requests
+       set status = 'active', second_approver_id = f.u_mgmt, second_approved_at = now()
+     where id = req;
+  exception when others then
+    failed := true;
+  end;
+  perform assert(failed, 'The requester cannot be their own second approver');
+
+  -- Approved by a second person, the grant goes through.
+  update role_grant_requests
+     set status = 'active', second_approver_id = f.u_hr, second_approved_at = now()
+   where id = req;
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, org_a),
+      format('insert into user_roles (organization_id, user_id, role_id) values (%L, %L, %L)',
+             org_a, f.u_emp, r_hr)
+    ) = 1,
+    'Approved by a second person, the high-risk grant is written'
+  );
+
+  -- And someone without roles.manage cannot raise a request at all, so the
+  -- screen is not the thing keeping them out.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, org_a),
+      format($q$insert into role_grant_requests
+                  (organization_id, target_user_id, role_id, status, reason, requested_by)
+                values (%L, %L, %L, 'awaiting_second_approver', 'Promoting myself, thanks.', %L)$q$,
+             org_a, f.u_emp, r_hr, f.u_emp)
+    ) = 0,
+    'Raising a grant request needs roles.manage'
+  );
+
+  raise notice '--- grant path assertions passed ---';
+end
+$$;

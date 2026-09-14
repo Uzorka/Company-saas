@@ -1215,3 +1215,44 @@ suite fails differently twice.
 The gate is now lint, typecheck, unit, database, parity, build, accessibility
 and end-to-end — and the last two exist specifically because the first six
 cannot see this class of bug at all.
+
+## D90 — A rule enforced everywhere and reachable nowhere — **Accepted**
+Migration 0003 built `role_grant_requests` so that Management, HR and Accounts
+could not be handed out by one person. Migration 0033 made that real by
+refusing a direct write to `user_roles`. Between the two, the product had no
+screen that wrote to `role_grant_requests` at all.
+
+So the rule as a user met it was not "a second person must approve" but "these
+roles cannot be granted". The control was total, which is another way of saying
+it was wrong: nobody could be made an HR administrator through the product,
+including the first one.
+
+This is the third instance of the same shape in this codebase — a real control
+sitting on a table nothing was required to go through (D72, D79), and now the
+inverse, a real control with no path through it. Both failures come from
+checking the schema and the screen separately.
+
+The Role grants card is the path: one administrator requests with a written
+reason, a different one approves, and the grant is written. Nothing about the
+rule moved into the action — the requester/approver split is a CHECK
+constraint, the approver requirement is a trigger, the high-risk guard is
+another trigger, and who may raise a request at all is a policy. The action
+fails four different ways if it is wrong, and five assertions say so.
+
+## D91 — A colour class that names nothing renders nothing — **Accepted**
+`bg-danger-surface` was written where the token is `error-surface`. Tailwind v4
+resolves colour utilities against `@theme` custom properties; a class naming a
+property that was never declared is not an error, it emits no CSS. The element
+renders with no background.
+
+It typechecks, it lints, it builds. The only way to see it is to look at the
+page — and it was on an error state, the surface least often reached in testing
+and most needing to be legible when it is.
+
+This is D80 again in a different costume: a class that is present in the source
+and absent from the browser. So it is now a gate. `scripts/check-design-tokens.mjs`
+extracts every declared token from `globals.css` and checks every colour and
+shadow class in the source against it. Reintroducing the exact bug fails the
+gate; the 19 apparent hits on first run were all real namespaces
+(`shadow-e1` against `--shadow-*`) and taught the script that prefixes resolve
+against different namespaces, which is the actual Tailwind rule.

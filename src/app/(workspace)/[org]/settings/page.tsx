@@ -9,9 +9,11 @@ import {
   listRoles,
   listPermissions,
 } from "@/lib/settings/queries";
+import { listGrantRequests, listMembers } from "@/lib/people/queries";
 import { SettingsForm } from "./settings-form";
 import { Offices } from "./offices";
 import { RolesMatrix } from "./roles";
+import { RoleGrants } from "./role-grants";
 
 export const metadata = { title: "Settings" };
 
@@ -53,13 +55,20 @@ export default async function SettingsPage({
   const canEdit = can(session, "settings.manage");
   const canManageOffices = can(session, "attendance.manage_locations");
   const canSeeRoles = can(session, "roles.view");
+  const canManageRoles = can(session, "roles.manage");
 
-  const [settings, offices, roles, permissions] = await Promise.all([
-    getSettings(),
-    listOffices(),
-    canSeeRoles ? listRoles() : Promise.resolve([]),
-    canSeeRoles ? listPermissions() : Promise.resolve([]),
-  ]);
+  const [settings, offices, roles, permissions, grants, members] =
+    await Promise.all([
+      getSettings(),
+      listOffices(),
+      canSeeRoles ? listRoles() : Promise.resolve([]),
+      canSeeRoles ? listPermissions() : Promise.resolve([]),
+      canSeeRoles
+        ? listGrantRequests()
+        : Promise.resolve({ rows: [], error: false }),
+      // Only needed to populate the request form's person picker.
+      canManageRoles ? listMembers() : Promise.resolve({ rows: [] }),
+    ]);
 
   if (!settings) {
     return (
@@ -91,7 +100,21 @@ export default async function SettingsPage({
       />
 
       {canSeeRoles ? (
-        <RolesMatrix roles={roles} permissions={permissions} />
+        <>
+          <RoleGrants
+            org={org}
+            requests={grants.rows}
+            members={members.rows}
+            roles={roles.map((r) => ({
+              id: r.id,
+              name: r.name,
+              high_risk: r.high_risk,
+            }))}
+            currentUserId={session.userId}
+            canManage={canManageRoles}
+          />
+          <RolesMatrix roles={roles} permissions={permissions} />
+        </>
       ) : null}
     </div>
   );

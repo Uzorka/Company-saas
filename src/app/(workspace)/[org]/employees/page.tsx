@@ -9,8 +9,10 @@ import {
   listPositions,
   type EmployeeStatus,
 } from "@/lib/employees/queries";
+import { listUnlinkedEmployees } from "@/lib/people/queries";
 import { EmployeeDirectory } from "./directory";
 import { CreateEmployee } from "./create-employee";
+import { InviteUser } from "./invite-user";
 
 export const metadata = { title: "Employees" };
 
@@ -53,9 +55,17 @@ export default async function EmployeesPage({
   }
 
   const mayCreate = can(session, "employees.create");
+  // Creating a login is a higher bar than creating a record: it needs the
+  // permission to add people *and* the permission to place them in a role.
+  // The action checks both again on the server; this only decides the button.
+  const mayInvite = mayCreate && can(session, "roles.manage");
 
-  const [{ rows, error }, { rows: departments }, { rows: positions }] =
-    await Promise.all([
+  const [
+    { rows, error },
+    { rows: departments },
+    { rows: positions },
+    { rows: unlinked },
+  ] = await Promise.all([
       listEmployees({
         search: q,
         departmentId: department,
@@ -64,6 +74,10 @@ export default async function EmployeesPage({
       listDepartments(),
       // Only needed to populate the create form's position picker.
       mayCreate ? listPositions() : Promise.resolve({ rows: [], error: false }),
+      // Only needed to populate the invite form's "link to employee" picker.
+      mayInvite
+        ? listUnlinkedEmployees()
+        : Promise.resolve({ rows: [], error: false }),
     ]);
 
   if (error) {
@@ -83,14 +97,25 @@ export default async function EmployeesPage({
       filters={{ q: q ?? "", department: department ?? "", status: status ?? "" }}
       createAction={
         mayCreate ? (
-          <CreateEmployee
-            org={org}
-            departments={departments.map((d) => ({ id: d.id, label: d.name }))}
-            positions={positions.map((p) => ({
-              id: p.id,
-              label: p.grade ? `${p.title} · ${p.grade}` : p.title,
-            }))}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {mayInvite ? (
+              <InviteUser
+                org={org}
+                employees={unlinked.map((e) => ({
+                  id: e.id,
+                  label: `${e.first_name} ${e.last_name} · ${e.employee_no}`,
+                }))}
+              />
+            ) : null}
+            <CreateEmployee
+              org={org}
+              departments={departments.map((d) => ({ id: d.id, label: d.name }))}
+              positions={positions.map((p) => ({
+                id: p.id,
+                label: p.grade ? `${p.title} · ${p.grade}` : p.title,
+              }))}
+            />
+          </div>
         ) : null
       }
     />

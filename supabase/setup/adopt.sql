@@ -263,6 +263,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0032_public_form_rate_limit';
   end if;
 
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'enforce_high_risk_user_role') then
+    insert into schema_migrations (version) values ('0033_high_risk_grants') on conflict do nothing;
+    raise notice 'present, recorded: %', '0033_high_risk_grants';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0033_high_risk_grants';
+  end if;
+
 end
 $adopt$;
 
