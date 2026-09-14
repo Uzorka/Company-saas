@@ -36,3 +36,39 @@ Responsive QA at the five designed widths (375, 430, 768, 1280, 1560) asserting 
 
 ## Gate
 Lint, `tsc --noEmit`, unit, integration and a production build after every phase. No phase closes with a critical failure.
+
+
+## The browser gates (Phase 10)
+
+Two checks drive a real browser against the production build. They exist
+because three separate bugs shipped through every other gate:
+
+| Bug | What every other check said |
+|---|---|
+| `text-white` deleted from every primary button by the class merger (D80) | typecheck, lint and build all passed; the class was correct in the source |
+| The product rendered in the system font for nine phases (D84) | the build passed and the fonts downloaded; nothing was applied |
+| A contrast regression reintroduced within an hour of being fixed (D83) | nothing in the gate looked at colour |
+
+None of them were visible to reading the code. All of them were obvious the
+moment something rendered the page and measured it.
+
+### `npm run test:a11y`
+Builds, serves, audits, stops. Seven public pages at 400px and 1280px against
+WCAG 2.1 AA via axe-core — fourteen pairs. Fails if a violation is found **or
+if any pair could not be checked**: a page that errored silently would
+otherwise read as a pass, which is the same false-green shape as D45 and D50.
+
+### `npm run test:e2e`
+Twenty-one checks in a real browser: the public journey and its navigation,
+the sign-in form's fields, the routes that used to 404, and — asserted rather
+than eyeballed — that nothing scrolls sideways at 390px on any public page.
+
+It also carries two explicit regression guards, each naming the bug it exists
+for: the computed body font must be Plus Jakarta Sans (D84), and the primary
+button's label must compute to white (D80).
+
+### What they do not cover
+Everything behind the login. Both need a signed-in session against a live
+Supabase project, which the build environment cannot reach. That gap is named
+in `BACKLOG.md` rather than hidden behind a suite that tests only what happens
+to be reachable.

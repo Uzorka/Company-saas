@@ -38,7 +38,15 @@ export function BrandMark({
   }
 
   return (
-    <span className={cn("flex items-baseline gap-1.5", className)} aria-label="CHF Heron Nigeria">
+    // role="img" with a label, because the two spans below are decorative
+    // fragments of a logotype rather than text to be read out letter by letter.
+    // aria-label on a bare <span> is prohibited ARIA — it has no role for the
+    // label to attach to, so assistive technology is entitled to ignore it.
+    <span
+      role="img"
+      aria-label="CHF Heron Nigeria"
+      className={cn("flex items-baseline gap-1.5", className)}
+    >
       <span
         className={cn(
           "font-[family-name:var(--font-display)] font-extrabold tracking-tight text-brand-600",

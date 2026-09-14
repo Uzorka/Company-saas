@@ -10,12 +10,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run test:db && npm run test:parity && npm run build && npm run test:a11y",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run test:db && npm run test:parity && npm run build && npm run test:a11y && npm run test:e2e",
     "db:start": "scripts/db-start.sh",
     "db:reset": "scripts/db-test.sh --seed",
     "test:db": "scripts/db-rls-test.sh",
     "test:parity": "node --experimental-strip-types --no-warnings scripts/check-geofence-parity.mjs",
-    "test:a11y": "scripts/a11y-test.sh"
+    "test:a11y": "scripts/a11y-test.sh",
+    "test:e2e": "scripts/e2e-test.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

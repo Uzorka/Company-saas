@@ -72,6 +72,30 @@ applicants. Reversible with `demo-seed-remove.sql`.
 **The notification bell is removed** until a notifications screen and table
 exist.
 
+## Found in Phase 10, deliberately not fixed yet
+
+**`middleware.ts` is deprecated in Next 16.** The build warns: *"The
+'middleware' file convention is deprecated. Please use 'proxy' instead."* It
+still works. Not renamed, because middleware is what refreshes the session
+cookie and keeps unauthenticated callers out of the workspace — and a rename
+that silently stopped being picked up would disable both without failing a
+build or a test. It needs the migration guide read first, then the E2E suite
+extended to prove the gate still bites, then the rename. Deprecation is a
+deadline, not an emergency.
+
+**The workspace screens are not covered by the accessibility or E2E gates.**
+Both need a signed-in session against a live Supabase project, which the build
+environment cannot reach. The public site, the careers pages and the sign-in
+screens are covered at two widths; everything behind the login is covered only
+by the database suite and unit tests. Closing this needs either a seeded test
+project reachable from CI, or a stubbed auth mode — the second is a security
+surface of its own and should not be added casually.
+
+**Recharts is not in the measured bundle.** The reports page renders its setup
+screen without Supabase, so the charts never mount during measurement. The
+~150kB figure for that route is the shell, not the charts. Measure it again
+against a real project before treating reports as a light page.
+
 ## Design gaps — no screen exists
 - Notifications centre (a bell with a count appears in the shell; no screen designed).
 - Announcements composer (required by the brief; the design shows announcements only as dashboard content).

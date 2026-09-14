@@ -11,17 +11,26 @@ import "./globals.css";
  * coordinates, timestamps, currency, accuracy. Their site specifies no
  * monospace, and a tabular figure is a product concern rather than a brand one.
  */
+// The weights the product actually uses: 400 body, 500 for the font-medium
+// call sites, 600 for semibold. Nothing uses font-bold.
+//
+// This is accuracy, not a saving. Both tenant families ship from next/font as
+// variable fonts — one file per family covering every weight — so the declared
+// list does not change a byte of payload. Measured before and after: 71kB
+// either way. Worth writing down, because trimming a weight list looks like an
+// optimisation and here it is only honesty about what is used.
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans-tenant",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
+// 600 for headings, 800 for the wordmark. Variable font, as above.
 const manrope = Manrope({
   variable: "--font-display-tenant",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["600", "800"],
   display: "swap",
 });
 

@@ -1104,3 +1104,66 @@ structure their own brand description gives — "CHF" in the brand blue with an
 orange accent, a smaller "HERON" beside it — without pretending to be artwork
 nobody here has seen. Supplying the file and pointing `brand.logo.assetPath` at
 it retires the fallback.
+
+## D86 — The browser gates were testing a stale build, and reported a pass — **Accepted**
+The accessibility gate reported "14 page/viewport pairs, 0 violations". It was
+lying, and so was I when I relayed it.
+
+Both browser gates started `next start` on a fixed port, waited for *anything*
+to answer, and ran. When a previous run's server was still holding that port,
+`next start` died with `EADDRINUSE`, the wait loop was satisfied by the stale
+process, and the suite tested a build from an hour earlier. Nothing failed.
+The a11y gate announced zero violations against code it had never loaded.
+
+It surfaced because the E2E suite failed *differently on every run* — the
+typeface check once, the sign-in fields the next. Chasing that as flakiness
+would have been the wrong move: the polling rewrite made it deterministic,
+which is what made the real cause visible in the server log.
+
+Run against the correct build, the a11y gate immediately found 14 real
+violations: `aria-label` on the new brand mark's bare `<span>`, which is
+prohibited ARIA — there is no role for the label to attach to, so assistive
+technology is entitled to ignore it. `role="img"` fixes it. That violation
+existed for every minute the gate was claiming zero.
+
+`scripts/with-server.sh` now serves both gates and every guard in it maps to
+part of this failure:
+
+* **An ephemeral port from the OS**, not a fixed one. A leaked server cannot
+  collide with a later run, so this class of failure cannot recur even if
+  cleanup fails.
+* **The server must be alive *and* answering.** Either can be true while the
+  other is false, and that combination is precisely what went wrong.
+* **A failure to start is a failed run**, with the server log printed — not a
+  silent fallback to whatever is listening.
+* **`setsid` and a process-group kill**, so the `next-server` child dies with
+  the wrapper. Orphaned children were what held the port.
+
+Verified: three consecutive E2E runs identical, and zero processes left behind.
+
+The general lesson is the one this project keeps relearning. A green check is
+a claim, and a claim needs the same scepticism as the code. D45 and D50 were
+tests that passed for the wrong reason; this is a whole gate passing for the
+wrong reason. The tell was the same both times — a result that did not move
+when it should have.
+
+## D87 — E2E covers what a browser can reach, and says what it cannot — **Accepted**
+Twenty-one checks: the public journey and its navigation, the sign-in form's
+real field names, the routes that used to 404, and — asserted rather than
+eyeballed — that nothing scrolls sideways at 390px on any public page.
+
+Two checks exist purely as regression guards and name the bug they guard:
+the computed body font must be Plus Jakarta Sans (D84), and the primary
+button's label must compute to white (D80). Both bugs were invisible to every
+other check in the gate, and both would return silently.
+
+Every assertion polls to a deadline rather than reading once. A page that has
+responded is not a page that has applied its stylesheet, hydrated its form or
+finished swapping its webfont, and reading too early is how a suite becomes
+flaky — which trains whoever sees it to re-run until green, at which point a
+real regression reads as one more flake.
+
+Nothing behind the login is covered. Both browser gates need a signed-in
+session against a live Supabase project, which the build environment cannot
+reach. That is stated in `BACKLOG.md` and in `TESTING.md` rather than disguised
+by a suite that tests only what happens to be reachable.

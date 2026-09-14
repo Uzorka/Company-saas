@@ -6,7 +6,13 @@ replaced, and five nav items pointed at routes that do not exist. The
 structural repairs (D57-D59), the create paths (D60) and demo data (D64) are
 done; the five missing screens and the invite flow are open — see
 `BACKLOG.md`.
-**Next phase:** Phase 9 — reports, settings and administration.
+**Next phase:** Phase 10 continues — the invite flow, and the two screens the
+design never specified (Documents, Notifications).
+
+`npm run check` is now: lint, typecheck, unit tests, database suite, geofence
+parity, production build, accessibility gate, end-to-end suite. The last two
+drive a real browser against the production build and are the only checks that
+catch a class of bug the others cannot see at all — see D80, D83 and D84.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the
 geofence default is the design's 150m (D33) and the position diagram is a
