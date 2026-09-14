@@ -65,10 +65,9 @@ has not been built.
 **Five screens do not exist**: reports, settings, audit log, documents,
 notifications. They render as "Soon" in the nav.
 
-**No demo data.** `supabase/seed.sql` creates the organization, offices,
-departments, positions, shift patterns, leave types, PAYE bands and roles —
-and no employees, attendance, tasks, leave, payroll or jobs. Every screen is
-empty, and with no create flow there is no way to fill it.
+**Demo data: done** (D64). `supabase/setup/demo-seed.sql` adds 23 fictional
+employees with attendance, tasks, field visits, leave, two payroll runs and
+applicants. Reversible with `demo-seed-remove.sql`.
 
 **The notification bell is removed** until a notifications screen and table
 exist.

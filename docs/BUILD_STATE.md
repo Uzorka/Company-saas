@@ -3,8 +3,9 @@
 **Current phase:** Phase 8 complete. A system review then found that the
 read-side screens shipped without their write paths, the dashboard was never
 replaced, and five nav items pointed at routes that do not exist. The
-structural repairs (D57-D59) and the create paths (D60) are done; the five
-missing screens, the invite flow and demo data are open — see `BACKLOG.md`.
+structural repairs (D57-D59), the create paths (D60) and demo data (D64) are
+done; the five missing screens and the invite flow are open — see
+`BACKLOG.md`.
 **Next phase:** Phase 9 — reports, settings and administration.
 
 Phase 4 proceeded under two stated assumptions rather than waiting: the

@@ -544,3 +544,52 @@ The ledger check reports what it found rather than asserting a count. "28 of
 28" would need editing on every new migration, and a check that goes stale
 silently is worse than one that states the number. Completeness is proved by
 the checks that name actual objects.
+
+## D64 — Demo data is generated, reversible, and never hand-costed — **Accepted**
+23 fictional employees with 437 attendance records, 10 tasks, 3 field visits,
+4 leave requests at four points in the chain, two payroll runs and 9
+applicants. `supabase/seed.sql` had always deferred this — "inventing people
+now would mean inventing their attendance too" — and the modules now exist to
+give it meaning.
+
+Four things shape it.
+
+**The payroll figures are not written down.** Both runs are costed by
+`calculate_payroll()`, the same function the application calls, with the
+request claims set the way the access token hook stamps them. Hand-written
+numbers would make the tax engine look correct without ever running it; as it
+is, the demo payslips show real progressive PAYE (18.6% at ₦610k rising to
+20.8% at ₦2.4m), pension at 8% and NHF at 2.5%.
+
+**Attendance is generated from a hash of (employee, day)**, not listed. That
+keeps it current whenever the file is run, and gives each person a stable
+character — one is reliably early, another often late — instead of noise that
+looks identical for everyone. Roughly 5% of weekdays have no record at all,
+because an absence in this product is the absence of a row.
+
+**No accounts, no passwords.** `employees.user_id` stays null, which the
+schema supports. Nothing writes to `auth.users`: creating sign-in credentials
+from a SQL file is how test passwords reach production. The consequence is
+that `department_heads`, which points at a user, names the one real account.
+
+**Every row has a fixed id in a reserved range**, so the file is idempotent and
+`demo-seed-remove.sql` can match on identity rather than guessing from names
+or dates. Anything created through the app has a random id and is never
+touched.
+
+Two bugs surfaced only because the file was run twice rather than once.
+`calculate_payroll()` moves a period from draft to `processing`, so the
+publish step guarded on `status = 'draft'` never fired, and the re-run then
+recosted a period whose lines already had payslips pointing at them. The guard
+is now the absence of lines, which is what "not yet costed" actually means.
+
+The teardown disables `payslips_immutable` and `payroll_run_lines_locked` for
+the length of its transaction. That is a real trade and it is stated in the
+file: an issued payslip is a document, and nothing reaching the database
+through the application may withdraw one. This script is not the application —
+it runs as the table owner, deletes only ids it wrote itself, and re-enables
+both triggers in the same transaction, so a failure rolls back the data and
+the triggers together. Verified: seed, remove, re-seed, remove, and remove
+again on a clean database, with the triggers confirmed re-enabled and the
+configuration — departments, positions, leave types, PAYE bands, roles, the
+real account — untouched at 681 rows removed.
