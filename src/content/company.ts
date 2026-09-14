@@ -34,12 +34,14 @@
  *
  * SOURCING
  *
- * chfheron.com is unreachable from the build environment (the egress proxy
- * blocks it, as it blocks supabase.com and vercel.app). The business facts
- * below come from the company's own public listings and search results, not
- * from the site itself, so every one of them is marked with how confident it
- * is. Anything marked CONFIRM must be checked against chfheron.com before
- * this is shown to the client. See docs/BACKLOG.md.
+ * chfheron.com is unreachable from the build environment, so these facts come
+ * from a structured extract of the site supplied by the client on 2026-09-14.
+ * docs/reference/chfheron-brand.md records what it verified, what it corrected,
+ * and what it deliberately leaves out.
+ *
+ * That extract replaced an earlier set of guesses taken from business
+ * directories. One was wrong: a second office in Apapa that the company does
+ * not publish. It is gone. Directory data is a starting point, not a source.
  */
 
 export type Leader = { name: string; role: string; bio?: string };
@@ -49,6 +51,12 @@ export type Office = { name: string; address: string };
 export const company = {
   /** Shown in the header, footer and page titles. */
   name: "CHF Heron Nigeria",
+
+  /** The full form, for the footer and anywhere the legal entity is named. */
+  legalName: "CHF Heron Nigeria Ltd",
+
+  /** From the company's own About page. Stable, unlike an anniversary count. */
+  foundedYear: 1989,
 
   /** The workspace code employees type at sign-in. Matches the seeded tenant. */
   workspaceCode: "chfheron",
@@ -71,38 +79,42 @@ export const company = {
    * sharper about scale or brand relationships is the client's claim to make
    * in their own words, not ours to assert for them.
    */
-  tagline: "Consumer goods distribution in Nigeria.",
+  tagline: "Quality household, beauty and food brands, across Nigeria.",
 
-  heroHeading: "From port to shelf, across Nigeria",
+  /** The company's own homepage headline. Theirs, not ours. */
+  heroHeading: "Bringing quality to every Nigerian home",
   heroBody:
-    "A full-service distributor of fast-moving consumer goods — sourcing, warehousing, logistics, sales and in-store execution handled end to end.",
+    "Distributing international household, beauty, personal-care and food brands in Nigeria since 1989 — and selling them direct through our online store.",
 
   /**
-   * CONFIRM. Drawn from the company's public description of itself as a
-   * full-service FMCG distributor managing the whole value chain. The four
-   * lines below are that description split into services; the wording is
-   * ours. Check it against chfheron.com/services before the pitch.
+   * Grounded in the company's own site. The earlier version described a generic
+   * FMCG distributor and was invented.
+   *
+   * Note what is *not* claimed: not "exclusive" distribution, which the source
+   * extract explicitly could not verify, and no product count, because the
+   * company's own pages disagree with each other about it (1,000+ on the
+   * homepage, 606 in the shop). See docs/reference/chfheron-brand.md.
    */
   services: [
     {
-      title: "Distribution",
+      title: "Brand distribution",
       summary:
-        "Nationwide route-to-market for fast-moving consumer goods, from domestic and international suppliers to retail.",
+        "Bringing international household, beauty, personal-care and food brands to the Nigerian market — among them Badia, Brabantia, Sebamed, Vileda and Kikkoman.",
     },
     {
-      title: "Warehousing and logistics",
+      title: "Nationwide reach",
       summary:
-        "Storage and onward movement of stock, coordinated from the Lagos operation.",
+        "We deliver to all 36 states, with pickup available in Lagos where an order qualifies.",
     },
     {
-      title: "Sales and merchandising",
+      title: "Online store",
       summary:
-        "Field teams covering the trade — orders, shelf presence and in-store execution.",
+        "Our full range is available to order directly, across kitchen and dining, food and grocery, beauty and personal care, cleaning and laundry.",
     },
     {
-      title: "Brand representation",
+      title: "Established since 1989",
       summary:
-        "Acting as in-market partner for consumer brands entering or growing in Nigeria.",
+        "Built on transparent dealings, dependable supply and a product range that has grown with what customers ask for.",
     },
   ] as Service[],
 
@@ -118,17 +130,16 @@ export const company = {
   leadership: [] as Leader[],
 
   /**
-   * CONFIRM. From public business directory listings, not from chfheron.com.
-   * Directory data goes stale — verify both before this is shown to anyone.
+   * One office, from the company's own contact page.
+   *
+   * An Apapa address used to sit above this, taken from a business directory.
+   * The company does not publish it, so it is gone — a plausible address on a
+   * contact page is something people act on.
    */
   offices: [
     {
-      name: "Apapa, Lagos",
-      address: "39 Warehouse Road, off Creek Road, Apapa, Lagos",
-    },
-    {
-      name: "Victoria Island, Lagos",
-      address: "1C Akin Ogunlewe Street, Victoria Island, Lagos",
+      name: "Head office",
+      address: "Plot 1C Akin Ogunlewe Street, Victoria Island, Lagos",
     },
   ] as Office[],
 
@@ -141,8 +152,10 @@ export const company = {
   contact: {
     email: "",
     phone: "",
+    /** The real site, so anyone who lands here is pointed at it. */
+    website: "https://chfheron.com/",
     enquiryNote:
-      "Contact details are not published on this demonstration site. To reach CHF Heron Nigeria, use the details on their own website.",
+      "This is a demonstration, so no enquiry form here reaches CHF Heron Nigeria. Their own website is the way to contact them.",
   },
 
   /** Careers page intro. About this site, not a claim about the business. */

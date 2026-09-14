@@ -18,21 +18,21 @@
 Answered: CHF Heron Nigeria is the real client. This deployment is a pitch
 demonstration, not their commissioned website — see `DECISIONS.md` D56.
 
-**Verify before the demo is shown to CHF Heron.** `chfheron.com` is unreachable
-from the build environment, so the content in `src/content/company.ts` marked
-`CONFIRM` came from public directory listings, not from the company's own site:
-- The four **services** — wording is ours, derived from the company's public
-  description of itself as a full-service FMCG distributor. Check against
-  chfheron.com.
-- Both **office addresses** (Apapa; Victoria Island). Directory data goes stale.
-- The **legal name** as it should appear — "CHF Heron Nigeria", "C.H.F. Heron
-  Nigeria Limited", or their own preferred form.
-- **Founding year and headcount.** Third-party listings say 1989 and ~130 staff.
-  Not published anywhere in the app, because neither is confirmed.
+Resolved 2026-09-14: the client supplied a structured extract of chfheron.com.
+See `docs/reference/chfheron-brand.md`. Name, founding year, headline, business
+description, office address, phone and emails are now taken from the company's
+own pages. The Apapa address previously shown was a directory error and is gone.
 
 **Needs CHF Heron's explicit agreement before it goes on a public URL:**
-- Leadership names, titles and photos — deliberately empty, see D56.
-- Contact email and phone, and whether an enquiry form should reach them.
+- Leadership names, titles and photos. The extract records `leadership: null` —
+  the company publishes none. Still deliberately empty, see D56.
+- Contact email and phone. Both are now known and verified
+  (`social@chfheron.com`, `sales@chfheron.com`, `+234 704 410 2187`) and are
+  still not published here: a demonstration must not collect enquiries meant
+  for them. The contact page links to chfheron.com instead.
+- Partner logos. The brand marks belong to their owners; appearing on CHF
+  Heron's site is not a licence for ours. Brand names as plain text are fine —
+  the company lists them publicly itself.
 - Client and brand logos (permission required from the brand owners, not only
   from CHF Heron).
 - Logo and brand assets (SVG) plus a favicon set.

@@ -13,7 +13,7 @@ export default function ForgotPage() {
       </p>
       <ForgotForm />
       <div className="mt-5 border-t border-border pt-5 text-small">
-        <Link href="/auth/login" className="text-brand-600 hover:underline">
+        <Link href="/auth/login" className="text-brand-600 underline underline-offset-2">
           Back to sign in
         </Link>
       </div>

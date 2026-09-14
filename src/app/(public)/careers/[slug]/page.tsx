@@ -41,7 +41,7 @@ export default async function JobPage({
 
   return (
     <div className="mx-auto max-w-[760px] px-4 py-14 sm:px-6">
-      <Link href="/careers" className="text-small text-brand-600 hover:underline">
+      <Link href="/careers" className="text-small text-brand-600 underline underline-offset-2">
         ← All roles
       </Link>
 

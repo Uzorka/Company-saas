@@ -98,7 +98,7 @@ export default async function PayrollRunPage({
       <div>
         <Link
           href={`/${org}/payroll`}
-          className="text-small text-brand-600 hover:underline"
+          className="text-small text-brand-600 underline underline-offset-2"
         >
           ← All periods
         </Link>

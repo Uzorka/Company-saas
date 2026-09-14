@@ -26,7 +26,7 @@ export default async function LoginPage({
       <LoginForm next={next} />
 
       <div className="mt-5 flex flex-col gap-2 border-t border-border pt-5 text-small">
-        <Link href="/auth/forgot" className="text-brand-600 hover:underline">
+        <Link href="/auth/forgot" className="text-brand-600 underline underline-offset-2">
           Forgot your password?
         </Link>
         <p className="text-text-2">

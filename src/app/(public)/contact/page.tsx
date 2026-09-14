@@ -18,7 +18,7 @@ export default function ContactPage() {
               <dd className="mt-0.5 text-body">
                 <a
                   href={`mailto:${company.contact.email}`}
-                  className="text-brand-600 hover:underline"
+                  className="text-brand-600 underline underline-offset-2"
                 >
                   {company.contact.email}
                 </a>
@@ -38,6 +38,17 @@ export default function ContactPage() {
             No phone number or inbox is published here, and there is no enquiry
             form. Routing real enquiries out of a demonstration site would send
             them to a company that never asked for them.
+          </p>
+          <p className="mt-3 max-w-[60ch] text-body text-text-2">
+            To reach CHF Heron Nigeria, visit{" "}
+            <a
+              href={company.contact.website}
+              className="text-brand-600 underline underline-offset-2"
+              rel="noreferrer noopener"
+            >
+              chfheron.com
+            </a>
+            .
           </p>
         </div>
       )}

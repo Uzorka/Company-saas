@@ -64,7 +64,7 @@ export default async function PayslipsPage({
               can(session, "payroll.view_all") ? (
                 <Link
                   href={`/${org}/payroll`}
-                  className="text-brand-600 hover:underline"
+                  className="text-brand-600 underline underline-offset-2"
                 >
                   Go to payroll
                 </Link>

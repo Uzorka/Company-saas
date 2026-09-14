@@ -22,7 +22,7 @@ export default function ServicesPage() {
           <p className="max-w-[60ch] text-body text-text-2">
             Detail on what we offer is being prepared for this page. To ask
             about a specific service,{" "}
-            <Link href="/contact" className="text-brand-600 hover:underline">
+            <Link href="/contact" className="text-brand-600 underline underline-offset-2">
               get in touch
             </Link>
             .

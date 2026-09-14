@@ -991,3 +991,61 @@ Both findings were contrast, both were real, and neither was visible to any
 check already in the gate. The harness lives in the scratch directory rather
 than the repository for now; wiring it into CI is in `BACKLOG.md`, because a
 one-off audit rots exactly like the verify script did.
+
+## D82 — CHF Heron's own site replaced the directory guesses — **Accepted**
+The client supplied a structured extract of chfheron.com, which the build
+environment cannot reach. `docs/reference/chfheron-brand.md` records it.
+
+It corrected a real error. The Apapa address published on the contact page —
+"39 Warehouse Road, off Creek Road" — came from a business directory and does
+not appear anywhere on the company's own site. It is gone. Victoria Island is
+the only office they publish. A plausible address on a contact page is
+something people act on, which is exactly why a directory is a starting point
+and not a source.
+
+Two other things changed: the founding year (December 1989) moved from
+unpublished to published, because it is now on their own About page rather than
+an aggregator; and the four services, which were invented and described a
+generic FMCG distributor, became what the site actually describes.
+
+What the extract did *not* change is as important. `leadership` is `null` —
+the company publishes no names, so D56 stands unaltered. Contact details are
+now verified and still unpublished: a demonstration must not collect enquiries
+meant for the real company, so the contact page links to chfheron.com instead.
+Partner logos stay out, because appearing on CHF Heron's site is not a licence
+for ours; brand names as plain text are fine, since the company lists them
+itself.
+
+The extract flags contradictions on the company's own pages — 1,000+ products
+on the homepage against 606 in the shop, a 14-day return promise against a
+24–48 hour reporting window, five-day support against seven. None of those are
+reproduced, and "exclusive distributor" is never claimed, because the extract
+could not verify it.
+
+Their primary blue is `#1B4F8C`, which is this product's `brand-600` exactly —
+arrived at independently from the design pack.
+
+## D83 — The accessibility audit is a gate, not an event — **Accepted**
+The audit in D81 found two violations, fixed them, and reached zero. Within the
+same hour, a content change reintroduced two more: the new footer line used the
+muted token at 13px (3.46:1 again), and a link added to the contact page was
+distinguishable from its paragraph by colour alone.
+
+That is the argument. A one-off audit measures a moment; only a gate keeps a
+property, and this one lost the property in under an hour with the fix still
+fresh.
+
+`npm run test:a11y` now builds, serves, audits and stops, and is part of
+`npm run check`. Seven public pages at two widths — 400px and 1280px — against
+WCAG 2.1 AA. Fourteen pairs, zero violations. It fails if any pair could not be
+checked, not only if a violation is found: a page that errored silently would
+otherwise read as a pass, which is the false-green shape of D45 and D50 again.
+
+Fixing the link also fixed six others of the same kind elsewhere in the product
+that axe had not reached, because they are behind a login. Inline links are now
+underlined rather than hover-underlined — hover does not exist on a touchscreen,
+and someone who cannot distinguish the hue has nothing to hover toward.
+
+The workspace screens are still unaudited: they need a signed-in session
+against a real Supabase project, which this environment has no way to provide.
+That gap is named in `BACKLOG.md` rather than hidden behind a lower standard.

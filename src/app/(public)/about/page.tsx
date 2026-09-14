@@ -5,10 +5,35 @@ export const metadata = { title: "About" };
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-content-max px-4 py-14 sm:px-6">
-      <h1 className="text-h1">About {company.name}</h1>
+      <h1 className="text-h1">About {company.legalName}</h1>
       <p className="mt-3 max-w-[65ch] text-body text-text-2">
-        {company.tagline}
+        Founded in {company.foundedYear}, CHF Heron Nigeria distributes
+        international household, beauty, personal-care and food brands across
+        Nigeria, and sells them directly through its online store.
       </p>
+
+      <section className="mt-10">
+        <h2 className="text-h2">What we stand for</h2>
+        {/* The company's own list, from its About page — not a rewrite. */}
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {[
+            "Transparent dealings",
+            "Dependability",
+            "Sincerity",
+            "Fair business conduct",
+            "Product and service quality",
+            "Adapting to customer needs",
+            "Continual improvement",
+          ].map((value) => (
+            <li
+              key={value}
+              className="rounded-lg border border-border bg-surface px-4 py-2.5 text-small"
+            >
+              {value}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {hasContent.leadership ? (
         <section className="mt-12">

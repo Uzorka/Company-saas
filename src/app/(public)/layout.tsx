@@ -62,8 +62,11 @@ export default function PublicLayout({
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-content-max flex-wrap gap-6 px-4 py-8 sm:px-6">
           <div className="min-w-[200px] flex-1">
-            <p className="text-small font-semibold">{company.name}</p>
+            <p className="text-small font-semibold">{company.legalName}</p>
             <p className="mt-1 text-small text-text-2">{company.tagline}</p>
+            <p className="mt-1 text-small text-text-2">
+              Distributing in Nigeria since {company.foundedYear}.
+            </p>
             {/* text-2, not text-3: at 13px the muted token measures 3.46:1 on
                 this surface, under the 4.5:1 minimum. This paragraph is the
                 notice that keeps the whole deployment honest, so it is the
