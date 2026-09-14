@@ -2,6 +2,7 @@ import Link from "next/link";
 import { company } from "@/content/company";
 import { buttonVariants } from "@/components/ui/button";
 import { DemoNotice } from "@/components/demo-notice";
+import { NavProgress } from "@/components/shell/nav-progress";
 
 /**
  * Public site shell. Source: Phase 2 - Public Website.
@@ -24,6 +25,7 @@ export default function PublicLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-bg">
+      <NavProgress />
       <DemoNotice />
 
       <header className="border-b border-border">

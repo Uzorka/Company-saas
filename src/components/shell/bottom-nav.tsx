@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LinkPending } from "./nav-progress";
 import { mobileNav } from "@/lib/navigation";
 
 /**
@@ -41,7 +42,11 @@ export function BottomNav({
               active ? "text-brand-700" : "text-text-3",
             )}
           >
-            <Icon className="size-[18px]" aria-hidden />
+            <span className="relative grid place-items-center">
+              <Icon className="size-[18px]" aria-hidden />
+              {/* Over the icon: on a phone there is no room beside it. */}
+              <LinkPending className="absolute -right-3 top-0" />
+            </span>
             <span className="text-[11px] leading-none">{navItem.label}</span>
           </Link>
         );

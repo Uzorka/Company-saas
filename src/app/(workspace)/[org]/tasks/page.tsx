@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/shell/nav-progress";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
@@ -66,6 +67,7 @@ export default async function TasksPage({
               className={buttonVariants({ variant: "secondary" })}
             >
               Visit review queue
+              <LinkPending />
             </Link>
           ) : null}
           {mayCreate ? (

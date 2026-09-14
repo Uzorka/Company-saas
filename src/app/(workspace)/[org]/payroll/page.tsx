@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/shell/nav-progress";
 import { CreatePeriod } from "./create-period";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -76,6 +77,7 @@ export default async function PayrollPage({
                         {period.pay_date ? ` · pays ${formatDate(period.pay_date)}` : ""}
                       </p>
                     </div>
+                    <LinkPending className="text-text-3" />
                     <StatusPill tone={payrollStatusTone[period.status]}>
                       {payrollStatusLabel[period.status]}
                     </StatusPill>

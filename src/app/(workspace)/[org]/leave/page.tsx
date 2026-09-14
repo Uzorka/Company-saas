@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/shell/nav-progress";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
@@ -84,6 +85,7 @@ export default async function LeavePage({
               className={buttonVariants({ variant: "secondary" })}
             >
               Approval queue
+              <LinkPending />
             </Link>
           ) : null}
           {mayRequest ? (

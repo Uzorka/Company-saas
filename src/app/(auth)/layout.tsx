@@ -1,4 +1,5 @@
 import { DemoNotice } from "@/components/demo-notice";
+import { NavProgress } from "@/components/shell/nav-progress";
 
 /**
  * Auth layout. Identical single column at every width, max 400px, vertically
@@ -14,6 +15,7 @@ export default function AuthLayout({
     // design fixes the card at 400px, and the notice is about the deployment,
     // not about the form.
     <div className="flex min-h-screen flex-col bg-canvas">
+      <NavProgress />
       <DemoNotice />
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-[400px]">

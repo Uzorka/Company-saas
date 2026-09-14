@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import { dialog, duration, ease } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/lib/navigation";
+import { useProgrammaticNav } from "./nav-progress";
 
 /**
  * Command palette. Source: Developer Handoff section 07.
@@ -63,6 +64,7 @@ function PaletteDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const [, navigate] = useProgrammaticNav();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,10 @@ function PaletteDialog({
     const target = results[index];
     if (!target) return;
     onClose();
-    router.push(`${basePath}${target.href}`);
+    // Inside a transition so the top bar lights up: the palette closes
+    // instantly, and without this there is nothing on screen saying the jump
+    // it just started is still running.
+    navigate(() => router.push(`${basePath}${target.href}`));
   }
 
   return (

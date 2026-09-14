@@ -684,3 +684,40 @@ None of this is proof it was the cause of what was reported — the sweep can
 only show which paths were broken, not which one was in the address bar. The
 question of whether the deployment itself is serving the current build is
 separate and still open.
+
+## D69 — Two loading signals, because they answer different questions — **Accepted**
+The route skeletons from D66 only appear once the new route begins rendering.
+Between the click and that moment there was still nothing: the old screen sat
+unchanged, which reads as a dead control and gets clicked again — which is
+exactly how it was reported.
+
+So two signals, not one:
+
+**A spinner on the thing you clicked.** It answers "did *this* land", and it is
+where the eyes already are. In the sidebar it occupies the slot the lock glyph
+uses, so the row never changes width when it appears. On the phone bottom nav
+it sits over the icon, because there is no room beside it.
+
+**A bar across the top.** It answers "is the app doing anything at all", and it
+covers navigations with no obvious control to watch.
+
+Both are driven by Next's `useLinkStatus()`, which is only valid inside a
+`<Link>`. Each link therefore renders a marker component that reports into a
+small external store, and the bar subscribes to it. The store counts rather
+than flags: a prefetch and a click can overlap, and two overlapping navigations
+that both cleared a boolean would hide the bar while one was still running.
+
+The command palette pushes routes programmatically, so `useLinkStatus()` never
+sees it — and that is the slowest kind of jump, the one where the palette has
+already closed and nothing is left on screen. It now runs inside a transition
+that reports into the same store.
+
+The bar is indeterminate on purpose. The server never says how far along a
+navigation is, and a bar that fakes it creeps to 90% and stalls, which teaches
+people to distrust it. Under `prefers-reduced-motion` it stays visible and
+stops moving: the signal matters more than the motion.
+
+Verified in the production build rather than assumed — the keyframes, the
+class and the reduced-motion override are all present in the shipped CSS. A
+silently dropped keyframe would have left a bar that renders and never moves,
+which is worse than no bar, because it looks like the app has frozen.

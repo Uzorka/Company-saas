@@ -8,6 +8,7 @@ import { BottomNav } from "./bottom-nav";
 import { CommandPalette } from "./command-palette";
 import { bottomSheet, duration, ease } from "@/lib/motion";
 import { navByRole, type RoleSlug } from "@/lib/navigation";
+import { NavProgress, LinkPending } from "./nav-progress";
 import type { Permission } from "@/lib/auth/permissions";
 import Link from "next/link";
 
@@ -54,6 +55,8 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-canvas">
+      <NavProgress />
+
       <a href="#main" className="sr-only-focusable">
         Skip to content
       </a>
@@ -132,6 +135,7 @@ export function AppShell({
                         >
                           <Icon className="size-[18px]" aria-hidden />
                           {item.label}
+                          <LinkPending className="ml-auto" />
                         </Link>
                       ) : (
                         <div className="flex h-[44px] items-center gap-2.5 rounded-md px-3 text-small text-text-3">

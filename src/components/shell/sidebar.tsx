@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { duration, ease } from "@/lib/motion";
 import type { NavItem } from "@/lib/navigation";
 import type { Permission } from "@/lib/auth/permissions";
+import { LinkPending } from "./nav-progress";
 
 /**
  * Desktop sidebar. Source: Developer Handoff section 07.
@@ -123,6 +124,8 @@ export function Sidebar({
             >
               <Icon className="size-[18px] shrink-0" aria-hidden />
               {label}
+              {/* Sits where the lock would, so the row never changes width. */}
+              <LinkPending className={cn(collapsed && "hidden")} />
               {!allowed ? (
                 <Lock
                   className={cn("size-3.5 shrink-0", collapsed && "hidden")}

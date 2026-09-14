@@ -5,6 +5,7 @@ import { SetupRequired } from "@/components/states/setup-required";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
 import { navByRole, pickPrimaryRole } from "@/lib/navigation";
 import { Card, CardBody } from "@/components/ui/card";
+import { LinkPending } from "@/components/shell/nav-progress";
 
 export const metadata = { title: "Dashboard" };
 
@@ -76,6 +77,7 @@ export default async function DashboardPage({
                         <Icon className="size-[18px]" aria-hidden />
                       </span>
                       <span className="text-h3">{item.label}</span>
+                      <LinkPending className="ml-auto size-4 text-text-3" />
                     </CardBody>
                   </Card>
                 </Link>

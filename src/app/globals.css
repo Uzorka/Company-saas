@@ -211,3 +211,29 @@
     color: #fff;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Navigation progress.
+
+   Indeterminate: it sweeps rather than fills, because the server never tells
+   us how far along a navigation is. A bar that fakes progress creeps to 90%
+   and stalls, which teaches people to distrust it.
+   --------------------------------------------------------------------------- */
+@keyframes nav-progress {
+  0%   { transform: scaleX(0);    opacity: 1; }
+  50%  { transform: scaleX(0.65); opacity: 1; }
+  100% { transform: scaleX(1);    opacity: 0.4; }
+}
+
+.animate-nav-progress {
+  animation: nav-progress 1.4s var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still visible, just not moving — the signal matters more than the motion. */
+  .animate-nav-progress {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.85;
+  }
+}
