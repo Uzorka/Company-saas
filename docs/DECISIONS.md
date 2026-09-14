@@ -509,3 +509,38 @@ That replica caught a real bug: the first sentinel for 0015 read
 `and` can short-circuit, so it raised wherever the storage schema is absent.
 It now checks `pg_policies`, a catalogue view that is empty rather than
 missing.
+
+## D63 — The verification script now covers the whole product, and the ledger is a migration — **Accepted**
+The live database turned out to be fourteen migrations behind: `install.sql`
+had been run once at Phase 4, when it contained migrations 0001–0015, and
+everything from Phase 5 on — tasks, field visits, leave, payroll, payslips,
+recruitment — had never reached it. The app had been querying tables that do
+not exist.
+
+`verify.sql` did not catch this, because it was written at Phase 4 and only
+ever checked Phase 4's objects. A database missing four modules entirely
+reported all-PASS. That is the failure worth naming: a verification script
+frozen at the moment it was written stops verifying and starts reassuring.
+It now checks the Phase 5–8 tables by name, the 0028 column default, the
+seeded leave types and payroll reference data, the storage policies, and the
+ledger.
+
+Two things came out of extending it.
+
+Its existing "RLS enabled on every public table" check failed — on
+`schema_migrations`, the ledger added in D62. Correct catch: the table was
+created by the bundle with no RLS and no revoke, so PostgREST would have
+exposed it. It now has RLS enabled and forced with no policies, and no grants
+to `anon` or `authenticated`.
+
+And it existed only in the generated bundle, not as a migration, so applying
+migrations directly produced a different schema from pasting `install.sql` —
+which is exactly how the structural audit ends up checking something the live
+database does not have. It is now `0000_schema_migrations.sql`, created
+`if not exists` because the bundle's header must create it before the first
+guard can read it.
+
+The ledger check reports what it found rather than asserting a count. "28 of
+28" would need editing on every new migration, and a check that goes stale
+silently is worse than one that states the number. Completeness is proved by
+the checks that name actual objects.

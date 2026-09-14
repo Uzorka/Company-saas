@@ -164,6 +164,63 @@ with checks as (
         )) -> 'claims' as c
       ) t
     ), false)
+
+  -- === Added after the Phase 4 install was found to be 14 migrations behind ===
+  -- These cover everything built in Phases 5-8. The original checks stopped at
+  -- Phase 4, so a database missing tasks, leave, payroll and recruitment
+  -- entirely still reported all-PASS.
+
+  -- Reports rather than asserts a number: hardcoding "of 28" here means this
+  -- file needs editing every time a migration is added, and a check that goes
+  -- stale silently is worse than one that states what it found. Completeness
+  -- is proved by 16 and 17 below, which name actual objects.
+  union all select 15, 'Migration ledger',
+    coalesce((select count(*)::text || ' recorded, latest ' || max(version)
+      from schema_migrations), 'EMPTY — run adopt.sql then install.sql'),
+    coalesce((select count(*) from schema_migrations), 0) > 0
+
+  union all select 16, 'Phase 5-8 tables present',
+    coalesce(nullif((select string_agg(t, ', ') from unnest(array[
+      'tasks','field_visits','leave_requests','leave_balances',
+      'payroll_periods','payroll_run_lines','payslips','jobs','job_applications'
+    ]) t where to_regclass('public.' || t) is null), ''),
+      'all present'),
+    not exists (select 1 from unnest(array[
+      'tasks','field_visits','leave_requests','leave_balances',
+      'payroll_periods','payroll_run_lines','payslips','jobs','job_applications'
+    ]) t where to_regclass('public.' || t) is null)
+
+  union all select 17, 'Task references are allocated by the database',
+    case when exists (
+      select 1 from pg_attrdef d
+      join pg_class c on c.oid = d.adrelid
+      join pg_attribute a on a.attrelid = c.oid and a.attnum = d.adnum
+      where c.relname = 'tasks' and a.attname = 'reference')
+    then 'default set' else 'MISSING — migration 0028 has not run' end,
+    exists (
+      select 1 from pg_attrdef d
+      join pg_class c on c.oid = d.adrelid
+      join pg_attribute a on a.attrelid = c.oid and a.attnum = d.adnum
+      where c.relname = 'tasks' and a.attname = 'reference')
+
+  union all select 18, 'Leave types seeded',
+    coalesce((select count(*)::text from leave_types), '0') || ' types',
+    coalesce((select count(*) from leave_types), 0) > 0
+
+  union all select 19, 'Payroll reference data seeded',
+    coalesce((select count(*)::text from paye_bands), '0') || ' PAYE bands, ' ||
+    coalesce((select count(*)::text from statutory_rates), '0') || ' statutory rates',
+    coalesce((select count(*) from paye_bands), 0) > 0
+      and coalesce((select count(*) from statutory_rates), 0) > 0
+
+  union all select 20, 'Storage policies installed',
+    coalesce((select count(*)::text from pg_policies where schemaname = 'storage'), '0')
+      || ' policies on storage.objects',
+    (select count(*) from pg_policies where schemaname = 'storage') >= 3
+
+  union all select 21, 'RLS policies across the app',
+    (select count(*) from pg_policies where schemaname = 'public')::text || ' policies',
+    (select count(*) from pg_policies where schemaname = 'public') >= 100
 )
 select
   case when ok then 'PASS' else 'FAIL' end as result,

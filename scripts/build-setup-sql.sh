@@ -41,11 +41,19 @@ out="supabase/setup/install.sql"
 begin;
 
 -- Which migrations this database already has. Created first so the guards
--- below have something to read on a brand-new project.
+-- below have something to read on a brand-new project; migration 0000 creates
+-- it too, idempotently, so applying migrations directly gives the same schema.
+--
+-- Locked down here as well as there, so it is never briefly readable through
+-- the API on a fresh install.
 create table if not exists schema_migrations (
   version    text primary key,
   applied_at timestamptz not null default now()
 );
+
+alter table schema_migrations enable row level security;
+alter table schema_migrations force row level security;
+revoke all on schema_migrations from anon, authenticated;
 
 HEADER
 
@@ -142,6 +150,12 @@ create table if not exists schema_migrations (
   version    text primary key,
   applied_at timestamptz not null default now()
 );
+
+-- Deployment bookkeeping, not application data. Locked down here too, because
+-- this file is the first of the two to run.
+alter table schema_migrations enable row level security;
+alter table schema_migrations force row level security;
+revoke all on schema_migrations from anon, authenticated;
 
 do $adopt$
 begin

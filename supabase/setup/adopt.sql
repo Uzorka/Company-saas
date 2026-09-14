@@ -24,8 +24,21 @@ create table if not exists schema_migrations (
   applied_at timestamptz not null default now()
 );
 
+-- Deployment bookkeeping, not application data. Locked down here too, because
+-- this file is the first of the two to run.
+alter table schema_migrations enable row level security;
+alter table schema_migrations force row level security;
+revoke all on schema_migrations from anon, authenticated;
+
 do $adopt$
 begin
+  if to_regclass('public.if') is not null then
+    insert into schema_migrations (version) values ('0000_schema_migrations') on conflict do nothing;
+    raise notice 'present, recorded: %', '0000_schema_migrations';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0000_schema_migrations';
+  end if;
+
   if to_regclass('public.organizations') is not null then
     insert into schema_migrations (version) values ('0001_organizations') on conflict do nothing;
     raise notice 'present, recorded: %', '0001_organizations';
