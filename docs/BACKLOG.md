@@ -55,14 +55,12 @@ from the build environment, so the content in `src/content/company.ts` marked
 ## Found by the Phase-8 system review — still open
 The structural repairs are done (see `DECISIONS.md` D57-D59). These remain:
 
-**No record can be created through the UI.** Every module is a review-and-
-approve screen with its first step missing. Server actions exist for check in,
-check out, selfie, review visit, set task status, advance/recalculate payroll,
-decide leave, cancel leave and apply for a job. There is no action to create an
-employee, department, position or office; no way to submit a leave request; no
-way to create a task, a payroll period or a job posting. An employee cannot
-request leave; Accounts cannot open a pay run; HR cannot post a vacancy, so
-`/careers` stays empty permanently.
+**Create paths: done** (D60). Employee, department, position, task, leave
+request, payroll period and job can all be created through the UI. Still
+missing: creating an office (attendance settings, which is part of the
+unbuilt settings screen), and inviting an employee to sign in — an employee
+record and a login are separate things in this schema and the invite flow
+has not been built.
 
 **Five screens do not exist**: reports, settings, audit log, documents,
 notifications. They render as "Soon" in the nav.
@@ -73,7 +71,7 @@ and no employees, attendance, tasks, leave, payroll or jobs. Every screen is
 empty, and with no create flow there is no way to fill it.
 
 **The notification bell is removed** until a notifications screen and table
-exist. The "Add employee" button is removed until the create flow exists.
+exist.
 
 ## Design gaps — no screen exists
 - Notifications centre (a bell with a count appears in the shell; no screen designed).

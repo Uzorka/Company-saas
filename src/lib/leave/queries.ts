@@ -86,3 +86,28 @@ export async function listMyBalances(): Promise<BalanceRow[]> {
 
   return (data ?? []) as unknown as BalanceRow[];
 }
+
+export type LeaveTypeRow = {
+  id: string;
+  name: string;
+  paid: boolean;
+  annual_entitlement_days: number | null;
+};
+
+/**
+ * Leave types available to request against.
+ *
+ * Every active type, not only the ones the employee already holds a balance
+ * row for — a first request of the year has no balance yet, and hiding the
+ * type would make it look unavailable.
+ */
+export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("leave_types")
+    .select("id, name, paid, annual_entitlement_days")
+    .eq("active", true)
+    .order("name");
+
+  return (data ?? []) as LeaveTypeRow[];
+}

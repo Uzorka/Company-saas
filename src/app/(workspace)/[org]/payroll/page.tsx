@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CreatePeriod } from "./create-period";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
@@ -44,13 +45,16 @@ export default async function PayrollPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-h1">Payroll</h1>
-        <p className="mt-1 max-w-[68ch] text-body text-text-2">
-          Each period runs draft → processing → review → approved → published →
-          closed. Whoever sends a run for review cannot be the one who approves
-          it, and publishing cannot be undone.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-h1">Payroll</h1>
+          <p className="mt-1 max-w-[68ch] text-body text-text-2">
+            Each period runs draft → processing → review → approved → published
+            → closed. Whoever sends a run for review cannot be the one who
+            approves it, and publishing cannot be undone.
+          </p>
+        </div>
+        {can(session, "payroll.create") ? <CreatePeriod org={org} /> : null}
       </div>
 
       {rows.length === 0 ? (

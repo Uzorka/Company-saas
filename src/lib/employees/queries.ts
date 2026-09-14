@@ -118,3 +118,31 @@ export async function departmentHeadcounts(): Promise<Record<string, number>> {
     return counts;
   }, {});
 }
+
+export type PositionRow = {
+  id: string;
+  title: string;
+  grade: string | null;
+  department_id: string | null;
+  active: boolean;
+};
+
+/**
+ * Positions, for the pickers on the employee and position forms.
+ *
+ * Inactive ones are excluded: they exist so historical records still resolve,
+ * not so someone can be hired into a role that was retired.
+ */
+export async function listPositions(): Promise<{
+  rows: PositionRow[];
+  error: boolean;
+}> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("positions")
+    .select("id, title, grade, department_id, active")
+    .eq("active", true)
+    .order("title");
+
+  return { rows: (data ?? []) as PositionRow[], error: Boolean(error) };
+}

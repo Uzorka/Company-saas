@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { requireOrg } from "@/lib/auth/session";
+import { type FormState, describeWriteError } from "@/lib/forms/result";
 import { requireSession } from "@/lib/auth/session";
 
 /**
@@ -64,4 +66,77 @@ function relay(message: string): string {
   return cleaned.length > 0 && cleaned.length < 200 && /^[A-Z]/.test(cleaned)
     ? cleaned
     : "That couldn't be saved. Nothing has changed — try again.";
+}
+
+
+const periodSchema = z
+  .object({
+    label: z.string().trim().min(1, "Name the period — for example March 2026").max(80),
+    startsOn: z.string().date("Choose a start date"),
+    endsOn: z.string().date("Choose an end date"),
+    payDate: z.string().date().optional().or(z.literal("")),
+  })
+  .refine((value) => value.endsOn >= value.startsOn, {
+    message: "The period cannot end before it starts.",
+    path: ["endsOn"],
+  })
+  .refine(
+    (value) => !value.payDate || value.payDate >= value.startsOn,
+    { message: "The pay date cannot fall before the period starts.", path: ["payDate"] },
+  );
+
+/**
+ * Open a payroll run.
+ *
+ * The period is created empty and in `draft`. It does not calculate anything:
+ * `calculate_payroll()` builds the lines, and it is a separate, deliberate
+ * step. Creating a period and immediately costing it would make an accidental
+ * click look like a payroll.
+ *
+ * Everything after draft — submit, approve, publish, and the rule that the
+ * submitter cannot approve — belongs to `advance_payroll()`.
+ */
+export async function createPayrollPeriod(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const org = String(formData.get("org") ?? "");
+  const parsed = periodSchema.safeParse({
+    label: formData.get("label"),
+    startsOn: formData.get("startsOn"),
+    endsOn: formData.get("endsOn"),
+    payDate: formData.get("payDate") ?? "",
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the details." };
+  }
+
+  const session = await requireOrg(org);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("payroll_periods")
+    .insert({
+      organization_id: session.organizationId,
+      label: parsed.data.label,
+      starts_on: parsed.data.startsOn,
+      ends_on: parsed.data.endsOn,
+      pay_date: parsed.data.payDate || null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return {
+      error: describeWriteError(
+        error?.code,
+        error?.message ?? "",
+        `A payroll period called “${parsed.data.label}” already exists.`,
+      ),
+    };
+  }
+
+  revalidatePath("/[org]/payroll", "page");
+  return { done: true, id: data.id };
 }

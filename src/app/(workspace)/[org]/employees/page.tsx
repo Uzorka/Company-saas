@@ -6,9 +6,11 @@ import { MODULE_ROLES, ROLE_LABELS } from "@/lib/auth/permissions";
 import {
   listEmployees,
   listDepartments,
+  listPositions,
   type EmployeeStatus,
 } from "@/lib/employees/queries";
 import { EmployeeDirectory } from "./directory";
+import { CreateEmployee } from "./create-employee";
 
 export const metadata = { title: "Employees" };
 
@@ -50,14 +52,19 @@ export default async function EmployeesPage({
     );
   }
 
-  const [{ rows, error }, { rows: departments }] = await Promise.all([
-    listEmployees({
-      search: q,
-      departmentId: department,
-      status: status as EmployeeStatus | undefined,
-    }),
-    listDepartments(),
-  ]);
+  const mayCreate = can(session, "employees.create");
+
+  const [{ rows, error }, { rows: departments }, { rows: positions }] =
+    await Promise.all([
+      listEmployees({
+        search: q,
+        departmentId: department,
+        status: status as EmployeeStatus | undefined,
+      }),
+      listDepartments(),
+      // Only needed to populate the create form's position picker.
+      mayCreate ? listPositions() : Promise.resolve({ rows: [], error: false }),
+    ]);
 
   if (error) {
     return (
@@ -74,6 +81,18 @@ export default async function EmployeesPage({
       departments={departments}
       orgSlug={org}
       filters={{ q: q ?? "", department: department ?? "", status: status ?? "" }}
+      createAction={
+        mayCreate ? (
+          <CreateEmployee
+            org={org}
+            departments={departments.map((d) => ({ id: d.id, label: d.name }))}
+            positions={positions.map((p) => ({
+              id: p.id,
+              label: p.grade ? `${p.title} · ${p.grade}` : p.title,
+            }))}
+          />
+        ) : null
+      }
     />
   );
 }

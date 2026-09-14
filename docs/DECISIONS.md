@@ -419,3 +419,58 @@ a figure nobody has computed is not a zero on a card, it is no card. So the
 dashboard is now a role-filtered launcher: the modules this user can open, and
 a plainly labelled list of the ones that are not built. It stops lying without
 inventing statistics to replace the lie.
+
+## D60 — Create paths: forms over the policies that already existed — **Accepted**
+The review found every module was a review-and-approve screen with its first
+step missing. Seven writes were added: employee, department, position, task,
+leave request, payroll period and job.
+
+Almost none of it needed new database work. `employees_insert`,
+`departments_manage`, `positions_manage`, `tasks_insert`,
+`payroll_periods_insert` and `jobs_manage` were all written in Phases 4–8 and
+had never had a caller. That is the useful finding: the security model was
+finished and the product could not use it.
+
+Three rules held throughout:
+
+1. **`organization_id` comes from the verified session, never the form.** A
+   hidden field naming the tenant is a tenant-switching bug waiting to happen.
+   The policies refuse a cross-tenant insert anyway, and there is now a test
+   that names another tenant's id directly and asserts zero rows change.
+
+2. **Nothing re-implements a database rule.** Leave goes through
+   `submit_leave_request()` because the balance check, the working-day count
+   and the two-stage routing have to happen together — `leave_requests` has no
+   insert policy at all, and that stays true. The leave form deliberately does
+   not show a computed day count alongside the dates: it would be a second
+   implementation of `working_days_between()` and the two would drift.
+
+3. **A new row starts in the least privileged state it can.** A payroll period
+   is created in `draft`, never costed — `calculate_payroll()` is a separate,
+   deliberate step, because costing a payroll should not happen as a side
+   effect of naming one. A job is created as a draft unless the author ticks
+   publish, because `jobs_public_read` makes a published row readable by
+   anonymous visitors: publishing is the one action in the workspace that puts
+   text on the public internet, so it is an explicit choice with the
+   consequence written next to it.
+
+One schema change was genuinely needed, as migration 0028: `tasks.reference`
+was `not null` with no default and no trigger, so every insert had to supply
+one. The sequence and `next_task_reference()` had existed since 0016 with
+nothing wired to them. Making it a column default keeps allocation in the
+database, where a client cannot skip it, choose its own, or race another
+writer.
+
+25 new assertions. Three of them were mutation-tested: dropping the permission
+check from `employees_insert`, dropping `created_by = auth.uid()` from
+`tasks_insert`, and reverting 0028 each make the suite fail.
+
+## D61 — The create panel calls the action, rather than reacting to it — **Accepted**
+`CreatePanel` needs to close the slide-over when the row is written. The
+obvious shape — `useActionState` plus an effect watching `state.done` — is
+exactly the pattern `react-hooks/set-state-in-effect` exists to catch, and it
+was flagged. Suppressing the rule was not the fix; it was right.
+
+So the panel calls the action inside a transition and acts on the result in
+the submit handler. Same behaviour, no state set from an effect, and the
+pending flag still comes from React rather than being tracked by hand.

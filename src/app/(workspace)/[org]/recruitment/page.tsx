@@ -9,6 +9,8 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { Avatar } from "@/components/ui/avatar";
 import { BOARD_STAGES, stageLabel, stageTone, type Stage } from "@/lib/recruitment/model";
 import { formatDate } from "@/lib/employees/display";
+import { listDepartments } from "@/lib/employees/queries";
+import { CreateJob } from "./create-job";
 
 export const metadata = { title: "Recruitment" };
 
@@ -48,8 +50,11 @@ export default async function RecruitmentPage({
     );
   }
 
+  const mayPostJobs = can(session, "recruitment.manage_jobs");
+
   const supabase = await createClient();
-  const [{ data: applications, error }, { data: jobs }] = await Promise.all([
+  const [{ data: applications, error }, { data: jobs }, { rows: departments }] =
+    await Promise.all([
     supabase
       .from("job_applications")
       .select("id, first_name, last_name, email, location, stage, created_at, job:jobs(title)")
@@ -58,6 +63,10 @@ export default async function RecruitmentPage({
       .from("jobs")
       .select("id, title, status")
       .order("created_at", { ascending: false }),
+    // Only needed to populate the job form's department picker.
+    mayPostJobs
+      ? listDepartments()
+      : Promise.resolve({ rows: [], error: false }),
   ]);
 
   if (error) {
@@ -74,12 +83,20 @@ export default async function RecruitmentPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-h1">Recruitment</h1>
-        <p className="mt-1 text-body text-text-2">
-          {openJobs} open {openJobs === 1 ? "role" : "roles"} · {rows.length}{" "}
-          {rows.length === 1 ? "applicant" : "applicants"}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-h1">Recruitment</h1>
+          <p className="mt-1 text-body text-text-2">
+            {openJobs} open {openJobs === 1 ? "role" : "roles"} · {rows.length}{" "}
+            {rows.length === 1 ? "applicant" : "applicants"}
+          </p>
+        </div>
+        {mayPostJobs ? (
+          <CreateJob
+            org={org}
+            departments={departments.map((d) => ({ id: d.id, label: d.name }))}
+          />
+        ) : null}
       </div>
 
       {rows.length === 0 ? (

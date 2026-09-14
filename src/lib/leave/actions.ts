@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireSession } from "@/lib/auth/session";
+import { type FormState, humanise as humaniseShared } from "@/lib/forms/result";
 
 /**
  * Leave mutations.
@@ -86,4 +87,61 @@ function humanise(message: string): string {
   return looksIntentional
     ? cleaned
     : "That couldn't be saved. Nothing has changed — try again.";
+}
+
+
+const requestSchema = z
+  .object({
+    leaveTypeId: z.string().uuid("Choose a leave type"),
+    startsOn: z.string().date("Choose a start date"),
+    endsOn: z.string().date("Choose an end date"),
+    reason: z.string().trim().max(2000).optional().or(z.literal("")),
+  })
+  .refine((value) => value.endsOn >= value.startsOn, {
+    message: "The end date cannot be before the start date.",
+    path: ["endsOn"],
+  });
+
+/**
+ * Submit a leave request.
+ *
+ * This is the step that was missing: `decide_leave_request` and
+ * `cancel_leave_request` were both wired up, so managers could approve and
+ * employees could cancel requests that no one could create.
+ *
+ * `leave_requests` has no insert policy by design — the balance check, the
+ * working-day count and the two-stage routing all have to happen together, so
+ * the write goes through `submit_leave_request()`, which owns those rules.
+ * Nothing here re-implements them.
+ */
+export async function requestLeave(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = requestSchema.safeParse({
+    leaveTypeId: formData.get("leaveTypeId"),
+    startsOn: formData.get("startsOn"),
+    endsOn: formData.get("endsOn"),
+    reason: formData.get("reason") ?? "",
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the details." };
+  }
+
+  await requireSession();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("submit_leave_request", {
+    p_leave_type_id: parsed.data.leaveTypeId,
+    p_starts_on: parsed.data.startsOn,
+    p_ends_on: parsed.data.endsOn,
+    p_reason: parsed.data.reason || null,
+    p_document_path: null,
+  });
+
+  if (error) return { error: humaniseShared(error.message) };
+
+  revalidatePath("/[org]/leave", "page");
+  return { done: true };
 }

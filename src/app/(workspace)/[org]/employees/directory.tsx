@@ -31,10 +31,13 @@ export function EmployeeDirectory({
   rows,
   departments,
   filters,
+  createAction,
 }: {
   rows: EmployeeRow[];
   departments: DepartmentRow[];
   orgSlug: string;
+  /** The create panel, rendered by the server page when the caller may add. */
+  createAction?: React.ReactNode;
   filters: { q: string; department: string; status: string };
 }) {
   const router = useRouter();
@@ -156,11 +159,7 @@ export function EmployeeDirectory({
             {isFiltered ? " matching your filters" : ""}
           </p>
         </div>
-        {/*
-          "Add employee" belonged here and rendered as a button with no
-          handler and no form behind it. Removed rather than left looking
-          real. It returns with the create flow — see docs/BACKLOG.md.
-        */}
+        {createAction}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">

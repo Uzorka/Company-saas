@@ -4,7 +4,12 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
 import { PermissionState, ErrorState, EmptyState } from "@/components/states";
 import { MODULE_ROLES, ROLE_LABELS } from "@/lib/auth/permissions";
-import { listMyLeave, listMyBalances } from "@/lib/leave/queries";
+import {
+  listMyLeave,
+  listMyBalances,
+  listLeaveTypes,
+} from "@/lib/leave/queries";
+import { RequestLeave } from "./request-leave";
 import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
@@ -43,9 +48,12 @@ export default async function LeavePage({
     );
   }
 
-  const [{ rows, error }, balances] = await Promise.all([
+  const mayRequest = can(session, "leave.request");
+
+  const [{ rows, error }, balances, leaveTypes] = await Promise.all([
     listMyLeave(),
     listMyBalances(),
+    mayRequest ? listLeaveTypes() : Promise.resolve([]),
   ]);
 
   if (error) {
@@ -69,14 +77,25 @@ export default async function LeavePage({
             Your balance and requests
           </p>
         </div>
-        {canApprove ? (
-          <Link
-            href={`/${org}/leave/approvals`}
-            className={buttonVariants({ variant: "secondary" })}
-          >
-            Approval queue
-          </Link>
-        ) : null}
+        <div className="flex flex-wrap gap-2.5">
+          {canApprove ? (
+            <Link
+              href={`/${org}/leave/approvals`}
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              Approval queue
+            </Link>
+          ) : null}
+          {mayRequest ? (
+            <RequestLeave
+              org={org}
+              leaveTypes={leaveTypes.map((type) => ({
+                id: type.id,
+                label: type.paid ? type.name : `${type.name} (unpaid)`,
+              }))}
+            />
+          ) : null}
+        </div>
       </div>
 
       {balances.length > 0 ? (
