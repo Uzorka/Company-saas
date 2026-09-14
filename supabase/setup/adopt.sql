@@ -256,6 +256,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0031_reports';
   end if;
 
+  if to_regclass('public.public_form_submissions') is not null then
+    insert into schema_migrations (version) values ('0032_public_form_rate_limit') on conflict do nothing;
+    raise notice 'present, recorded: %', '0032_public_form_rate_limit';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0032_public_form_rate_limit';
+  end if;
+
 end
 $adopt$;
 

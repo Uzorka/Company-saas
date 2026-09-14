@@ -927,3 +927,67 @@ that it took three attempts to serve: the page sat under a folder starting with
 an underscore, which the App Router treats as private and never routes, and
 then the middleware redirected the path because it was not public. Neither
 failure produced an error — just a page that was not there.
+
+## D79 — The rate limit that was only a comment — **Accepted**
+`apply_for_job()` carried a header comment listing four guards, the fourth
+being "a simple per-request rate limit, described below". There was no rate
+limit, below or anywhere else. A comment describing a protection that does not
+exist is worse than no comment, because it stops the next reader looking — and
+this is the only unauthenticated write in the product.
+
+Two limits now, enforced inside the function rather than in the server action.
+That distinction is the same one D72 turned on: `anon` holds execute on the
+RPC, so a check in TypeScript would be advice, not a control.
+
+* **Five per source per hour** — one person or script hammering the form. The
+  source key is the first forwarded address, truncated to its network prefix
+  and hashed: enough to recognise a repeat within the hour, not enough to
+  recover an address or follow someone between tenants. A missing header means
+  no key, and the per-source limit simply does not apply — a shared proxy must
+  not hand one visitor everyone else's quota.
+* **Sixty per organization per hour** — a distributed flood that spreads across
+  addresses. Deliberately generous: it exists to stop a database filling up
+  overnight, not to turn away a real hiring rush, and it is what covers the
+  no-key case above.
+
+The ledger has no policies and no grants at all. The structural audit flags any
+organization-owned table with no `current_org_id()` gate, and correctly flagged
+this one; rather than relaxing the rule, the table is named as an exception the
+way the `anon`/`jobs` exception already was — and two new assertions pin it
+down, failing if it ever grows a policy or a grant. Zero policies is a denial,
+not a gap, but only while it stays zero.
+
+Rewriting the function dropped three pieces of the original on the first
+attempt: name normalisation, the upsert on `(job_id, email)`, and the
+stage-history row. The recruitment suite caught all three. The body is now
+reproduced verbatim with the limits around it, and says so.
+
+## D80 — `text-white` was being deleted from every primary button — **Accepted**
+axe found 2.12:1 on the sign-in button: `#131a22` on `#1b4f8c`. Near-black on
+dark blue, on the most important button in the product, for nine phases.
+
+The variant said `text-white`. The rendered class list did not contain it.
+`tailwind-merge` groups classes to resolve conflicts and has to guess which
+group an unfamiliar `text-*` belongs to — and this theme names its font sizes
+`text-body`, `text-small`, `text-h1`. So `text-body` was read as a text
+*colour*, put in the same group as `text-white`, and the earlier one dropped.
+Every primary and destructive button in the app was affected.
+
+`cn()` now registers the type scale as font sizes via `extendTailwindMerge`.
+Five unit tests hold it, including the exact button class string that broke.
+
+Two things worth keeping from this. The class was correct in the source the
+whole time, so reading the code would never have found it — only rendering the
+page and measuring did. And it is invisible to typecheck, lint and build, all
+three of which passed on every commit that shipped it.
+
+## D81 — Accessibility was measured, not asserted — **Accepted**
+axe-core against all seven public pages at WCAG 2.1 AA: seven serious
+violations before, zero after. The other one was the demonstration notice in
+the footer at 3.46:1 — the paragraph that keeps the whole deployment honest was
+the hardest thing on the page to read.
+
+Both findings were contrast, both were real, and neither was visible to any
+check already in the gate. The harness lives in the scratch directory rather
+than the repository for now; wiring it into CI is in `BACKLOG.md`, because a
+one-off audit rots exactly like the verify script did.

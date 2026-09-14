@@ -66,7 +66,14 @@ begin
     where ns.nspname = 'public' and c.relkind = 'r'
       and a.attname = 'organization_id' and a.attnum > 0 and not a.attisdropped
   ) t
-  where not exists (
+  -- One table is named as an exception rather than relaxing the rule, the same
+  -- way the anon/jobs exception is handled below. public_form_submissions is
+  -- the rate-limit ledger: it has NO policies at all, which denies everything,
+  -- and is stricter than gating on the organization rather than weaker. The
+  -- assertions immediately after this one are what keep that exception honest —
+  -- if it ever grows a policy or a grant, they fail.
+  where t.tablename <> 'public_form_submissions'
+  and not exists (
     select 1 from pg_policies p
     where p.schemaname = 'public' and p.tablename = t.tablename
       and (coalesce(p.qual, '') like '%current_org_id()%'
@@ -76,6 +83,22 @@ begin
   perform assert(offender is null,
     coalesce('Every organization-owned table gates on current_org_id() (missing: ' || offender || ')',
              'Every organization-owned table gates on current_org_id()'));
+
+  -- The exception, pinned down. Zero policies and zero grants: written and read
+  -- only by apply_for_job(), which is security definer.
+  select count(*) into n from pg_policies
+  where schemaname = 'public' and tablename = 'public_form_submissions';
+  perform assert(n = 0,
+    'The rate-limit ledger has no policies at all — the exception above is a deny, not a gap');
+
+  select string_agg(distinct grantee || ':' || privilege_type, ', ') into offender
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name = 'public_form_submissions'
+    and grantee in ('anon', 'authenticated', 'service_role');
+  perform assert(offender is null,
+    coalesce('The rate-limit ledger grants nothing to app roles (found: ' || offender || ')',
+             'The rate-limit ledger grants nothing to app roles'));
 
   -- 4. anon reaches exactly one table, and only for reading.
   --

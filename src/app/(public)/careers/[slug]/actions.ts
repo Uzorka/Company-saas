@@ -1,5 +1,7 @@
 "use server";
 
+import { createHash } from "node:crypto";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,8 +17,45 @@ import { createAdminClient } from "@/lib/supabase/admin";
  *      cannot be applied to by anyone who guesses its id.
  *   3. The CV is size- and type-checked server-side and stored in a private
  *      bucket — applicant documents are never public.
- *   4. A simple per-request rate limit, described below.
+ *   4. Rate limits, enforced inside apply_for_job() — five per source per
+ *      hour and sixty per organization per hour (migration 0032). They live in
+ *      the function rather than here because this action is not the only way
+ *      to reach it: anon holds execute on the RPC, so a limit in TypeScript
+ *      would be advice rather than a control.
  */
+
+/**
+ * A stable, non-identifying key for the caller.
+ *
+ * The first hop of the forwarded address, truncated to its network prefix and
+ * then hashed with the anon key as a salt. Enough to recognise the same source
+ * twice within an hour; not enough to recover an address from the stored value,
+ * and not enough to follow someone between organizations.
+ *
+ * Null when no address is available — a shared proxy or a missing header should
+ * not hand one visitor everyone else's quota, so the per-source limit simply
+ * does not apply and the organization ceiling still does.
+ */
+async function sourceKey(): Promise<string | null> {
+  const headerList = await headers();
+  const forwarded =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    headerList.get("x-real-ip")?.trim() ??
+    null;
+
+  if (!forwarded) return null;
+
+  // IPv4 → first three octets; IPv6 → first four groups. A whole household or
+  // office keeps one quota between them, which is the intent.
+  const prefix = forwarded.includes(":")
+    ? forwarded.split(":").slice(0, 4).join(":")
+    : forwarded.split(".").slice(0, 3).join(".");
+
+  return createHash("sha256")
+    .update(`${prefix}|${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""}`)
+    .digest("base64url")
+    .slice(0, 32);
+}
 const applicationSchema = z.object({
   jobId: z.string().uuid(),
   firstName: z.string().trim().min(1, "Enter your first name").max(100),
@@ -81,15 +120,24 @@ export async function submitApplication(
     p_cover_letter: parsed.data.coverLetter || null,
     p_cv_path: null,
     p_source: "careers_site",
+    p_source_key: await sourceKey(),
   });
 
   if (error) {
     const message = error.message.replace(/^ERROR:\s*/i, "").trim();
+    // The rate-limit messages are written for the applicant and tell them to
+    // wait rather than to re-send, so they are worth passing through.
+    const passThrough = [
+      "That role",
+      "Applications",
+      "Too many applications",
+      "We are receiving",
+    ].some((prefix) => message.startsWith(prefix));
+
     return {
-      error:
-        message.startsWith("That role") || message.startsWith("Applications")
-          ? message
-          : "Your application couldn't be sent. Please try again.",
+      error: passThrough
+        ? message
+        : "Your application couldn't be sent. Please try again.",
     };
   }
 

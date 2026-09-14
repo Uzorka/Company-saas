@@ -64,8 +64,12 @@ export default function PublicLayout({
           <div className="min-w-[200px] flex-1">
             <p className="text-small font-semibold">{company.name}</p>
             <p className="mt-1 text-small text-text-2">{company.tagline}</p>
+            {/* text-2, not text-3: at 13px the muted token measures 3.46:1 on
+                this surface, under the 4.5:1 minimum. This paragraph is the
+                notice that keeps the whole deployment honest, so it is the
+                last thing that should be hard to read. */}
             {company.demo.isDemo ? (
-              <p className="mt-3 max-w-[46ch] text-small text-text-3">
+              <p className="mt-3 max-w-[46ch] text-small text-text-2">
                 {company.demo.notice}
               </p>
             ) : null}

@@ -112,3 +112,102 @@ begin
   raise notice '--- reporting assertions passed ---';
 end
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Public form rate limiting.
+--
+-- apply_for_job() carried a comment claiming a rate limit that did not exist.
+-- It exists now, and this is what stops it quietly becoming a comment again.
+--
+-- The form is the only unauthenticated write in the product, so these run as
+-- `anon`, the way a visitor actually reaches it.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  org_a uuid;
+  job_id uuid;
+  n integer;
+  ok boolean;
+begin
+  select * into f from fixture;
+  org_a := f.org_a;
+
+  select id into job_id from jobs
+   where organization_id = org_a and status = 'published'
+   order by created_at limit 1;
+
+  perform assert(job_id is not null, 'There is a published job to apply to');
+
+  -- Five from one source succeed.
+  perform set_config('request.jwt.claims', '{}', true);
+  set local role anon;
+  for n in 1..5 loop
+    perform apply_for_job(job_id, 'Applicant', n::text,
+      'flood' || n || '@example.com', null, null, null, null, 'test', 'source-alpha');
+  end loop;
+  reset role;
+
+  perform assert(
+    (select count(*) from job_applications where email like 'flood%@example.com') = 5,
+    'Five applications from one source are accepted'
+  );
+
+  -- The sixth is refused.
+  ok := true;
+  begin
+    perform set_config('request.jwt.claims', '{}', true);
+    set local role anon;
+    perform apply_for_job(job_id, 'Applicant', '6', 'flood6@example.com',
+      null, null, null, null, 'test', 'source-alpha');
+    reset role;
+    ok := false;
+  exception when check_violation then
+    execute 'reset role';
+  end;
+  perform assert(ok, 'The sixth application from the same source in an hour is refused');
+
+  perform assert(
+    (select count(*) from job_applications where email = 'flood6@example.com') = 0,
+    'The refused application was not written'
+  );
+
+  -- A different source is unaffected: the limit is per source, not a global
+  -- shutter that one abuser can close on everyone.
+  perform set_config('request.jwt.claims', '{}', true);
+  set local role anon;
+  perform apply_for_job(job_id, 'Different', 'Person', 'elsewhere@example.com',
+    null, null, null, null, 'test', 'source-beta');
+  reset role;
+
+  perform assert(
+    (select count(*) from job_applications where email = 'elsewhere@example.com') = 1,
+    'A different source still gets through'
+  );
+
+  -- No source key (a proxy stripping headers) falls back to the organization
+  -- ceiling rather than handing one visitor everyone else's quota.
+  perform set_config('request.jwt.claims', '{}', true);
+  set local role anon;
+  perform apply_for_job(job_id, 'No', 'Headers', 'nokey@example.com',
+    null, null, null, null, 'test', null);
+  reset role;
+  perform assert(
+    (select count(*) from job_applications where email = 'nokey@example.com') = 1,
+    'A submission with no source key is still accepted'
+  );
+
+  -- The ledger is not readable through the API. Someone who could read it
+  -- would learn who has been applying and when.
+  perform assert(
+    denies('{}'::jsonb, 'select count(*) from public_form_submissions', 'anon'),
+    'The rate-limit ledger is unreadable by anon'
+  );
+  perform assert(
+    denies(claims_for(f.u_mgmt, org_a), 'select count(*) from public_form_submissions'),
+    'The rate-limit ledger is unreadable even by Management'
+  );
+
+  raise notice '--- public form rate limit assertions passed ---';
+end
+$$;
