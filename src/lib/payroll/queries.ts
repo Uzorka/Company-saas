@@ -84,10 +84,17 @@ export type PayslipRow = {
 };
 
 /** An employee's own payslips. RLS restricts this to theirs. */
-export async function listMyPayslips(): Promise<{
+export async function listMyPayslips(employeeId: string | null): Promise<{
   rows: PayslipRow[];
   error: string | null;
 }> {
+  // No employee record means no payslips of one's own — which is the case for
+  // an administrator account that was never attached to a person. Return
+  // early rather than letting RLS decide: `payroll.view_all` makes every
+  // payslip in the company readable, so an unfiltered query here would answer
+  // "your payslips" with all 23 of them.
+  if (!employeeId) return { rows: [], error: null };
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("payslips")
@@ -97,10 +104,29 @@ export async function listMyPayslips(): Promise<{
          department_name, basic_salary, gross_pay, paye, pension_employee, nhf,
          other_deductions, total_deductions, net_pay, currency_code)`,
     )
+    .eq("employee_id", employeeId)
     .order("published_at", { ascending: false });
 
   if (error) return { rows: [], error: error.message };
   return { rows: (data ?? []) as unknown as PayslipRow[], error: null };
+}
+
+/**
+ * The employee record behind the signed-in account, if there is one.
+ *
+ * Filtered on user_id rather than read through my_employee_id(), because a
+ * caller holding employees.view_all can see every row and the point here is
+ * to find exactly one.
+ */
+export async function myEmployeeId(userId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("employees")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return data?.id ?? null;
 }
 
 /**

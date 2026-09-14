@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Permission, Role } from "./permissions";
@@ -34,8 +35,13 @@ type HeronClaims = {
 /**
  * The current session, or null. Never throws for an unauthenticated caller —
  * callers that require a session use requireSession().
+ *
+ * Cached for the length of one request. Every page calls this, and so does the
+ * layout wrapping it, so without deduplication a single navigation verified
+ * the token two or three times over — each one a round trip before any of the
+ * page's own data could be fetched.
  */
-export async function getSession(): Promise<Session | null> {
+export const getSession = cache(async function getSession(): Promise<Session | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -51,7 +57,7 @@ export async function getSession(): Promise<Session | null> {
     roles: (claims.roles ?? []) as Role[],
     permissions: new Set((claims.permissions ?? []) as Permission[]),
   };
-}
+});
 
 /**
  * Require a signed-in, org-scoped session. Sends the caller to sign in with a
@@ -74,22 +80,39 @@ export async function requireSession(returnTo?: string): Promise<Session> {
  * means the user typed or was linked to another tenant's URL: send them to the
  * workspace picker, never render the page.
  */
-export async function requireOrg(orgSlug: string): Promise<Session> {
+export const requireOrg = cache(async function requireOrg(
+  orgSlug: string,
+): Promise<Session> {
   const session = await requireSession();
-  const supabase = await createClient();
-
-  const { data: organization } = await supabase
-    .from("organizations")
-    .select("id, slug, name")
-    .eq("slug", orgSlug)
-    .maybeSingle();
+  const organization = await getOrganization(orgSlug);
 
   if (!organization || organization.id !== session.organizationId) {
     redirect("/auth/workspace");
   }
 
   return session;
-}
+});
+
+/**
+ * The organization named in the URL, once per request.
+ *
+ * requireOrg() already fetches this row to check the slug against the token,
+ * and the workspace layout then fetched it again for the name in the sidebar.
+ * Same row, same request, two round trips. Cached on the slug so both callers
+ * share one.
+ */
+export const getOrganization = cache(async function getOrganization(
+  orgSlug: string,
+): Promise<{ id: string; slug: string; name: string } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("organizations")
+    .select("id, slug, name")
+    .eq("slug", orgSlug)
+    .maybeSingle();
+
+  return data ?? null;
+});
 
 /** Does this session hold the permission? Union across all of the user's roles. */
 export function can(session: Session, permission: Permission): boolean {

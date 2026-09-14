@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
-import { requireOrg } from "@/lib/auth/session";
+import { requireOrg, getOrganization } from "@/lib/auth/session";
 import { AppShell } from "@/components/shell/app-shell";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
 import { pickPrimaryRole } from "@/lib/navigation";
@@ -34,19 +34,16 @@ export default async function WorkspaceLayout({
 
   const supabase = await createClient();
 
-  const [{ data: organization }, { data: profile }] =
-    await Promise.all([
-      supabase
-        .from("organizations")
-        .select("name")
-        .eq("id", session.organizationId)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", session.userId)
-        .maybeSingle(),
-    ]);
+  // getOrganization is the same cached lookup requireOrg just used, so this
+  // costs nothing. Only the profile is a new round trip, and it runs alongside.
+  const [organization, { data: profile }] = await Promise.all([
+    getOrganization(org),
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", session.userId)
+      .maybeSingle(),
+  ]);
 
   // A user may hold several roles — the union decides what they can do. The
   // sidebar needs one layout, so it uses the most privileged they hold.

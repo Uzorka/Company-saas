@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { isSupabaseConfigured, MISSING_SUPABASE_MESSAGE } from "./config";
@@ -6,8 +7,12 @@ import { isSupabaseConfigured, MISSING_SUPABASE_MESSAGE } from "./config";
  * Request-scoped server client. Carries the user's JWT, so RLS applies.
  * This is the default on the server — reach for the service-role client only
  * where bypassing RLS is genuinely required.
+ *
+ * Wrapped in React's cache() so one request gets one client rather than one
+ * per call site. A page and its layout each used to build their own, and each
+ * client re-reads cookies and re-establishes its auth state.
  */
-export async function createClient() {
+export const createClient = cache(async function createClient() {
   if (!isSupabaseConfigured()) throw new Error(MISSING_SUPABASE_MESSAGE);
 
   const cookieStore = await cookies();
@@ -33,4 +38,4 @@ export async function createClient() {
       },
     },
   );
-}
+});

@@ -593,3 +593,58 @@ the triggers together. Verified: seed, remove, re-seed, remove, and remove
 again on a clean database, with the triggers confirmed re-enabled and the
 configuration — departments, positions, leave types, PAYE bands, roles, the
 real account — untouched at 681 rows removed.
+
+## D65 — Session and organization are resolved once per request — **Accepted**
+Every screen was slow, and the cause was not query cost: it was round trips.
+
+`requireOrg()` ran in the workspace layout and again in the page inside it.
+Each call verified the JWT through `getClaims()` and issued its own
+`organizations` lookup, and the layout then fetched the same organization row a
+third time for the sidebar name. Each `createClient()` built a fresh client
+that re-read cookies and re-established auth state. None of it was wrong; all
+of it was repeated, and every repeat was a sequential round trip that had to
+finish before the page's own data could start loading.
+
+`createClient`, `getSession` and `requireOrg` are now wrapped in React's
+`cache()`, and a shared `getOrganization()` serves both the slug check and the
+sidebar. One request resolves each of these once. Nothing about the
+authorisation changed — the same token is verified, the same slug is checked
+against it, RLS is untouched — it is verified once instead of three times.
+
+The remaining latency is the count of genuine data round trips, and the
+distance between the Vercel region and the Supabase region. That second one is
+deployment configuration, not code, and is worth checking before optimising
+further: a mismatched pair puts 200-400ms on every single query.
+
+## D66 — The app had no loading state at all — **Accepted**
+There was not one `loading.tsx` in the project. Every navigation is a server
+render, so the browser held the previous screen, unchanged and unmarked, until
+the next one was ready. On a slow connection that is indistinguishable from a
+click that did nothing, which is exactly what it was reported as.
+
+Ten `loading.tsx` files now cover the workspace, each rendering a skeleton
+shaped like the screen it stands in for — rows for a directory, columns for the
+task board, a wide table for a payroll run — so the layout does not jump when
+the real content arrives. The pulse animates one container rather than each
+element, so the skeleton breathes together instead of shimmering out of step,
+and it respects `prefers-reduced-motion`.
+
+## D67 — "Payslips" means your own, and says so when you have none — **Accepted**
+The payslips screen ran an unfiltered query and let RLS decide the scope. For
+an employee that is correct: `payslips_select_own` matches their own row. For
+Management, `payslips_select_all` matches every payslip in the company — so a
+screen headed "Payslips" rendered 23 full payslip documents, one per employee,
+and called them yours.
+
+It now filters on the caller's own employee record explicitly. Where a policy
+is deliberately broad, the query has to say what it actually wants; leaning on
+RLS for scope means the answer changes with the caller's permissions, which is
+right for security and wrong for a heading that says "your".
+
+An account with no employee record now gets a different empty state from an
+employee with no payslips yet. They are not the same situation: one is waiting
+for a payroll run, the other never will be, and telling an administrator "no
+payslips yet" invites them to wait for something that cannot arrive. The
+demo seed also attaches the signed-in account to an employee record, because
+without one every self-scoped screen in the product is empty for the only
+person who can sign in.

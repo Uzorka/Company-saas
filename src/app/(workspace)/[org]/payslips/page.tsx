@@ -2,7 +2,8 @@ import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
 import { PermissionState, ErrorState, EmptyState } from "@/components/states";
-import { listMyPayslips } from "@/lib/payroll/queries";
+import { listMyPayslips, myEmployeeId } from "@/lib/payroll/queries";
+import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { formatMoney } from "@/lib/payroll/model";
 import { formatDate } from "@/lib/employees/display";
@@ -30,7 +31,8 @@ export default async function PayslipsPage({
     return <PermissionState module="Payslips" roles={["Accounts", "Management"]} />;
   }
 
-  const { rows, error } = await listMyPayslips();
+  const employeeId = await myEmployeeId(session.userId);
+  const { rows, error } = await listMyPayslips(employeeId);
 
   if (error) {
     return (
@@ -46,15 +48,35 @@ export default async function PayslipsPage({
       <div className="print:hidden">
         <h1 className="text-h1">Payslips</h1>
         <p className="mt-1 text-body text-text-2">
-          Published payslips. These never change once issued.
+          Your published payslips. These never change once issued.
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState
-          heading="No payslips yet"
-          body="Payslips appear here once a payroll run is published. Nothing is visible before then, even while a run is being prepared."
-        />
+        employeeId === null ? (
+          // Distinct from "no payslips yet": this account is not a person on
+          // the payroll, so there is nothing of its own to show and never will
+          // be. Saying "none yet" would suggest waiting fixes it.
+          <EmptyState
+            heading="This account has no employee record"
+            body="Payslips on this screen are your own. Your sign-in is not attached to a staff record, so there are none to show. Everyone else's figures live on the payroll run itself."
+            action={
+              can(session, "payroll.view_all") ? (
+                <Link
+                  href={`/${org}/payroll`}
+                  className="text-brand-600 hover:underline"
+                >
+                  Go to payroll
+                </Link>
+              ) : undefined
+            }
+          />
+        ) : (
+          <EmptyState
+            heading="No payslips yet"
+            body="Payslips appear here once a payroll run is published. Nothing is visible before then, even while a run is being prepared."
+          />
+        )
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((slip) => (

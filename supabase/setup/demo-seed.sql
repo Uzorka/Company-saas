@@ -113,6 +113,23 @@ begin
                          and pos.title = p.position_title
   on conflict (id) do nothing;
 
+  -- Attach the signed-in account to the Managing Director record.
+  --
+  -- Without this the one real user has no employee row, and every self-scoped
+  -- view is empty for them: no payslip, no leave balance, no attendance, no
+  -- assigned tasks — because my_employee_id() returns null and the policies
+  -- correctly match nothing. The screens were not broken; there was simply
+  -- nobody behind the account.
+  update employees
+  set user_id = v_admin
+  where organization_id = v_org
+    and employee_no = 'CHF-1001'
+    and user_id is null
+    and not exists (
+      select 1 from employees other
+      where other.organization_id = v_org and other.user_id = v_admin
+    );
+
   -- Reporting lines: everyone reports to their department's most senior person.
   update employees e
   set manager_id = head.id
