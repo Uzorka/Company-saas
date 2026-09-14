@@ -75,7 +75,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Leave", "/leave", Plane, "leave.view_all"),
     item("Payroll", "/payroll", Wallet, "payroll.view_all"),
     item("Recruitment", "/recruitment", UserPlus, "recruitment.view"),
-    planned("Reports", "/reports", BarChart3, "reports.management"),
+    item("Reports", "/reports", BarChart3, "reports.management"),
     item("Audit", "/audit", ShieldCheck, "audit.view"),
     item("Settings", "/settings", Settings, "settings.manage"),
   ],
@@ -87,7 +87,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Leave", "/leave", Plane, "leave.view_all"),
     item("Recruitment", "/recruitment", UserPlus, "recruitment.view"),
     planned("Documents", "/documents", Folder, "documents.view"),
-    planned("Reports", "/reports", BarChart3, "reports.hr"),
+    item("Reports", "/reports", BarChart3, "reports.hr"),
     item("Settings", "/settings", Settings),
   ],
   accounts: [
@@ -95,7 +95,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Payroll", "/payroll", Wallet, "payroll.view_all"),
     item("Payslips", "/payslips", Receipt, "payroll.view_all"),
     item("Employees", "/employees", Users, "employees.view_all"),
-    planned("Reports", "/reports", BarChart3, "reports.payroll"),
+    item("Reports", "/reports", BarChart3, "reports.payroll"),
     item("Settings", "/settings", Settings),
   ],
   hod: [
@@ -105,7 +105,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
     item("Tasks", "/tasks", ClipboardList, "tasks.view_department"),
     item("Field visits", "/tasks/visits", MapPin, "tasks.verify_visit"),
     item("Leave", "/leave", Plane, "leave.approve_department"),
-    planned("Reports", "/reports", BarChart3, "reports.department"),
+    item("Reports", "/reports", BarChart3, "reports.department"),
   ],
   employee: [
     item("Dashboard", "/dashboard", LayoutDashboard),

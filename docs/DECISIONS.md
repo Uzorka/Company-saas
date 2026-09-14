@@ -868,3 +868,62 @@ the form asks for decimal degrees.
 A map picker would be kinder and the product has no tile provider — that
 decision is still open (C6, `BACKLOG.md`). A drawn map that was not actually
 positioning anything would be worse than an honest pair of numbers.
+
+## D76 — Reports read through the caller's own RLS — **Accepted**
+Four aggregate functions — headcount, attendance, leave, payroll — and every
+one is SECURITY INVOKER, which is the default and is stated in the migration
+because it is the whole design. An HOD and Management run the identical query
+and get different answers, because their own policies decide which rows the
+aggregate sees. Nothing in the page or the query layer branches on role; the
+page only chooses which *sections* to render, and a section a role cannot see
+would come back empty anyway.
+
+A SECURITY DEFINER report function would have been the easy version and a
+second, weaker copy of the authorisation model — every future report another
+chance to widen access by accident. The test asserts an HOD counts fewer people
+than Management; making `report_headcount()` definer-rights fails it with "4 vs
+4", which is exactly the leak.
+
+Aggregated in SQL rather than by fetching rows and counting in TypeScript.
+Thirty days of attendance for a 500-person company is 15,000 rows to answer a
+question Postgres answers in one.
+
+Two figures are deliberately absent. There is no attendance *rate*, because the
+denominator would need shift patterns and the public holiday calendar, and the
+calendar is still missing (`BACKLOG.md`) — a rate guessed from weekdays would
+look authoritative and be wrong. So the tiles say "% of check-ins", naming the
+denominator they actually have. And payroll reports only *published* runs: a
+run still in progress can still change, and a figure that moves after someone
+has quoted it is worse than one they had to wait for.
+
+## D77 — The chart palette was validated, not chosen — **Accepted**
+`#2a63a0` and `#b06a00`, checked with the validator rather than by eye:
+lightness band, chroma floor, CVD separation (ΔE 21.4 protan / 23.8 tritan),
+normal-vision separation (26.3) and contrast against the surface all pass.
+
+The brand-600 the rest of the product uses **failed** the lightness band as a
+chart fill. It is a UI colour; a mark sitting on white needs to be lighter than
+a button does. That is not something eyeballing would have caught.
+
+No dark variant, because the product is light-mode only (D4). If that changes
+these get re-stepped against the dark surface and re-validated, not flipped.
+
+## D78 — Screenshotting the charts found two defects the build could not — **Accepted**
+Typecheck, lint and build all passed on charts that were unreadable.
+
+Rendering them at 1100px and at 400px showed it: "Late arrivals by day" forced
+every one of thirty date ticks and collapsed into "1 Sept2 Sept3 Sept4 Sept…",
+and "Headcount by department" overlapped its department names into each other
+at phone width.
+
+Both were the wrong *form*, not a styling slip. The time series now lets
+Recharts drop ticks that will not fit. Headcount became a horizontal bar chart,
+which is the standard answer for long category names — every label gets a line
+of its own, at every width, rather than being rotated so the reader tilts their
+head.
+
+The harness that rendered them was temporary and is deleted. Worth recording
+that it took three attempts to serve: the page sat under a folder starting with
+an underscore, which the App Router treats as private and never routes, and
+then the middleware redirected the path because it was not public. Neither
+failure produced an error — just a page that was not there.

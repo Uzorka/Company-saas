@@ -28,6 +28,7 @@ output=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TEST_DB" \
   -f supabase/tests/15_payroll_test.sql \
   -f supabase/tests/16_recruitment_test.sql \
   -f supabase/tests/17_create_paths_test.sql \
+  -f supabase/tests/18_reports_test.sql \
   -f supabase/tests/20_rls_audit.sql 2>&1)
 
 echo "$output" | grep -E '^(NOTICE:\s+)?(PASS|FAIL|ERROR)' | sed 's/^NOTICE:  //' || true
@@ -43,8 +44,8 @@ count=$(echo "$output" | grep -c 'PASS' || true)
 
 # A suite that asserts nothing is not a passing suite. Guard against a silenced
 # log level or a skipped block reporting a false green.
-if [[ "$count" -lt 228 ]]; then
-  echo "RLS suite reported only $count assertions — expected at least 228. Treating as a failure."
+if [[ "$count" -lt 235 ]]; then
+  echo "RLS suite reported only $count assertions — expected at least 235. Treating as a failure."
   exit 1
 fi
 

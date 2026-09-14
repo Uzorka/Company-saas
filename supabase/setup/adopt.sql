@@ -249,6 +249,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0030_settings_scope';
   end if;
 
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = 'report_headcount') then
+    insert into schema_migrations (version) values ('0031_reports') on conflict do nothing;
+    raise notice 'present, recorded: %', '0031_reports';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0031_reports';
+  end if;
+
 end
 $adopt$;
 
