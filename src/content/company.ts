@@ -3,26 +3,43 @@
  *
  * ONE file. The brief is explicit: "Do not hard-code company content across
  * many components." Every public page reads from here, so replacing the
- * placeholders below is a single edit rather than a hunt through components.
+ * values below is a single edit rather than a hunt through components.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * WHY THIS IS MOSTLY PLACEHOLDERS
+ * WHAT THIS DEPLOYMENT IS
  *
- * The design pack contains a complete-looking company: named executives with
- * biographies, a founding year, coverage figures, client logos. All of it is
- * sample content invented to make the mockups feel real.
+ * CHF Heron Nigeria is a real business. This deployment is NOT their website
+ * and was not commissioned by them — it is a demonstration of this product,
+ * built with CHF Heron as the worked example so the pitch shows a real
+ * distribution business rather than "Acme Corp".
  *
- * Publishing invented executives and invented history on a live corporate
- * website would be stating things about a real business — and about named
- * people — that nobody has verified. So the *structure* is built from the
- * design, and the *claims* are left as placeholders that render honestly
- * until someone supplies the real ones.
+ * That distinction is load-bearing, because the deployment is on a public
+ * URL that anyone can reach. So:
  *
- * A section with no content does not render at all. The site is smaller
- * until it is filled in, rather than confidently wrong.
+ *   1. `demo.isDemo` puts a visible notice on every public page. Publishing
+ *      a real company's name and details on a public URL with no notice
+ *      produces something indistinguishable from their official site.
+ *      Set it to false only for a deployment the company has actually asked
+ *      for, on a domain they control.
  *
- * See docs/BACKLOG.md — "Blocking Phase 8".
+ *   2. Only facts the business itself publishes go in here, and only ones
+ *      about the *business*. Nothing invented, and nothing about named
+ *      individuals — see `leadership` below.
+ *
+ * The design pack shipped a complete-looking company: six named executives
+ * with biographies, a founding year, coverage figures, client logos. All of
+ * it was sample content invented to make the mockups feel real, and none of
+ * it is here. See docs/DECISIONS.md D51 and D56.
  * ─────────────────────────────────────────────────────────────────────────
+ *
+ * SOURCING
+ *
+ * chfheron.com is unreachable from the build environment (the egress proxy
+ * blocks it, as it blocks supabase.com and vercel.app). The business facts
+ * below come from the company's own public listings and search results, not
+ * from the site itself, so every one of them is marked with how confident it
+ * is. Anything marked CONFIRM must be checked against chfheron.com before
+ * this is shown to the client. See docs/BACKLOG.md.
  */
 
 export type Leader = { name: string; role: string; bio?: string };
@@ -37,48 +54,98 @@ export const company = {
   workspaceCode: "chfheron",
 
   /**
-   * One sentence on what the business does. Kept factual and general —
-   * anything sharper is a claim the client should make in their own words.
+   * The demonstration notice. See the header comment — this is what keeps a
+   * public deployment from reading as the company's official website.
    */
-  tagline: "Distribution across Nigeria.",
+  demo: {
+    isDemo: true,
+    /** Short form, for the banner. */
+    label: "Demonstration",
+    /** Long form. Says who built it and who did not. */
+    notice:
+      "This is a product demonstration, not an official CHF Heron Nigeria website. It is not operated by or affiliated with CHF Heron Nigeria, and enquiries sent here do not reach them.",
+  },
 
   /**
-   * The hero line. The design's version made specific claims about scale and
-   * brand relationships; those are the client's to assert, not ours.
+   * One sentence on what the business does. General on purpose — anything
+   * sharper about scale or brand relationships is the client's claim to make
+   * in their own words, not ours to assert for them.
    */
-  heroHeading: "Distribution, warehousing and trade marketing",
+  tagline: "Consumer goods distribution in Nigeria.",
+
+  heroHeading: "From port to shelf, across Nigeria",
   heroBody:
-    "We move goods from port to shelf. This site is being prepared — the sections below fill in as content is supplied.",
+    "A full-service distributor of fast-moving consumer goods — sourcing, warehousing, logistics, sales and in-store execution handled end to end.",
 
   /**
-   * Everything from here down is empty on purpose.
-   *
-   * Fill an array and its section appears. Leave it empty and the section is
-   * omitted entirely, which is why the site never shows "Lorem ipsum" or an
-   * invented executive.
+   * CONFIRM. Drawn from the company's public description of itself as a
+   * full-service FMCG distributor managing the whole value chain. The four
+   * lines below are that description split into services; the wording is
+   * ours. Check it against chfheron.com/services before the pitch.
    */
-
-  /** e.g. { title: "Warehousing", summary: "…" } */
-  services: [] as Service[],
+  services: [
+    {
+      title: "Distribution",
+      summary:
+        "Nationwide route-to-market for fast-moving consumer goods, from domestic and international suppliers to retail.",
+    },
+    {
+      title: "Warehousing and logistics",
+      summary:
+        "Storage and onward movement of stock, coordinated from the Lagos operation.",
+    },
+    {
+      title: "Sales and merchandising",
+      summary:
+        "Field teams covering the trade — orders, shelf presence and in-store execution.",
+    },
+    {
+      title: "Brand representation",
+      summary:
+        "Acting as in-market partner for consumer brands entering or growing in Nigeria.",
+    },
+  ] as Service[],
 
   /**
-   * Real people only. An invented name on a leadership page is a claim about
-   * a person who does not exist, attached to a real company.
+   * Empty on purpose, and it should stay empty until CHF Heron says otherwise.
+   *
+   * Real names and job titles for their executives are findable online, but
+   * putting them on an unaffiliated public demo publishes identifiable people
+   * on a site they have never agreed to appear on. An invented name is a lie;
+   * a real one taken without asking is worse. The page renders without this
+   * section, and a leadership grid is not what the pitch turns on.
    */
   leadership: [] as Leader[],
 
-  /** Real addresses only — these appear on a contact page people may act on. */
-  offices: [] as Office[],
+  /**
+   * CONFIRM. From public business directory listings, not from chfheron.com.
+   * Directory data goes stale — verify both before this is shown to anyone.
+   */
+  offices: [
+    {
+      name: "Apapa, Lagos",
+      address: "39 Warehouse Road, off Creek Road, Apapa, Lagos",
+    },
+    {
+      name: "Victoria Island, Lagos",
+      address: "1C Akin Ogunlewe Street, Victoria Island, Lagos",
+    },
+  ] as Office[],
 
-  /** Optional. Omitted from the contact page when blank. */
+  /**
+   * Left blank deliberately. A demonstration site must not route enquiries to
+   * the real company's switchboard or inbox: they did not ask for the traffic,
+   * and a stale directory number would send callers somewhere else entirely.
+   * Fill these in only for a deployment CHF Heron has commissioned.
+   */
   contact: {
     email: "",
     phone: "",
     enquiryNote:
-      "Send us a message and we will route it to the right desk.",
+      "Contact details are not published on this demonstration site. To reach CHF Heron Nigeria, use the details on their own website.",
   },
 
-  /** Careers page intro. Safe to state — it is about this site, not the business. */
+  /** Careers page intro. About this site, not a claim about the business. */
   careersIntro:
     "Open roles are listed below. Applying takes a few minutes and you do not need an account.",
 

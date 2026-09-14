@@ -15,10 +15,28 @@
 - Confirmation of the leave policy (Annual 20d at 1.67/mo, Sick 10d with a certificate at 3+ days, Compassionate 5d, Maternity 16 weeks, Unpaid uncapped).
 
 ## Blocking Phase 8
-- Is *CHF Heron Nigeria* the real client, or design placeholder content?
-- Real company copy: legal name, registered details, services, leadership names/titles/photos, office addresses, client logos (with permission), contact desks.
+Answered: CHF Heron Nigeria is the real client. This deployment is a pitch
+demonstration, not their commissioned website — see `DECISIONS.md` D56.
+
+**Verify before the demo is shown to CHF Heron.** `chfheron.com` is unreachable
+from the build environment, so the content in `src/content/company.ts` marked
+`CONFIRM` came from public directory listings, not from the company's own site:
+- The four **services** — wording is ours, derived from the company's public
+  description of itself as a full-service FMCG distributor. Check against
+  chfheron.com.
+- Both **office addresses** (Apapa; Victoria Island). Directory data goes stale.
+- The **legal name** as it should appear — "CHF Heron Nigeria", "C.H.F. Heron
+  Nigeria Limited", or their own preferred form.
+- **Founding year and headcount.** Third-party listings say 1989 and ~130 staff.
+  Not published anywhere in the app, because neither is confirmed.
+
+**Needs CHF Heron's explicit agreement before it goes on a public URL:**
+- Leadership names, titles and photos — deliberately empty, see D56.
+- Contact email and phone, and whether an enquiry form should reach them.
+- Client and brand logos (permission required from the brand owners, not only
+  from CHF Heron).
 - Logo and brand assets (SVG) plus a favicon set.
-- Production domain(s).
+- Production domain(s), and whether `company.demo.isDemo` should be turned off.
 
 ## Needed before payroll runs for real
 - **Confirm the statutory rates and PAYE bands.** The seeded values are the

@@ -35,9 +35,9 @@ export default function ContactPage() {
       ) : (
         <div className="mt-8 rounded-xl border border-border bg-surface p-6">
           <p className="max-w-[60ch] text-body text-text-2">
-            Contact details are being confirmed and will appear here. The
-            enquiry form arrives alongside them — a form that goes nowhere is
-            worse than no form.
+            No phone number or inbox is published here, and there is no enquiry
+            form. Routing real enquiries out of a demonstration site would send
+            them to a company that never asked for them.
           </p>
         </div>
       )}

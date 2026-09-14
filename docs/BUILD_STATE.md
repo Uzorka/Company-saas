@@ -121,6 +121,12 @@ Phase 8: public `/`, `/about`, `/services`, `/careers`, `/careers/[slug]`,
 - Rejected and withdrawn stay on the board and stay searchable.
 - **A single content layer** at `src/content/company.ts` drives every public
   page, per the brief's rule against hard-coded content.
+- **The deployment says it is a demonstration.** CHF Heron is a real client
+  and the demo carries their real name, so `<DemoNotice />` renders on the
+  public site and the sign-in screens, stating the site is not operated by or
+  affiliated with them. Leadership and contact details are deliberately blank;
+  services and offices are marked `CONFIRM` pending a check against
+  chfheron.com. See `DECISIONS.md` D56 and `BACKLOG.md`.
 
 ### Phase 7 — payroll and payslips
 - **Three migrations.** `0022_payroll` (rates, bands, components, periods, run

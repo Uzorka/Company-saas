@@ -335,3 +335,44 @@ Broadened from two to include `no_data_found` and `unique_violation` — the
 other classes our functions raise deliberately. Deliberately not wider: a
 catch-all would let a typo or a dropped function read as a successful
 refusal, which is the same false-pass problem as D45 and D50 in a new place.
+
+## D56 — The demo carries CHF Heron's real name, and says so on every page — **Accepted**
+CHF Heron Nigeria is a real client, and the product is being pitched *to* them
+using their own business as the worked example. That is a better demo than
+"Acme Corp" — a distribution business with warehouses, field reps and a
+payroll is exactly what this product is for.
+
+It also creates a problem D51 did not have. The deployment is on a public URL.
+A public page carrying a real company's name, services and addresses, with no
+notice, is indistinguishable from that company's official website — and CHF
+Heron has not commissioned, reviewed or approved it.
+
+So three rules now hold together:
+
+1. **`company.demo.isDemo` renders a notice on every publicly reachable
+   surface** — the public site and the sign-in screens — stating that this is
+   a product demonstration, not operated by or affiliated with CHF Heron, and
+   that enquiries sent here do not reach them. Setting the flag to false is
+   the single switch for a deployment the client has actually asked for on a
+   domain they control.
+
+2. **Only business facts the company itself publishes, and nothing about named
+   individuals.** Real executive names and titles are findable online. They
+   stay out: publishing identifiable people on an unaffiliated site is worse
+   than the invented names D51 refused, not better, because the harm lands on
+   someone real. `leadership` stays empty and the About page says why.
+
+3. **No contact route.** Email and phone are blank and there is no enquiry
+   form. A demo that funnels real enquiries to the client's switchboard sends
+   them traffic they never agreed to; a stale directory number sends callers
+   to a stranger.
+
+The services and offices that *are* published came from public directory
+listings and search results, not from chfheron.com — the build environment
+cannot reach it. Each is marked `CONFIRM` in `src/content/company.ts` and
+listed in `BACKLOG.md`. Directory data goes stale, and a wrong address in a
+pitch is worse than no address.
+
+This supersedes D51's "empty until the client supplies content" only for
+business-level facts. D51's rule about invented people stands, and now
+extends to real ones.

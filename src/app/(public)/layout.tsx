@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { company } from "@/content/company";
 import { buttonVariants } from "@/components/ui/button";
+import { DemoNotice } from "@/components/demo-notice";
 
 /**
  * Public site shell. Source: Phase 2 - Public Website.
@@ -23,6 +24,8 @@ export default function PublicLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-bg">
+      <DemoNotice />
+
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-content-max flex-wrap items-center gap-4 px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
@@ -59,6 +62,11 @@ export default function PublicLayout({
           <div className="min-w-[200px] flex-1">
             <p className="text-small font-semibold">{company.name}</p>
             <p className="mt-1 text-small text-text-2">{company.tagline}</p>
+            {company.demo.isDemo ? (
+              <p className="mt-3 max-w-[46ch] text-small text-text-3">
+                {company.demo.notice}
+              </p>
+            ) : null}
           </div>
           <nav className="flex flex-col gap-2">
             {nav.map((item) => (

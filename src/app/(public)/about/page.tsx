@@ -30,10 +30,11 @@ export default function AboutPage() {
         </section>
       ) : (
         <section className="mt-10 rounded-xl border border-border bg-surface p-6">
-          <h2 className="text-h3">More about us, shortly</h2>
+          <h2 className="text-h3">Leadership</h2>
           <p className="mt-2 max-w-[60ch] text-small text-text-2">
-            Our history, leadership and coverage are being prepared for this
-            page. In the meantime, the contact page reaches a real person.
+            Not published here. Naming a company&rsquo;s executives on a site
+            they did not commission puts identifiable people on a page they
+            never agreed to appear on.
           </p>
         </section>
       )}
