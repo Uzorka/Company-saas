@@ -146,3 +146,75 @@ export async function listPositions(): Promise<{
 
   return { rows: (data ?? []) as PositionRow[], error: Boolean(error) };
 }
+
+// ---------------------------------------------------------------------------
+// One employee
+// ---------------------------------------------------------------------------
+
+export type EmployeeDetail = EmployeeRow & {
+  phone: string | null;
+  exit_date: string | null;
+  user_id: string | null;
+  manager: { id: string; first_name: string; last_name: string } | null;
+};
+
+const EMPLOYEE_DETAIL_SELECT = `
+  id, employee_no, first_name, last_name, photo_url, work_email, phone,
+  location, hire_date, exit_date, employment_status, employment_type, user_id,
+  department:departments(id, name),
+  position:positions(id, title),
+  manager:employees!employees_manager_id_fkey(id, first_name, last_name)
+`;
+
+/**
+ * One employee, or null.
+ *
+ * Null covers both "no such person" and "not yours to see", and deliberately
+ * does not distinguish them: RLS returns no row in either case, and a page
+ * that said "you may not view this employee" would confirm the record exists
+ * to someone who should not know that.
+ */
+export async function getEmployee(
+  id: string,
+): Promise<{ row: EmployeeDetail | null; error: boolean }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("employees")
+    .select(EMPLOYEE_DETAIL_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) return { row: null, error: true };
+  return { row: (data as unknown as EmployeeDetail | null) ?? null, error: false };
+}
+
+export type CompensationRow = {
+  basic_salary: number;
+  currency_code: string;
+  effective_from: string;
+  effective_to: string | null;
+};
+
+/**
+ * Current salary, when the caller may see it.
+ *
+ * `employee_compensation` is a separate table with its own policy, so this
+ * returns nothing for a role without payroll access — no check here, and none
+ * needed. That is why salary is not part of the employee select.
+ */
+export async function getCompensation(
+  employeeId: string,
+): Promise<CompensationRow | null> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("employee_compensation")
+    .select("basic_salary, currency_code, effective_from, effective_to")
+    .eq("employee_id", employeeId)
+    .order("effective_from", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (data as CompensationRow | null) ?? null;
+}

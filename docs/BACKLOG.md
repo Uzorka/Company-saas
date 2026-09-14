@@ -111,3 +111,16 @@ against a real project before treating reports as a light page.
 
 ## Explicitly out of scope for MVP
 Bank transfer integration · automatic PAYE remittance · pension API integration · tax authority filing · government filing · any presentation of payroll output as final statutory compliance advice · billing (the design says platform admin excludes it).
+
+## Self-service profile edits
+An employee cannot change their own phone number or address. `employees_update`
+requires `employees.update` and has no self-edit clause, and the profile's Edit
+button matches that rather than offering something the database refuses.
+
+Worth having, and not a one-line policy change: a self-edit clause on the whole
+row would let someone move themselves into another department or change their
+employment type. It needs the update scoped to the columns a person may
+legitimately correct about themselves — contact details — which in Postgres
+means either column privileges or a `security definer` function taking only
+those fields. The second is more in keeping with how the rest of this schema
+works.

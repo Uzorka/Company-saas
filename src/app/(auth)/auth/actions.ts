@@ -57,7 +57,49 @@ export async function signIn(
     return { error: "Those details didn't match. Check and try again." };
   }
 
-  redirect(safeRedirect(parsed.data.next));
+  // An explicit `next` wins: the person was going somewhere before they were
+  // asked to sign in, and the company code is not a reason to lose it.
+  if (parsed.data.next) {
+    redirect(safeRedirect(parsed.data.next));
+  }
+
+  // The company code selects a workspace — which, until now, it did not do.
+  // The field was validated and then discarded, so it read as a credential
+  // while behaving as decoration.
+  //
+  // Only the caller's own memberships are consulted, and RLS scopes that read
+  // to them, so a code that matches nothing here tells them nothing about
+  // whether it exists elsewhere. It is not a credential (D6) and is not
+  // treated as one: a code that does not match does not fail the sign-in, it
+  // falls through to the picker, which shows what they do have.
+  const slug = await matchWorkspace(supabase, parsed.data.companyCode);
+
+  redirect(slug ? `/${slug}/dashboard` : "/auth/workspace");
+}
+
+/** The caller's active workspace whose slug is this code, if there is one. */
+async function matchWorkspace(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyCode: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("organization_members")
+    .select("organizations(slug, status)")
+    .eq("status", "active");
+
+  const wanted = companyCode.trim().toLowerCase();
+
+  for (const row of data ?? []) {
+    const org = row.organizations as unknown as {
+      slug: string;
+      status: string;
+    } | null;
+    if (org?.slug?.toLowerCase() === wanted && org.status === "active") {
+      return org.slug;
+    }
+  }
+
+  return null;
 }
 
 const forgotSchema = z.object({

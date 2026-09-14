@@ -171,3 +171,63 @@ begin
   raise notice '--- employee assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Editing a profile.
+--
+-- The profile screen shows an Edit button to whoever `employees_update`
+-- actually allows. These assertions are what that claim rests on — including
+-- the negative one, because a button shown to someone the database will refuse
+-- is a button that does not work.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  emp uuid;
+begin
+  select * into f from fixture;
+  select id into emp from employees
+   where organization_id = f.org_a and user_id = f.u_emp;
+
+  perform assert(emp is not null, 'The fixture employee has a record to edit');
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format('update employees set phone = %L where id = %L', '+234 800 000 0001', emp)
+    ) = 1,
+    'HR can edit an employee profile'
+  );
+
+  -- No self-edit clause in employees_update, deliberately: a person editing
+  -- their own row unchecked could move themselves into another department.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format('update employees set phone = %L where id = %L', '+234 800 000 0002', emp)
+    ) = 0,
+    'An employee cannot edit their own profile'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_acct, f.org_a),
+      format('update employees set phone = %L where id = %L', '+234 800 000 0003', emp)
+    ) = 0,
+    'Accounts reads the directory but does not edit it'
+  );
+
+  -- And nothing reaches across tenants, which is what makes the action's
+  -- organization filter a second belt rather than the only one.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, f.org_b),
+      format('update employees set phone = %L where id = %L', '+234 800 000 0004', emp)
+    ) = 0,
+    'An administrator in another workspace cannot edit this record'
+  );
+
+  raise notice '--- employee edit assertions passed ---';
+end
+$$;

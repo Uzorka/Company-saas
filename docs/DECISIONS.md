@@ -1256,3 +1256,33 @@ shadow class in the source against it. Reintroducing the exact bug fails the
 gate; the 19 apparent hits on first run were all real namespaces
 (`shadow-e1` against `--shadow-*`) and taught the script that prefixes resolve
 against different namespaces, which is the actual Tailwind rule.
+
+## D92 — The company code was a field that did nothing — **Accepted**
+Sign-in asked for a company code, validated its shape, and then called
+`signInWithPassword` with the email and password alone. The parsed value was
+discarded. D6 says the code selects a workspace and is not a credential; the
+first half of that was not true.
+
+It was invisible because the demo has one workspace and the picker redirects
+when there is only one — so the field appeared to work by having nothing to do.
+
+It now selects the workspace: a code matching one of the caller's own active
+memberships goes straight to that dashboard, anything else falls through to the
+picker. Only the caller's memberships are read and RLS scopes that, so a code
+matching nothing says nothing about whether it exists elsewhere. A wrong code
+does not fail the sign-in — it is still not a credential.
+
+## D93 — The profile shows Edit to exactly who the policy allows — **Accepted**
+The first version of the employee profile offered Edit to anyone viewing their
+own record. `employees_update` requires `employees.update` and has no self-edit
+clause — the self-or-permission pattern is on `employee_emergency_contacts`,
+one table over. The button would have been shown and then refused.
+
+Caught by reading the policy rather than the neighbouring one, and now held by
+an assertion that fails if `employees_update` is ever loosened.
+
+Letting someone correct their own phone number is worth having and is not this
+change: a self-edit clause on the whole row would let a person move themselves
+into another department or change their employment type. It needs the update
+scoped to the columns a person may legitimately correct, which is a migration,
+not a condition in an action. Recorded in docs/BACKLOG.md.

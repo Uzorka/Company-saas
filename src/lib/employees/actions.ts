@@ -225,3 +225,102 @@ export async function createPosition(
   revalidatePath("/[org]/employees", "page");
   return { done: true };
 }
+
+/**
+ * Edit an employee record.
+ *
+ * Deliberately a smaller set of fields than createEmployee. Three are absent
+ * and each for its own reason:
+ *
+ *  - `employee_no` identifies the person across payroll runs, payslips and
+ *    attendance history. Changing it would silently re-point that history.
+ *  - `hire_date` is used to compute leave entitlement and service length, and
+ *    a correction to it belongs with the records it would move.
+ *  - `employment_status` has a constraint requiring an exit date when it is
+ *    'exited', so ending someone's employment is its own action with its own
+ *    form, not a dropdown that fails at the database.
+ *
+ * Who may edit is not decided here. `employees_update` requires
+ * `employees.update` and has no self-edit clause, so this action does not
+ * check for one either — the zero-rows guard below is what reports a refusal,
+ * and it reports whatever the policy actually does rather than a copy of it
+ * that could drift.
+ */
+const employeeEditSchema = z.object({
+  id: z.string().uuid(),
+  firstName: z.string().trim().min(1, "Enter a first name").max(80),
+  lastName: z.string().trim().min(1, "Enter a last name").max(80),
+  workEmail: optionalText(255),
+  phone: optionalText(40),
+  location: optionalText(120),
+  departmentId: optionalUuid,
+  positionId: optionalUuid,
+  employmentType: z.enum([
+    "full_time",
+    "part_time",
+    "contract",
+    "intern",
+    "nysc",
+  ]),
+});
+
+export async function updateEmployee(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const org = String(formData.get("org") ?? "");
+  const parsed = employeeEditSchema.safeParse({
+    id: formData.get("id"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    workEmail: formData.get("workEmail") ?? "",
+    phone: formData.get("phone") ?? "",
+    location: formData.get("location") ?? "",
+    departmentId: formData.get("departmentId") ?? "",
+    positionId: formData.get("positionId") ?? "",
+    employmentType: formData.get("employmentType"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the details." };
+  }
+
+  const session = await requireOrg(org);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("employees")
+    .update({
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
+      work_email: parsed.data.workEmail || null,
+      phone: parsed.data.phone || null,
+      location: parsed.data.location || null,
+      department_id: parsed.data.departmentId,
+      position_id: parsed.data.positionId,
+      employment_type: parsed.data.employmentType,
+    })
+    .eq("id", parsed.data.id)
+    .eq("organization_id", session.organizationId)
+    .select("id");
+
+  if (error) {
+    return {
+      error: describeWriteError(
+        error.code,
+        error.message,
+        "Those details clash with another record.",
+      ),
+    };
+  }
+
+  // A policy that matches no rows does not raise — the statement succeeds
+  // having changed nothing. Without this, a refused edit would report success.
+  if (!data || data.length === 0) {
+    return { error: "You don't have permission to edit this record." };
+  }
+
+  revalidatePath("/[org]/employees", "page");
+  revalidatePath(`/[org]/employees/[id]`, "page");
+  return { done: true };
+}

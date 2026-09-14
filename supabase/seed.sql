@@ -35,23 +35,42 @@ on conflict do nothing;
 select provision_default_roles('00000000-0000-4000-8000-000000000001');
 
 -- ---------------------------------------------------------------------------
--- Attaching a real account.
+-- Attaching the first accounts.
 --
--- 1. Sign up through the app or the Supabase dashboard.
--- 2. Find your user id:      select id, email from auth.users;
--- 3. Run, with that id and the role slug you want:
+-- CREATE TWO MANAGEMENT ACCOUNTS, NOT ONE.
+--
+-- Management, HR and Accounts are high-risk: since migration 0033 none can be
+-- granted by one person acting alone, and only Management holds `roles.manage`.
+-- So granting any of them needs two Management accounts — one to request, a
+-- different one to approve. With a single administrator the workspace can
+-- never issue an HR or Accounts role at all.
+--
+-- This block is the only way in, and it works because there is no JWT claim in
+-- the SQL editor: `current_org_id()` is null, the 0033 guard returns early, and
+-- the first administrators can exist before anyone is there to approve them.
+-- A test asserts that this stays true (supabase/tests/18_reports_test.sql).
+--
+-- 1. Create two users: Supabase dashboard -> Authentication -> Add user.
+--    Set a password there. Do not put one in this file or any other file in
+--    this repository.
+-- 2. Find their ids:    select id, email from auth.users;
+-- 3. Run this once per administrator, substituting the id:
 --
 --      insert into organization_members (organization_id, user_id, status)
---      values ('00000000-0000-4000-8000-000000000001', '<your-user-id>', 'active');
+--      values ('00000000-0000-4000-8000-000000000001', '<user-id>', 'active');
 --
 --      insert into user_roles (organization_id, user_id, role_id)
---      select '00000000-0000-4000-8000-000000000001', '<your-user-id>', id
+--      select '00000000-0000-4000-8000-000000000001', '<user-id>', id
 --      from roles
 --      where organization_id = '00000000-0000-4000-8000-000000000001'
 --        and slug = 'management';
 --
 -- 4. Sign out and back in — the access token hook stamps the new claims into
 --    a fresh token, so an existing session will not see the change.
+--
+-- Every other account is made inside the product after this: Employees ->
+-- Create account for HOD and Employee, Settings -> Role grants for HR and
+-- Accounts. See docs/TEST_LOGINS.md.
 -- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------

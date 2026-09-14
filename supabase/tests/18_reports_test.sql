@@ -381,3 +381,41 @@ begin
   raise notice '--- grant path assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- The first administrator has to come from outside the app.
+--
+-- The 0033 guard returns early when there is no JWT claim, which is what makes
+-- the bootstrap documented in supabase/seed.sql work: an operator running SQL
+-- in their own dashboard can create the first Management account, because
+-- there is nobody yet to be the second approver.
+--
+-- Asserted rather than assumed. "Hardening" the trigger to fire with null
+-- claims would leave a correct-looking rule and a product that cannot be set
+-- up at all — the failure would appear only on a fresh install.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  r_mgmt uuid;
+  n integer;
+begin
+  select * into f from fixture;
+  select id into r_mgmt from roles where organization_id = f.org_a and slug = 'management';
+
+  perform set_config('request.jwt.claims', '', true);
+  perform assert(current_org_id() is null, 'No claims means no current organization');
+
+  insert into user_roles (organization_id, user_id, role_id)
+  values (f.org_a, f.u_acct, r_mgmt);
+  get diagnostics n = row_count;
+
+  perform assert(n = 1, 'The dashboard bootstrap can create the first administrator');
+
+  delete from user_roles
+   where organization_id = f.org_a and user_id = f.u_acct and role_id = r_mgmt;
+
+  raise notice '--- bootstrap assertions passed ---';
+end
+$$;

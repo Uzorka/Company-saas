@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { SlideOver } from "@/components/ui/slide-over";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 export function EmployeeDirectory({
   rows,
   departments,
+  orgSlug,
   filters,
   createAction,
 }: {
@@ -244,12 +246,19 @@ export function EmployeeDirectory({
             <Detail label="Start date" mono>
               {formatDate(selected.hire_date)}
             </Detail>
-            <p className="border-t border-border pt-4 text-small text-text-3">
-              Personal details, documents and attendance history arrive with the
-              full profile. Compensation is deliberately absent here — it is
-              readable only by Accounts and Management, and by the person
-              themselves.
-            </p>
+            <div className="border-t border-border pt-4">
+              <Link href={`/${orgSlug}/employees/${selected.id}`}>
+                <Button variant="secondary">
+                  Open full profile
+                  <ArrowRight aria-hidden />
+                </Button>
+              </Link>
+              <p className="mt-3 text-small text-text-3">
+                Compensation is deliberately absent from this summary — it is
+                readable only by Accounts and Management, and by the person
+                themselves, and the profile shows it to whoever that is.
+              </p>
+            </div>
           </dl>
         ) : null}
       </SlideOver>

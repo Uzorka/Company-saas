@@ -296,11 +296,12 @@ themselves no-ops on the first try, which is exactly why they get checked.
 - Dialog, toast, timeline, capture panel and evidence viewer are still
   unbuilt — they land with the modules that use them. Table and slide-over
   arrived with Phase 3.
-- **Create-employee and the full employee profile are not built.** The
-  directory's Add button is present only when the caller holds
-  `employees.create`, and the slide-over shows the directory fields plus a
-  note about what is still to come — no fake form, no dead button beyond the
-  one the next phase fills in.
+- **Create-employee and the employee profile are built.** The directory's Add
+  button is present only when the caller holds `employees.create`; the
+  slide-over shows the directory fields and opens the full profile at
+  `/[org]/employees/[id]`, where Edit appears only for `employees.update` —
+  matching the policy exactly, since an employee cannot edit their own row.
+  Documents and attendance history on the profile are still to come.
 - **The public site is mostly placeholders, deliberately.** The design pack
   contains invented executives with invented biographies, a founding year and
   coverage figures — sample content that made the mockups feel real. Those are
