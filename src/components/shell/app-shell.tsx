@@ -8,7 +8,7 @@ import { BottomNav } from "./bottom-nav";
 import { CommandPalette } from "./command-palette";
 import { bottomSheet, duration, ease } from "@/lib/motion";
 import { navByRole, type RoleSlug } from "@/lib/navigation";
-import { NavProgress, LinkPending } from "./nav-progress";
+import { NavProgress, LinkPending, ContentLoading } from "./nav-progress";
 import type { Permission } from "@/lib/auth/permissions";
 import Link from "next/link";
 
@@ -80,11 +80,17 @@ export function AppShell({
           onOpenPalette={() => setPaletteOpen(true)}
         />
 
+        {/*
+          `relative` so the overlay can cover exactly this box — the content
+          area — and not the sidebar or the topbar. Navigation stays usable
+          while a screen loads, which is the point of covering only this.
+        */}
         <main
           id="main"
-          className="mx-auto w-full max-w-content-max flex-1 px-4 pb-[74px] pt-5 sm:px-6 sm:pb-8"
+          className="relative mx-auto w-full max-w-content-max flex-1 px-4 pb-[74px] pt-5 sm:px-6 sm:pb-8"
         >
           {children}
+          <ContentLoading />
         </main>
       </div>
 
@@ -135,7 +141,7 @@ export function AppShell({
                         >
                           <Icon className="size-[18px]" aria-hidden />
                           {item.label}
-                          <LinkPending className="ml-auto" />
+                          <LinkPending />
                         </Link>
                       ) : (
                         <div className="flex h-[44px] items-center gap-2.5 rounded-md px-3 text-small text-text-3">

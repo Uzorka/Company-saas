@@ -13,16 +13,18 @@ import { cn } from "@/lib/utils";
  * screen sat there unchanged, which reads as a dead button and gets clicked
  * again — the exact failure this is here to prevent.
  *
- * Two signals, because they answer different questions:
+ * The signal belongs where the content is about to appear, not on the control
+ * that was clicked. Someone who clicks "Employees" is already looking at the
+ * space the directory will fill; putting a spinner back on the sidebar item
+ * asks them to look away from it to find out whether anything is happening.
  *
- *   - A spinner on the item you clicked. Answers "did *this* land", and it is
- *     the one people look at, because their eyes are already there.
- *   - A bar across the top. Answers "is the app doing something", and it
- *     covers navigations that start somewhere without an obvious control.
+ * So: the content area is covered while a navigation runs, and a thin bar
+ * across the top carries the same state for surfaces with no content area of
+ * their own — the public site and the sign-in screens.
  *
  * Both are driven by Next's useLinkStatus(), which is only valid inside a
- * <Link>. So each link renders a marker component, and the markers report into
- * the tiny store below that the top bar subscribes to.
+ * <Link>. So each link renders a marker component that reports into the tiny
+ * store below. The marker draws nothing itself.
  */
 
 // ---------------------------------------------------------------------------
@@ -64,13 +66,13 @@ function notPending() {
 }
 
 /**
- * Place inside a <Link> to report its navigation state upward, and to show a
- * spinner on the link itself.
+ * Place inside a <Link> to report its navigation state upward.
  *
- * `className` positions the spinner for the link it sits in — the sidebar
- * wants it where the lock glyph goes, a card wants it in the corner.
+ * Renders nothing. It exists only because useLinkStatus() has to be called
+ * from inside the <Link> it describes — the visible result of what it reports
+ * is ContentLoading, over the content area.
  */
-export function LinkPending({ className }: { className?: string }) {
+export function LinkPending() {
   const { pending: linkPending } = useLinkStatus();
 
   useEffect(() => {
@@ -79,13 +81,42 @@ export function LinkPending({ className }: { className?: string }) {
     return stop;
   }, [linkPending]);
 
-  if (!linkPending) return null;
+  return null;
+}
+
+/**
+ * Covers the content area while a navigation is in flight.
+ *
+ * An overlay rather than a replacement, so the page underneath keeps its
+ * height and the layout does not collapse and snap back when the new screen
+ * arrives.
+ *
+ * The fade is held back for 150ms by the keyframe itself rather than a timer.
+ * Most navigations in this app finish faster than that, and an overlay that
+ * flashes on every quick click is its own kind of noise — worse than none,
+ * because it makes a fast app look like it is struggling.
+ */
+export function ContentLoading() {
+  const navigating = useSyncExternalStore(subscribe, isPending, notPending);
+
+  if (!navigating) return null;
 
   return (
-    <Loader2
-      className={cn("size-3.5 shrink-0 animate-spin motion-reduce:animate-none", className)}
-      aria-label="Loading"
-    />
+    <div
+      className={cn(
+        "absolute inset-0 z-20 grid place-items-center",
+        "bg-canvas/75 backdrop-blur-[1px] animate-content-loading",
+      )}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <span className="sr-only">Loading</span>
+      <Loader2
+        className="size-7 animate-spin text-brand-600 motion-reduce:animate-none"
+        aria-hidden
+      />
+    </div>
   );
 }
 

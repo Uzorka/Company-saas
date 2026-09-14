@@ -42,11 +42,8 @@ export function BottomNav({
               active ? "text-brand-700" : "text-text-3",
             )}
           >
-            <span className="relative grid place-items-center">
-              <Icon className="size-[18px]" aria-hidden />
-              {/* Over the icon: on a phone there is no room beside it. */}
-              <LinkPending className="absolute -right-3 top-0" />
-            </span>
+            <Icon className="size-[18px]" aria-hidden />
+            <LinkPending />
             <span className="text-[11px] leading-none">{navItem.label}</span>
           </Link>
         );

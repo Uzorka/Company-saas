@@ -77,7 +77,7 @@ export default async function PayrollPage({
                         {period.pay_date ? ` · pays ${formatDate(period.pay_date)}` : ""}
                       </p>
                     </div>
-                    <LinkPending className="text-text-3" />
+                    <LinkPending />
                     <StatusPill tone={payrollStatusTone[period.status]}>
                       {payrollStatusLabel[period.status]}
                     </StatusPill>

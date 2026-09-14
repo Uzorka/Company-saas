@@ -124,8 +124,8 @@ export function Sidebar({
             >
               <Icon className="size-[18px] shrink-0" aria-hidden />
               {label}
-              {/* Sits where the lock would, so the row never changes width. */}
-              <LinkPending className={cn(collapsed && "hidden")} />
+              {/* Reports this link's pending state; draws nothing. */}
+              <LinkPending />
               {!allowed ? (
                 <Lock
                   className={cn("size-3.5 shrink-0", collapsed && "hidden")}

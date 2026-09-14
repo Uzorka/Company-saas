@@ -77,7 +77,7 @@ export default async function DashboardPage({
                         <Icon className="size-[18px]" aria-hidden />
                       </span>
                       <span className="text-h3">{item.label}</span>
-                      <LinkPending className="ml-auto size-4 text-text-3" />
+                      <LinkPending />
                     </CardBody>
                   </Card>
                 </Link>

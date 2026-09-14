@@ -237,3 +237,26 @@
     opacity: 0.85;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Navigation overlay.
+
+   Opacity is pinned at 0 for the first 150ms of the animation, so a navigation
+   that resolves quickly never paints it at all. A timer in JavaScript would do
+   the same thing with a re-render and a cleanup to get wrong.
+   --------------------------------------------------------------------------- */
+@keyframes content-loading {
+  0%, 45% { opacity: 0; }
+  100%    { opacity: 1; }
+}
+
+.animate-content-loading {
+  animation: content-loading 0.33s var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1)) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-content-loading {
+    animation: none;
+    opacity: 1;
+  }
+}

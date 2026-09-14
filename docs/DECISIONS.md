@@ -685,21 +685,35 @@ only show which paths were broken, not which one was in the address bar. The
 question of whether the deployment itself is serving the current build is
 separate and still open.
 
-## D69 — Two loading signals, because they answer different questions — **Accepted**
+## D69 — The loading signal goes where the content will be — **Accepted**
+*(Revised. The first version put a spinner on the clicked nav item; see the
+note at the end.)*
 The route skeletons from D66 only appear once the new route begins rendering.
 Between the click and that moment there was still nothing: the old screen sat
 unchanged, which reads as a dead control and gets clicked again — which is
 exactly how it was reported.
 
-So two signals, not one:
+The signal belongs in the content area. Someone who clicks "Employees" is
+already looking at the space the directory will fill — putting a spinner back
+on the sidebar item asks them to look away from where they are looking to find
+out whether anything is happening.
 
-**A spinner on the thing you clicked.** It answers "did *this* land", and it is
-where the eyes already are. In the sidebar it occupies the slot the lock glyph
-uses, so the row never changes width when it appears. On the phone bottom nav
-it sits over the icon, because there is no room beside it.
+So the content area is covered while a navigation runs: an overlay with a
+spinner, over `<main>` only. The sidebar and topbar stay uncovered and usable,
+which is the point of scoping it to that box rather than the viewport.
 
-**A bar across the top.** It answers "is the app doing anything at all", and it
-covers navigations with no obvious control to watch.
+It is an overlay rather than a replacement, so the page underneath keeps its
+height and the layout does not collapse and snap back when the new screen
+arrives.
+
+The fade is held at zero opacity for the first 150ms by the keyframe itself,
+not a JavaScript timer. Most navigations here finish faster than that, and an
+overlay that flashes on every quick click is its own kind of noise — it makes a
+fast app look like it is struggling. A timer would do the same job with a
+re-render and a cleanup to get wrong.
+
+**A bar across the top** carries the same state for surfaces with no content
+area of their own: the public site and the sign-in screens.
 
 Both are driven by Next's `useLinkStatus()`, which is only valid inside a
 `<Link>`. Each link therefore renders a marker component that reports into a
@@ -717,7 +731,14 @@ navigation is, and a bar that fakes it creeps to 90% and stalls, which teaches
 people to distrust it. Under `prefers-reduced-motion` it stays visible and
 stops moving: the signal matters more than the motion.
 
-Verified in the production build rather than assumed — the keyframes, the
-class and the reduced-motion override are all present in the shipped CSS. A
-silently dropped keyframe would have left a bar that renders and never moves,
-which is worse than no bar, because it looks like the app has frozen.
+Verified in the production build rather than assumed — both keyframes, both
+classes and both reduced-motion overrides are present in the shipped CSS. A
+silently dropped keyframe would leave an overlay pinned at zero opacity, or a
+bar that renders and never moves: worse than nothing, because it looks like the
+app has frozen.
+
+**Revision.** The first attempt put the spinner on the clicked item — sidebar
+row, bottom-nav icon, dashboard card, table row. That was wrong for the reason
+above, and the markers that drove it are now headless: they still call
+`useLinkStatus()`, because it is only valid inside the `<Link>` it describes,
+and they render nothing. Seven of them report; one overlay draws.
