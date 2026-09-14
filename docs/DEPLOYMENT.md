@@ -1,6 +1,39 @@
 # Deployment
 
-Nothing is deployed yet. This is the plan.
+**Live.** `https://company-saas-nine.vercel.app/`, Supabase project
+`xhnvlydfdocybzhhqkxa`. The runbook below is what was actually done, kept
+current rather than aspirational.
+
+## Applying a change
+
+1. `npm run check` — must pass end to end. It is lint, typecheck, unit tests,
+   the database suite, geofence parity, a production build, the accessibility
+   gate and the end-to-end suite. The last two drive a real browser; see
+   `TESTING.md` for why they exist.
+2. Push to `main`. Vercel builds and deploys automatically.
+3. **If the change adds a migration**, paste `supabase/setup/install.sql` into
+   the Supabase SQL editor. It is re-runnable: each migration records itself in
+   `schema_migrations` and is skipped if already applied, so pasting the whole
+   file applies only what is new.
+4. Paste `supabase/setup/verify.sql` and confirm all 26 rows read PASS.
+
+### A project set up before the ledger existed
+Run `supabase/setup/adopt.sql` once first. It changes no schema — it checks
+which migrations are already present by looking for objects each one creates,
+and records only those. Then run `install.sql` as above.
+
+### Demo data
+`supabase/setup/demo-seed.sql` loads 23 fictional employees with attendance,
+tasks, leave, two payroll runs and applicants. Idempotent.
+`demo-seed-remove.sql` takes it out again and leaves configuration untouched.
+
+## History, honestly
+The first install was run at Phase 4, when `install.sql` held migrations
+0001–0015. Everything from Phase 5 on — tasks, leave, payroll, recruitment —
+did not reach the database until Phase 10, because the bundle was not
+re-runnable and re-pasting it failed on the first `create type`. The app spent
+that time querying tables that did not exist. That is why step 3 exists and why
+the ledger does.
 
 ## Environments
 - **Development** — a Supabase development project plus Vercel preview deployments per pull request.
@@ -23,11 +56,20 @@ One Next.js project. The three surfaces are route groups, so they can be served 
 ## Supabase
 Schema changes exist only as migration files under `supabase/migrations/`, applied via the Supabase CLI. No structure is ever created by hand in the dashboard. Storage buckets are created by migration too, with their RLS policies. `pg_cron` runs the retention jobs.
 
-## Security posture at deploy
-- RLS enabled and asserted on every company-owned table before any environment holds real data.
-- All buckets private except `public-assets`; private objects served only via short-TTL signed URLs.
-- Redirects validated against an allowlist.
-- Public forms (contact, job application) rate-limited; the strategy is documented alongside the implementation in Phase 8.
+## Security posture
+Audited in Phase 10 — every rule, the command run to check it, and the result
+are in `SECURITY_AUDIT.md`. Two real vulnerabilities were found and fixed in
+that pass (a settings policy that let HR weaken the password rules, and a
+public form whose rate limit existed only as a comment); both are named at the
+top of that document rather than buried.
+
+- RLS enabled and asserted on every company-owned table: 248 assertions, run as
+  the real database roles, mutation-tested.
+- All buckets private except `public-assets`; private objects reach a browser
+  only through a short-TTL signed URL.
+- Redirects validated; 11 unit tests cover the attack shapes.
+- The public application form is rate-limited in the database, not the action.
+- The service-role key appears in exactly one server-only module.
 - Safe error messages — no stack traces, no raw codes reaching a user.
 
 ## CI

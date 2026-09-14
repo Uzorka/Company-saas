@@ -1,14 +1,26 @@
 # Build state
 
-**Current phase:** Phase 8 complete. A system review then found that the
-read-side screens shipped without their write paths, the dashboard was never
-replaced, and five nav items pointed at routes that do not exist. The
-structural repairs (D57-D59), the create paths (D60) and demo data (D64) are
-done; the five missing screens and the invite flow are open — see
-`BACKLOG.md`.
-**Next phase:** Phase 10 continues — the invite flow, and the two screens the
-design never specified (Documents, Notifications).
+**Current phase:** Phase 10 complete. Ten phases built, then a review that
+found the read-side screens had shipped without their write paths — see the
+repairs at D57-D61 and the create paths at D60.
 
+**Gate:** `npm run check` — lint, typecheck, 119 unit tests, 248 database
+assertions, 17 geofence parity cases, a production build, 14 accessibility
+page/viewport pairs and 21 end-to-end browser checks.
+
+**Open, and why:** the invite flow (an employee record and a login are separate
+things in this schema); Documents and Notifications, which the design pack
+never specified a screen for; the authenticated surface in the browser gates,
+which needs a Supabase project CI can reach; and the `middleware.ts` → `proxy`
+rename that Next 16 deprecates. All in `BACKLOG.md` with reasoning.
+
+**What Phase 10 found.** Five bugs that every previous gate had passed over:
+`text-white` deleted from every primary button by the class merger (D80); the
+product rendering in the system font for nine phases (D84); a settings policy
+that let HR weaken the password rules (D72); a rate limit that was only a
+comment (D79); and the browser gates themselves reporting a pass while testing
+a stale build (D86). None were visible to typecheck, lint or build. All needed
+something to run the thing and measure it.
 `npm run check` is now: lint, typecheck, unit tests, database suite, geofence
 parity, production build, accessibility gate, end-to-end suite. The last two
 drive a real browser against the production build and are the only checks that

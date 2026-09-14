@@ -1167,3 +1167,51 @@ Nothing behind the login is covered. Both browser gates need a signed-in
 session against a live Supabase project, which the build environment cannot
 reach. That is stated in `BACKLOG.md` and in `TESTING.md` rather than disguised
 by a suite that tests only what happens to be reachable.
+
+## D88 — The security audit names what it found — **Accepted**
+`docs/SECURITY_AUDIT.md` walks every rule the brief set, with the command that
+was run and what it returned, rather than a paraphrase.
+
+Two real vulnerabilities are at the top rather than in the table: the settings
+policy that let HR weaken the password rules and Accounts shorten audit
+retention (D72), and the public application form whose rate limit existed only
+as a comment (D79). A clean audit that quietly omits what it found is a
+marketing document.
+
+Three policies are broader than the default and each is named rather than
+excused: `anon` reading published jobs, `permissions` readable by any signed-in
+user (the shared vocabulary — slug, module, description, no tenant data), and
+the rate-limit ledger with no policies at all. Each is pinned by an assertion
+that fails if it grows.
+
+Four things are explicitly *not* covered: penetration testing, the
+authenticated surface in a browser, Supabase dashboard configuration, and
+dependency vulnerabilities. Saying so is the point. An audit that implies
+coverage it does not have is worse than a shorter one.
+
+## D89 — Phase 10 closes with five bugs that every other gate had passed — **Accepted**
+Worth recording together, because they share a shape.
+
+1. `text-white` deleted from every primary button by tailwind-merge (D80) —
+   near-black on dark blue, nine phases.
+2. The product rendering in `-apple-system` since Phase 1 (D84) — the specified
+   typeface downloaded on every request and applied to nothing.
+3. A settings policy that let HR weaken the password minimum (D72).
+4. A rate limit that existed only as a header comment (D79).
+5. The browser gates reporting a pass while testing a stale build (D86) —
+   including the accessibility gate announcing zero violations against code it
+   had never loaded.
+
+Every one passed typecheck, lint and build on every commit that shipped it.
+Three were correct in the source and wrong in the browser. Two were claims in a
+comment that nothing checked.
+
+The habit that found them was the same each time: run the thing and measure the
+result, rather than read the code and conclude. Screenshot the chart and look
+at the axis. Ask the browser what colour the button computed to. Ask the
+database whether HR can actually write that row. Read the server log when a
+suite fails differently twice.
+
+The gate is now lint, typecheck, unit, database, parity, build, accessibility
+and end-to-end — and the last two exist specifically because the first six
+cannot see this class of bug at all.
