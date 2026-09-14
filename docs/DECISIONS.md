@@ -648,3 +648,39 @@ payslips yet" invites them to wait for something that cannot arrive. The
 demo seed also attaches the signed-in account to an employee record, because
 without one every self-scoped screen in the product is empty for the only
 person who can sign in.
+
+## D68 — The workspace root and unknown paths answer, rather than 404 — **Accepted**
+Reported as "404, nothing loads". The build was clean and every route present;
+running the production build locally and sweeping the paths showed the app
+serving 200 everywhere except three cases, all of which were real gaps:
+
+`/{org}` — the bare workspace URL — had no page at all. Bookmark the workspace,
+trim the path in the address bar, or share a link without a screen on the end,
+and a signed-in user got a flat framework 404 from a product that was working.
+It now redirects to the dashboard, rather than rendering a second copy of it,
+so one dashboard URL serves the breadcrumb, the sidebar's active state and the
+browser history alike.
+
+Adding that page created a problem of its own, caught by re-running the sweep:
+`[org]` is a dynamic segment at the top of the tree, so every unmatched
+single-segment URL in the product — `/nope`, anything — suddenly matched it and
+got bounced toward a dashboard that cannot exist. The page now checks the slug
+resolves to a real organization first and calls `notFound()` when it does not,
+which is the behaviour that existed before and should have survived the change.
+
+The five unbuilt screens (`/reports`, `/settings`, `/audit`, `/documents`,
+`/notifications`) 404'd too. D57 made them non-links in the sidebar, but a URL
+can still be typed, bookmarked from an older build, or followed from a shared
+link — and being told a page does not exist, by a product whose own sidebar
+lists it, reads as a bug. A catch-all under `[org]` now renders inside the app
+shell and distinguishes the two cases: a planned module says it is not built
+yet, a typo says nothing answers to that address. Both keep the sidebar and
+offer a way back.
+
+The root `not-found.tsx` replaces the framework's unstyled default, which gave
+no sign the rest of the product was fine or how to return to it.
+
+None of this is proof it was the cause of what was reported — the sweep can
+only show which paths were broken, not which one was in the address bar. The
+question of whether the deployment itself is serving the current build is
+separate and still open.
