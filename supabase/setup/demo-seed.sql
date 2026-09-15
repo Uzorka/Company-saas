@@ -21,7 +21,10 @@
 --
 -- IDEMPOTENT
 -- Every row has a fixed id and an `on conflict do nothing`, so running this
--- twice changes nothing the second time.
+-- twice changes nothing the second time — including on a later date, which
+-- is the case that used to fail. Attendance ids are derived from the calendar
+-- day rather than from how many days ago it was, and the insert conflicts on
+-- (employee_id, work_date), which is what the schema actually calls unique.
 --
 -- TO REMOVE IT
 -- Run supabase/setup/demo-seed-remove.sql. It deletes exactly these rows and
@@ -223,8 +226,11 @@ begin
     check_out_latitude, check_out_longitude, check_out_accuracy_m, check_out_distance_m,
     attendance_type, state, review_state, exception_codes, late_by_minutes, device)
   select
-    -- Deterministic id from employee + day, so re-running collides and skips.
-    ('00000000-0000-4000-8004-' || lpad((a.seq * 1000 + a.day_offset)::text, 12, '0'))::uuid,
+    -- Deterministic from employee and the *calendar day*, not from how long
+    -- ago it was. An offset from current_date gives the same person-and-day a
+    -- different id on a different run date, which is how this file came to
+    -- claim it was idempotent and not be.
+    ('00000000-0000-4000-8004-' || lpad((a.seq * 100000 + a.day_number)::text, 12, '0'))::uuid,
     v_org, a.employee_id,
     case when a.kind = 'remote' then null
          when a.at_ikeja then v_office_ikj else v_office_vi end,
@@ -252,7 +258,7 @@ begin
       e.id as employee_id,
       row_number() over (order by e.employee_no) as seq,
       g.d::date as d,
-      (current_date - g.d::date) as day_offset,
+      (g.d::date - date '2020-01-01') as day_number,
       -- Stable per (person, day): same person, same day, same outcome.
       (abs(hashtext(e.employee_no || g.d::date::text)) % 100) as roll,
       e.location = 'Ikeja' as at_ikeja,
@@ -275,7 +281,11 @@ begin
       and extract(isodow from g.d) between 1 and 5
   ) a
   where a.kind <> 'absent'
-  on conflict (id) do nothing;
+  -- On the constraint that actually decides whether this row exists. The
+  -- primary key is not it: a database seeded by an earlier version of this
+  -- file holds these days under different ids, and skipping on `id` would let
+  -- a second copy of the same day through to fail here instead.
+  on conflict (employee_id, work_date) do nothing;
 
   select count(*) into n from attendance_records where organization_id = v_org;
   raise notice 'attendance: % records over the last 30 days', n;

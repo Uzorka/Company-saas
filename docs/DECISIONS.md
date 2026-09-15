@@ -1385,3 +1385,32 @@ Third time in a row that writing assertions found I had duplicated existing
 coverage — the suite already had "an employee cannot change their own balance".
 Reading the existing tests before adding to them is cheaper than mutation-
 testing a duplicate, and I keep learning it late.
+
+## D98 — "IDEMPOTENT" was a header comment, and it was wrong — **Accepted**
+The demo seed failed in the user's live project with
+
+    duplicate key value violates unique constraint
+    "attendance_one_per_employee_per_day"
+
+Attendance ids were built as `seq * 1000 + (current_date - work_date)` —
+deterministic from the employee and *how long ago the day was*, not from the
+day. Re-run on a later date, the same person-and-day gets a different id, so
+`on conflict (id) do nothing` never fires and the constraint that actually
+defines the row raises instead.
+
+Two things were wrong and both had to change. The id now derives from an
+absolute day number, and the insert conflicts on `(employee_id, work_date)` —
+what the schema calls unique. The arbiter alone is not enough: with unstable
+ids a genuinely new day reuses an old row's id and fails on the primary key
+instead, which is exactly what the gate reports if either fix is reverted.
+
+The file's own header said "running this twice changes nothing the second
+time". It had said so for a month. This is the same shape as the rate limit
+that was only a comment (D79) and the write guards that reported success
+(D94): a claim written down, believed, and never executed. `npm run test:seed`
+runs the file today, five days on, and five days on again, then tears it down —
+the second run being the one that failed for a real user.
+
+It also failed *silently* on first writing: `set -e` aborted with psql's exit
+code and no explanation. A gate that cannot say why it failed is the stale
+build again (D86), so it now prints the error and what to look at.
