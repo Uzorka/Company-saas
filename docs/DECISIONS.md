@@ -1331,3 +1331,30 @@ The same shape as D90: a control the schema takes seriously with no path
 through it. `/[org]/tasks/[id]` is that path. Comments and activity are
 interleaved by time rather than shown as two lists — a returned visit and the
 reply to it belong next to each other.
+
+## D96 — "Needs review" was a number that only went up — **Accepted**
+`attendance_corrections` has existed since migration 0011 with policies, a
+mandatory reason of at least ten characters, a trigger making `check_in_at`
+immutable, and assertions covering all of it. The attendance screen counted
+flagged days and offered no way to deal with one.
+
+Two outcomes now, and they are not one button with two labels. Approving says
+the record is right as it stands. Correcting says it is not, and writes what
+should have been there instead — without rewriting the original. A check-in is
+evidence in a pay dispute, and the useful artefact is "recorded 08:40,
+corrected to 08:05 by HR because the depot has no signal", not a row that has
+always said 08:05. The corrected times are shown on the record, since the
+original keeps its own.
+
+Writing the assertions surfaced two things worth recording. The suite already
+covered corrections and immutability, so most of what I first wrote was
+duplicate coverage — trimmed to the review-state transitions, which is what
+was actually missing. And an assertion that the immutability trigger *raises*
+was wrong in form: `rows_changed_by` deliberately swallows `check_violation`
+and returns 0, so the idiom is zero-rows-plus-value-unchanged, not a caught
+exception.
+
+The design-token gate also caught `bg-info-surface` on its first run. The
+palette has surface/border pairs for error, success and warn but not info —
+a real gap, left alone rather than filled, since inventing palette is not this
+change. The block uses neutral tokens and the pill carries the colour.

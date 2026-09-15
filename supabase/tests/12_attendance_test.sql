@@ -168,3 +168,68 @@ begin
   raise notice '--- attendance assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Clearing the flag.
+--
+-- Corrections and the immutability of check_in_at are asserted above. What was
+-- missing is the other half of a review: moving `review_state` off 'pending'.
+-- The attendance screen counted flagged records and offered no way to deal
+-- with one, so the number only ever went up. These are what the review buttons
+-- rest on.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  rec uuid;
+begin
+  select * into f from fixture;
+
+  select id into rec from attendance_records
+   where organization_id = f.org_a and review_state = 'pending'
+   limit 1;
+
+  perform assert(rec is not null, 'There is a flagged record to review');
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format('update attendance_records set review_state = ''approved'' where id = %L', rec)
+    ) = 0,
+    'An employee cannot clear the flag on their own record'
+  );
+
+  perform assert(
+    (select review_state from attendance_records where id = rec) = 'pending',
+    'and the flag is still there afterwards'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format('update attendance_records set review_state = ''approved'' where id = %L', rec)
+    ) = 1,
+    'HR can accept a flagged record as recorded'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format('update attendance_records set review_state = ''corrected'' where id = %L', rec)
+    ) = 1,
+    'and can mark one as superseded by a correction'
+  );
+
+  -- Accounts reads attendance for payroll and does not adjudicate it.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_acct, f.org_a),
+      format('update attendance_records set review_state = ''approved'' where id = %L', rec)
+    ) = 0,
+    'Accounts reads attendance but does not review it'
+  );
+
+  raise notice '--- attendance review assertions passed ---';
+end
+$$;

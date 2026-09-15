@@ -9,6 +9,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { formatAccuracy, formatDistance, exceptionLabel, type ExceptionCode } from "@/lib/attendance/geofence";
+import { ReviewAttendance } from "./review";
 
 export const metadata = { title: "Attendance" };
 
@@ -24,6 +25,15 @@ type Row = {
   check_in_accuracy_m: number | null;
   check_in_distance_m: number | null;
   employees: { first_name: string; last_name: string; employee_no: string } | null;
+};
+
+type Correction = {
+  attendance_record_id: string;
+  reason: string;
+  created_at: string;
+  new_check_in_at: string | null;
+  new_check_out_at: string | null;
+  new_type: string | null;
 };
 
 /**
@@ -78,6 +88,31 @@ export default async function AttendancePage({
   }
 
   const rows = (data ?? []) as unknown as Row[];
+
+  // Corrections for the records on this page. Fetched in one query rather than
+  // per row, and scoped by RLS to whoever can see the record they correct.
+  const corrected = rows.filter((r) => r.review_state === "corrected");
+  const { data: correctionData } =
+    corrected.length > 0
+      ? await supabase
+          .from("attendance_corrections")
+          .select(
+            "attendance_record_id, reason, created_at, new_check_in_at, new_check_out_at, new_type",
+          )
+          .in("attendance_record_id", corrected.map((r) => r.id))
+          .order("created_at", { ascending: false })
+      : { data: [] };
+
+  // Latest correction per record — a record can be corrected more than once,
+  // and the most recent is the one that stands.
+  const corrections = new Map<string, Correction>();
+  for (const c of (correctionData ?? []) as unknown as Correction[]) {
+    if (!corrections.has(c.attendance_record_id)) {
+      corrections.set(c.attendance_record_id, c);
+    }
+  }
+
+  const mayReview = can(session, "attendance.review");
   const present = rows.filter((r) => r.attendance_type === "office").length;
   const remote = rows.filter((r) => r.attendance_type === "remote").length;
   const flagged = rows.filter((r) => r.review_state === "pending").length;
@@ -168,7 +203,35 @@ export default async function AttendancePage({
                     {row.review_state === "pending" ? (
                       <StatusPill tone="warn">Needs review</StatusPill>
                     ) : null}
+                    {row.review_state === "approved" ? (
+                      <StatusPill tone="success">Reviewed</StatusPill>
+                    ) : null}
+                    {row.review_state === "corrected" ? (
+                      <StatusPill tone="info">Corrected</StatusPill>
+                    ) : null}
                   </div>
+
+                  {mayReview && row.review_state === "pending" ? (
+                    <div className="w-full sm:w-auto">
+                      <ReviewAttendance
+                        org={org}
+                        recordId={row.id}
+                        recordedType={row.attendance_type}
+                      />
+                    </div>
+                  ) : null}
+
+                  {corrections.get(row.id) ? (
+                    <div className="w-full rounded-lg border border-border bg-surface p-3">
+                      <p className="text-small text-text-2">
+                        <span className="font-medium">Corrected.</span>{" "}
+                        {describeCorrection(corrections.get(row.id)!)}
+                      </p>
+                      <p className="mt-1 text-small text-text-3">
+                        {corrections.get(row.id)!.reason}
+                      </p>
+                    </div>
+                  ) : null}
 
                   {row.exception_codes.length > 0 ? (
                     <p className="w-full text-small text-text-2">
@@ -188,6 +251,30 @@ export default async function AttendancePage({
       )}
     </div>
   );
+}
+
+/**
+ * What a correction changed, in words. The original row keeps its own values —
+ * `check_in_at` is immutable by trigger and the rest is deliberately left
+ * alone — so this is the only place the corrected times are readable.
+ */
+function describeCorrection(correction: Correction): string {
+  const parts: string[] = [];
+  const time = (value: string) =>
+    new Date(value).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  if (correction.new_check_in_at) {
+    parts.push(`check-in should be ${time(correction.new_check_in_at)}`);
+  }
+  if (correction.new_check_out_at) {
+    parts.push(`check-out should be ${time(correction.new_check_out_at)}`);
+  }
+  if (correction.new_type) parts.push(`recorded as ${correction.new_type}`);
+
+  return parts.length > 0 ? `${parts.join(", ")}.` : "See the reason below.";
 }
 
 function Stat({
