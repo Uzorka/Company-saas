@@ -221,6 +221,21 @@ with checks as (
   union all select 21, 'RLS policies across the app',
     (select count(*) from pg_policies where schemaname = 'public')::text || ' policies',
     (select count(*) from pg_policies where schemaname = 'public') >= 100
+
+  -- Check 15 reports the latest migration but passes on any of them, so it
+  -- cannot answer "is this database current?". These two can.
+  union all select 22, 'Database is at the latest migration',
+    coalesce((select 'latest applied: ' || max(version) from schema_migrations),
+             'EMPTY — run adopt.sql then install.sql'),
+    coalesce((select max(version) from schema_migrations), '') >= '0033'
+
+  union all select 23, 'High-risk roles cannot be granted by one person',
+    coalesce((select 'guard present' from pg_trigger
+              where tgname = 'user_roles_high_risk_guard' and not tgisinternal),
+             'MISSING — migration 0033 has not run, so Management, HR and '
+             || 'Accounts can be granted directly'),
+    exists (select 1 from pg_trigger
+            where tgname = 'user_roles_high_risk_guard' and not tgisinternal)
 )
 select
   case when ok then 'PASS' else 'FAIL' end as result,
