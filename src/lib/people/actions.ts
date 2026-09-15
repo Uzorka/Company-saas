@@ -61,6 +61,8 @@ const HIGH_RISK = new Set(["management", "hr", "accounts"]);
 export type InviteState = FormState & {
   /** Shown once, never persisted. */
   credentials?: { email: string; password: string };
+  /** The account was made, but something alongside it was not. */
+  warning?: string;
 };
 
 /**
@@ -175,11 +177,10 @@ export async function inviteUser(
   });
 
   if (roleError) {
-    await supabase
-      .from("organization_members")
-      .delete()
-      .eq("organization_id", session.organizationId)
-      .eq("user_id", userId);
+    // Deleting the auth user is enough to undo the membership too:
+    // organization_members.user_id cascades from auth.users. An explicit
+    // delete here would be a second write that can itself be refused, in an
+    // error path with nowhere to report it.
     await admin.auth.admin.deleteUser(userId);
     return {
       error: describeWriteError(
@@ -194,18 +195,32 @@ export async function inviteUser(
   // person signs in to a workspace where every "my own" screen is empty —
   // no payslip, no leave balance, no assigned tasks — because my_employee_id()
   // returns null and the policies correctly match nothing.
+  let linkWarning: string | undefined;
+
   if (parsed.data.employeeId) {
-    await supabase
+    const { data: linked } = await supabase
       .from("employees")
       .update({ user_id: userId })
       .eq("id", parsed.data.employeeId)
-      .is("user_id", null);
+      .is("user_id", null)
+      .select("id");
+
+    // `.is("user_id", null)` matches nothing if someone linked that record
+    // first, and a policy refusal looks the same. The account is real either
+    // way — the password below is the only copy — so this is a warning shown
+    // alongside it, not an error that throws the credentials away.
+    if (!linked || linked.length === 0) {
+      linkWarning =
+        "The account was created, but it could not be linked to that employee " +
+        "record — someone may have linked it already. Link it from the profile.";
+    }
   }
 
   revalidatePath("/[org]/employees", "page");
 
   return {
     done: true,
+    warning: linkWarning,
     credentials: { email: parsed.data.email, password },
   };
 }

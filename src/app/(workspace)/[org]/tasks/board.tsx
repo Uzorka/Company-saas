@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, List, MapPin, ShieldOff, Camera, ClipboardCheck } from "lucide-react";
+import Link from "next/link";
+import {
+  LayoutGrid,
+  List,
+  MapPin,
+  ShieldOff,
+  Camera,
+  ClipboardCheck,
+  ArrowRight,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Button } from "@/components/ui/button";
@@ -34,7 +43,7 @@ const modeIcon = {
  * horizontally scrolling board on a phone. Both views render from the same
  * rows, so they cannot drift.
  */
-export function TaskBoard({ rows }: { rows: TaskRow[] }) {
+export function TaskBoard({ rows, org }: { rows: TaskRow[]; org: string }) {
   const [view, setView] = useState<"board" | "list">("board");
   const [selected, setSelected] = useState<TaskRow | null>(null);
 
@@ -105,7 +114,7 @@ export function TaskBoard({ rows }: { rows: TaskRow[] }) {
         )}
       </div>
 
-      <TaskDetail task={selected} onClose={() => setSelected(null)} />
+      <TaskDetail task={selected} org={org} onClose={() => setSelected(null)} />
     </div>
   );
 }
@@ -304,9 +313,11 @@ function TaskList({
 
 function TaskDetail({
   task,
+  org,
   onClose,
 }: {
   task: TaskRow | null;
+  org: string;
   onClose: () => void;
 }) {
   const visit = task?.visits?.[0];
@@ -369,11 +380,19 @@ function TaskDetail({
             </Detail>
           </dl>
 
-          <p className="border-t border-border pt-4 text-small text-text-3">
-            Comments, attachments and the capture flow open from the task page.
-            A visit can only be submitted from the site itself — the app checks
-            range before the camera opens.
-          </p>
+          <div className="border-t border-border pt-4">
+            <Link href={`/${org}/tasks/${task.id}`}>
+              <Button variant="secondary">
+                Open task
+                <ArrowRight aria-hidden />
+              </Button>
+            </Link>
+            <p className="mt-3 text-small text-text-3">
+              Comments and the full activity trail are on the task. A visit can
+              only be submitted from the site itself — the app checks range
+              before the camera opens.
+            </p>
+          </div>
         </div>
       ) : null}
     </SlideOver>

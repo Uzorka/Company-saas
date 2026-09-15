@@ -1286,3 +1286,48 @@ change: a self-edit clause on the whole row would let a person move themselves
 into another department or change their employment type. It needs the update
 scoped to the columns a person may legitimately correct, which is a migration,
 not a condition in an action. Recorded in docs/BACKLOG.md.
+
+## D94 — A refused write that reported success — **Accepted**
+`setTaskStatus` checked `error` and returned ok. Its comment claimed "RLS
+refuses the update for someone without the right scope, so this is the honest
+message" — which is the opposite of what happens. RLS refuses a write in two
+ways and only one of them raises: missing a table privilege raises; a policy
+that matches no rows does not. The statement succeeds having changed nothing.
+
+Verified against the running database: a member with no task permission
+updating a task changed **0 rows and raised nothing**. So the card slid across
+the board, the action returned ok, and the database never heard about it. The
+person finds out on the next refresh.
+
+A sweep found five more. Three were in code written earlier the same day —
+including `revokeRoleGrant`, where a refused delete would have marked the
+request revoked while the person kept the role: the screen would have said the
+access was taken away and it would not have been.
+
+That is why this is a gate rather than a habit. `scripts/check-write-guards.mjs`
+requires every PostgREST update and delete to end in `.select(...)`, and
+`refusedIfEmpty()` is the one place the reasoning is written down. Removing the
+`.select()` from `setTaskStatus` fails the gate.
+
+Two findings fell out of the sweep rather than the rule:
+
+- The membership rollback in `inviteUser` was a redundant second write —
+  `organization_members.user_id` cascades from `auth.users`, which the next
+  line deletes. Removed rather than guarded: an extra write in an error path
+  has nowhere to report its own failure.
+- The employee link in `inviteUser` used `.is("user_id", null)` and ignored the
+  result, so an account created against an already-linked record was silently
+  half-done. It now warns — alongside the password, not instead of it, because
+  that password is the only copy.
+
+## D95 — tasks.comment was granted to everyone and usable by no one — **Accepted**
+`task_comments` and `task_activity` have existed since migration 0016 with
+policies, indexes and a documented rule that comments are never editable. No
+screen read or wrote either, and `tasks.comment` is in every role's permission
+set. The board's slide-over said "comments … open from the task page", and
+there was no task page.
+
+The same shape as D90: a control the schema takes seriously with no path
+through it. `/[org]/tasks/[id]` is that path. Comments and activity are
+interleaved by time rather than shown as two lists — a returned visit and the
+reply to it belong next to each other.

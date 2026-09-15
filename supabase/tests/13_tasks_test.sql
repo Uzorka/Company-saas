@@ -173,3 +173,63 @@ begin
   raise notice '--- task assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- A refused status change changes nothing — and looks like success.
+--
+-- `tasks_update_assigned` matches no rows for someone who is not on the task.
+-- That is not an error: the statement succeeds having changed nothing, and
+-- setTaskStatus reported ok for it until the zero-rows guard was added. These
+-- assert the shape the guard depends on.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  t uuid;
+begin
+  select * into f from fixture;
+  select id into t from tasks where organization_id = f.org_a limit 1;
+  perform assert(t is not null, 'There is a task to move');
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_other, f.org_a),
+      format('update tasks set status = ''completed'' where id = %L', t)
+    ) = 0,
+    'A member with no task permission cannot move a task'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format('update tasks set status = ''in_progress'' where id = %L', t)
+    ) = 1,
+    'The assignee can move their own task'
+  );
+
+  -- Comments: tasks.comment is granted to every role, and had no path in the
+  -- product until the task detail screen. The policy it rests on:
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format($q$insert into task_comments (organization_id, task_id, author_id, body)
+                values (%L, %L, %L, 'Stock counted, two cases short.')$q$,
+             f.org_a, t, f.u_emp)
+    ) = 1,
+    'An assignee can comment on their task'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format($q$insert into task_comments (organization_id, task_id, author_id, body)
+                values (%L, %L, %L, 'Posted as somebody else.')$q$,
+             f.org_a, t, f.u_mgmt)
+    ) = 0,
+    'A comment cannot be posted under another person''s name'
+  );
+
+  raise notice '--- task status and comment assertions passed ---';
+end
+$$;

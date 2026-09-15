@@ -72,22 +72,26 @@ export async function setTaskStatus(
   await requireSession();
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("tasks")
     .update({
       status: parsed.data.status,
       completed_at:
         parsed.data.status === "completed" ? new Date().toISOString() : null,
     })
-    .eq("id", parsed.data.taskId);
+    .eq("id", parsed.data.taskId)
+    .select("id");
 
   if (error) {
-    // RLS refuses the update for someone without the right scope, so this is
-    // the honest message rather than a generic failure.
-    return {
-      ok: false,
-      error: "You can't change this task's status.",
-    };
+    return { ok: false, error: "That status couldn't be saved." };
+  }
+
+  // `tasks_update_assigned` matches no rows for someone who is not on the
+  // task, which is not an error — the statement succeeds having changed
+  // nothing. Checking `error` alone reported success for a refused move, so
+  // the card slid across the board and the database never heard about it.
+  if (!data || data.length === 0) {
+    return { ok: false, error: "You can't change this task's status." };
   }
 
   revalidatePath("/[org]/tasks", "page");
@@ -207,4 +211,61 @@ export async function createTask(
 
   revalidatePath("/[org]/tasks", "page");
   return { done: true, id: data.id };
+}
+
+const commentSchema = z.object({
+  taskId: z.string().uuid(),
+  body: z.string().trim().min(1, "Write something first").max(4000),
+});
+
+/**
+ * Comment on a task.
+ *
+ * `tasks.comment` is granted to every role in the catalogue and had no path in
+ * the product at all until the task screen — a permission nobody could use.
+ *
+ * `author_id` comes from the session, not the form. The insert policy requires
+ * it to equal `auth.uid()`, so a form field naming someone else would be
+ * refused; accepting one would imply it could work.
+ *
+ * Comments cannot be edited or deleted, and that is the schema's decision, not
+ * a missing screen: a conversation someone acted on is not something to
+ * quietly rewrite.
+ */
+export async function addTaskComment(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const org = String(formData.get("org") ?? "");
+  const parsed = commentSchema.safeParse({
+    taskId: formData.get("taskId"),
+    body: formData.get("body"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Write something first" };
+  }
+
+  const session = await requireOrg(org);
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("task_comments").insert({
+    organization_id: session.organizationId,
+    task_id: parsed.data.taskId,
+    author_id: session.userId,
+    body: parsed.data.body,
+  });
+
+  if (error) {
+    return {
+      error: describeWriteError(
+        error.code,
+        error.message,
+        "That comment is already there.",
+      ),
+    };
+  }
+
+  revalidatePath("/[org]/tasks/[id]", "page");
+  return { done: true };
 }

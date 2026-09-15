@@ -63,6 +63,16 @@ export function InviteUser({
               </p>
             </div>
 
+            {state.warning ? (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-error-border bg-error-surface p-3 text-small text-danger-fg"
+              >
+                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                {state.warning}
+              </p>
+            ) : null}
+
             <div className="rounded-lg border border-warn-border bg-warn-bg p-4">
               <p className="flex items-start gap-2 text-small text-warn-fg">
                 <KeyRound className="mt-0.5 size-4 shrink-0" aria-hidden />

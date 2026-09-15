@@ -46,3 +46,27 @@ export function describeWriteError(
   }
   return humanise(message);
 }
+
+/**
+ * Did that write actually change anything?
+ *
+ * RLS refuses a write in two different ways, and only one of them raises.
+ * Missing a table privilege raises; a policy that simply matches no rows does
+ * not — the statement succeeds having changed nothing. So an action that
+ * checks only `error` reports success for a write the database refused: the
+ * screen updates, the row does not, and the person finds out on the next
+ * refresh.
+ *
+ * Every update and delete therefore ends in `.select(...)` and passes the rows
+ * through here. Zero rows is the refusal.
+ *
+ * This is also why actions do not re-implement the policy as an `if`: what
+ * comes back is what the database actually did, rather than a second opinion
+ * that can drift from it.
+ */
+export function refusedIfEmpty(
+  rows: unknown[] | null | undefined,
+  message = "You don't have permission to do that.",
+): string | null {
+  return rows && rows.length > 0 ? null : message;
+}

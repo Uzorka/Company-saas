@@ -82,7 +82,7 @@ export default async function TasksPage({
           ) : null}
         </div>
       ) : null}
-      <TaskBoard rows={rows} />
+      <TaskBoard rows={rows} org={org} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/auth/session";
-import { type FormState, describeWriteError } from "@/lib/forms/result";
+import { type FormState, describeWriteError, refusedIfEmpty } from "@/lib/forms/result";
 
 /**
  * Settings mutations.
@@ -70,7 +70,7 @@ export async function updateSettings(
   const session = await requireOrg(org);
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("organization_settings")
     .update({
       timezone: parsed.data.timezone,
@@ -84,13 +84,23 @@ export async function updateSettings(
       coordinate_retention_months: parsed.data.coordinateRetentionMonths,
       audit_retention_years: parsed.data.auditRetentionYears,
     })
-    .eq("organization_id", session.organizationId);
+    .eq("organization_id", session.organizationId)
+    .select("organization_id");
 
   if (error) {
     return {
       error: describeWriteError(error.code, error.message, "Settings already saved."),
     };
   }
+
+  // Since migration 0030 `org_settings_update` requires `settings.manage`, so
+  // HR and Accounts reach this screen and are refused here. Without this they
+  // would be told the change saved.
+  const refused = refusedIfEmpty(
+    data,
+    "Changing these needs full settings access. Your role manages its own area elsewhere.",
+  );
+  if (refused) return { error: refused };
 
   revalidatePath("/[org]/settings", "page");
   return { done: true };

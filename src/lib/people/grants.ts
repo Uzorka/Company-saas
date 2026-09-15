@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg, can } from "@/lib/auth/session";
-import { type FormState, describeWriteError } from "@/lib/forms/result";
+import {
+  type FormState,
+  describeWriteError,
+  refusedIfEmpty,
+} from "@/lib/forms/result";
 
 /**
  * High-risk role grants: the two-stage path.
@@ -145,7 +149,7 @@ export async function approveRoleGrant(
     };
   }
 
-  const { error: approveError } = await supabase
+  const { data: approved, error: approveError } = await supabase
     .from("role_grant_requests")
     .update({
       status: "active",
@@ -153,7 +157,8 @@ export async function approveRoleGrant(
       second_approved_at: new Date().toISOString(),
     })
     .eq("id", request.id)
-    .eq("status", "awaiting_second_approver");
+    .eq("status", "awaiting_second_approver")
+    .select("id");
 
   if (approveError) {
     return {
@@ -165,6 +170,14 @@ export async function approveRoleGrant(
     };
   }
 
+  // Zero rows means the policy refused it or somebody else decided it between
+  // the read above and this write. Either way the grant below must not run.
+  const approveRefused = refusedIfEmpty(
+    approved,
+    "That request was decided by someone else a moment ago. Reload to see where it stands.",
+  );
+  if (approveRefused) return { error: approveRefused };
+
   const { error: grantError } = await supabase.from("user_roles").insert({
     organization_id: session.organizationId,
     user_id: request.target_user_id,
@@ -172,14 +185,27 @@ export async function approveRoleGrant(
   });
 
   if (grantError) {
-    await supabase
+    // Put the request back, so an approved-but-ungranted row is not left
+    // standing — the 0033 trigger looks for exactly that shape, and one
+    // sitting there would let a later direct insert through.
+    const { data: rolledBack } = await supabase
       .from("role_grant_requests")
       .update({
         status: "awaiting_second_approver",
         second_approver_id: null,
         second_approved_at: null,
       })
-      .eq("id", request.id);
+      .eq("id", request.id)
+      .select("id");
+
+    if (!rolledBack || rolledBack.length === 0) {
+      return {
+        error:
+          "The role could not be granted, and the approval could not be undone. " +
+          "This request now shows as approved without the role having been given — " +
+          "tell an administrator before anyone acts on it.",
+      };
+    }
 
     return {
       error: describeWriteError(
@@ -211,15 +237,22 @@ export async function declineRoleGrant(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("role_grant_requests")
     .update({ status: "declined" })
     .eq("id", parsed.data.requestId)
-    .eq("status", "awaiting_second_approver");
+    .eq("status", "awaiting_second_approver")
+    .select("id");
 
   if (error) {
     return { error: describeWriteError(error.code, error.message, "Already decided.") };
   }
+
+  const refused = refusedIfEmpty(
+    data,
+    "That request was decided by someone else a moment ago. Reload to see where it stands.",
+  );
+  if (refused) return { error: refused };
 
   revalidatePath("/[org]/settings", "page");
   return { done: true };
@@ -267,29 +300,49 @@ export async function revokeRoleGrant(
     };
   }
 
-  const { error: removeError } = await supabase
+  const { data: removed, error: removeError } = await supabase
     .from("user_roles")
     .delete()
     .eq("organization_id", session.organizationId)
     .eq("user_id", request.target_user_id)
-    .eq("role_id", request.role_id);
+    .eq("role_id", request.role_id)
+    .select("user_id");
 
   if (removeError) {
     return { error: describeWriteError(removeError.code, removeError.message, "") };
   }
 
-  const { error: markError } = await supabase
+  // The dangerous one: a refused delete changes nothing and raises nothing, so
+  // without this the request would be marked revoked while the person kept the
+  // role. The screen would say the access was taken away and it would not have
+  // been.
+  const removeRefused = refusedIfEmpty(
+    removed,
+    "That role could not be removed, so nothing has been changed.",
+  );
+  if (removeRefused) return { error: removeRefused };
+
+  const { data: marked, error: markError } = await supabase
     .from("role_grant_requests")
     .update({
       status: "revoked",
       revoked_by: session.userId,
       revoked_at: new Date().toISOString(),
     })
-    .eq("id", request.id);
+    .eq("id", request.id)
+    .select("id");
 
   if (markError) {
     return { error: describeWriteError(markError.code, markError.message, "") };
   }
+
+  // The role is already gone by this point. Say so plainly rather than report
+  // a clean revocation whose record did not get written.
+  const markRefused = refusedIfEmpty(
+    marked,
+    "The role was removed, but the record of the revocation could not be written. Tell an administrator.",
+  );
+  if (markRefused) return { error: markRefused };
 
   revalidatePath("/[org]/settings", "page");
   return { done: true };
