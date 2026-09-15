@@ -68,6 +68,8 @@ export default async function LeavePage({
 
   const canApprove =
     can(session, "leave.approve_department") || can(session, "leave.approve_hr");
+  const canSeeBalances =
+    can(session, "leave.view_all") || can(session, "leave.view_department");
 
   return (
     <div className="flex flex-col gap-5">
@@ -79,6 +81,15 @@ export default async function LeavePage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          {canSeeBalances ? (
+            <Link
+              href={`/${org}/leave/balances`}
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              Balances
+              <LinkPending />
+            </Link>
+          ) : null}
           {canApprove ? (
             <Link
               href={`/${org}/leave/approvals`}

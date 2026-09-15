@@ -111,3 +111,73 @@ export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
 
   return (data ?? []) as LeaveTypeRow[];
 }
+
+// ---------------------------------------------------------------------------
+// Balances, for whoever administers them
+// ---------------------------------------------------------------------------
+
+export type EmployeeBalances = {
+  employeeId: string;
+  employeeNo: string;
+  name: string;
+  department: string | null;
+  /** Keyed by leave type id. Absent means no row for this year yet. */
+  byType: Record<string, { entitled: number; taken: number }>;
+};
+
+/**
+ * Everyone's balances for one leave year.
+ *
+ * Two queries rather than an embed from `employees`, because an employee with
+ * no balance row at all is the case that matters most — they are the person
+ * who cannot request leave — and an inner join would hide exactly them.
+ *
+ * Scope is RLS's: `leave_balances_select_department` narrows an HOD to their
+ * own people without a `where` clause here.
+ */
+export async function listBalances(year: number): Promise<{
+  rows: EmployeeBalances[];
+  error: boolean;
+}> {
+  const supabase = await createClient();
+
+  const [{ data: employees, error: empError }, { data: balances }] =
+    await Promise.all([
+      supabase
+        .from("employees")
+        .select("id, employee_no, first_name, last_name, department:departments(name)")
+        .neq("employment_status", "exited")
+        .order("last_name"),
+      supabase
+        .from("leave_balances")
+        .select("employee_id, leave_type_id, entitled_days, taken_days")
+        .eq("leave_year", year),
+    ]);
+
+  if (empError) return { rows: [], error: true };
+
+  const byEmployee = new Map<string, EmployeeBalances["byType"]>();
+  for (const b of balances ?? []) {
+    const key = b.employee_id as string;
+    const existing = byEmployee.get(key) ?? {};
+    existing[b.leave_type_id as string] = {
+      entitled: Number(b.entitled_days),
+      taken: Number(b.taken_days),
+    };
+    byEmployee.set(key, existing);
+  }
+
+  return {
+    error: false,
+    rows: (employees ?? []).map((e) => {
+      const department = e.department as unknown as { name: string } | null;
+      return {
+        employeeId: e.id as string,
+        employeeNo: e.employee_no as string,
+        name: `${e.first_name} ${e.last_name}`,
+        department: department?.name ?? null,
+        byType: byEmployee.get(e.id as string) ?? {},
+      };
+    }),
+  };
+}

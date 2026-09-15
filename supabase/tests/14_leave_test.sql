@@ -204,3 +204,69 @@ begin
   raise notice '--- leave assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Entitlements, and why the leave module needed a screen for them.
+--
+-- That an employee cannot move their own balance is asserted above. What was
+-- missing is the other side: a balance row is created only by
+-- apply_leave_balance on final approval, leave_days_remaining returns 0 when
+-- there is no row, and request_leave refuses any capped type on that. So a
+-- workspace with no entitlements set refuses every annual leave request, and
+-- nothing in the product could change the answer.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  emp uuid;
+  annual uuid;
+  yr smallint := extract(year from current_date)::smallint;
+begin
+  select * into f from fixture;
+  select id into emp from employees
+   where organization_id = f.org_a and user_id = f.u_emp;
+  select id into annual from leave_types
+   where organization_id = f.org_a and annual_entitlement_days is not null
+   limit 1;
+
+  perform assert(annual is not null, 'There is a capped leave type');
+
+  -- The state a fresh leave year is actually in.
+  delete from leave_balances
+   where employee_id = emp and leave_type_id = annual and leave_year = yr;
+
+  perform assert(
+    leave_days_remaining(emp, annual, yr) = 0,
+    'With no balance row nothing is left — which is what refuses every request'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format($q$insert into leave_balances
+                  (organization_id, employee_id, leave_type_id, leave_year, entitled_days)
+                values (%L, %L, %L, %L, 20)$q$,
+             f.org_a, emp, annual, yr)
+    ) = 1,
+    'HR can set an entitlement, which is what the balances screen writes'
+  );
+
+  perform assert(
+    leave_days_remaining(emp, annual, yr) = 20,
+    'and the days become available to request'
+  );
+
+  -- Accounts sees leave for payroll and does not set policy.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_acct, f.org_a),
+      format('update leave_balances set entitled_days = 60 where employee_id = %L and leave_type_id = %L and leave_year = %L',
+             emp, annual, yr)
+    ) = 0,
+    'Accounts reads leave for payroll but does not set entitlements'
+  );
+
+  raise notice '--- leave entitlement assertions passed ---';
+end
+$$;

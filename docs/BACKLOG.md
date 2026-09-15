@@ -55,15 +55,13 @@ own pages. The Apapa address previously shown was a directory error and is gone.
 ## Found by the Phase-8 system review — still open
 The structural repairs are done (see `DECISIONS.md` D57-D59). These remain:
 
-**Create paths: done** (D60). Employee, department, position, task, leave
-request, payroll period and job can all be created through the UI. Still
-missing: creating an office (attendance settings, which is part of the
-unbuilt settings screen), and inviting an employee to sign in — an employee
-record and a login are separate things in this schema and the invite flow
-has not been built.
+**Create paths: done** (D60, extended). Employee, department, position, task,
+leave request, payroll period, job and office can all be created through the
+UI. Account provisioning is built (Employees → Create account), and high-risk
+roles go through Settings → Role grants (D90).
 
-**Five screens do not exist**: reports, settings, audit log, documents,
-notifications. They render as "Soon" in the nav.
+**Two screens do not exist**: documents and notifications. They render as
+"Soon" in the nav. Reports, settings and the audit log were built in Phase 9.
 
 **Demo data: done** (D64). `supabase/setup/demo-seed.sql` adds 23 fictional
 employees with attendance, tasks, field visits, leave, two payroll runs and

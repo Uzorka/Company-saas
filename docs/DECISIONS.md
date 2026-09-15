@@ -1358,3 +1358,30 @@ The design-token gate also caught `bg-info-surface` on its first run. The
 palette has surface/border pairs for error, success and warn but not info —
 a real gap, left alone rather than filled, since inventing palette is not this
 change. The block uses neutral tokens and the pill carries the colour.
+
+## D97 — Leave did not work, and said so in a way nobody would read as a bug — **Accepted**
+`request_leave` refuses a capped type when the balance is short.
+`leave_days_remaining` returns 0 when there is no balance row. A balance row is
+created only by `apply_leave_balance`, on final approval. Nothing in the
+product could create one.
+
+So a fresh workspace refuses every annual leave request with "You have 0 days
+of Annual left and this request is 5 days — short by 5". That reads as the
+system working correctly. It is the leave module being unusable, phrased as a
+policy decision.
+
+The balances screen sets entitlements, and "Open <year>" applies each leave
+type's own `annual_entitlement_days` to anyone who has no row yet. That is not
+a policy decision being invented here — the entitlement is configured on the
+leave type, and this applies it. Existing rows are left alone, so a negotiated
+extra allowance survives the button being pressed twice.
+
+`taken_days` is shown and not editable anywhere. It moves only on final
+approval, which migration 0019 singles out as the rule that most needs to hold;
+a field that let someone type over it would be a way around the approval chain
+rather than a way to fix a number.
+
+Third time in a row that writing assertions found I had duplicated existing
+coverage — the suite already had "an employee cannot change their own balance".
+Reading the existing tests before adding to them is cheaper than mutation-
+testing a duplicate, and I keep learning it late.
