@@ -1679,3 +1679,42 @@ users for its own purposes. Counting is the wrong instrument there. The
 assertions now state properties — no row outside a headed department, no
 payroll line for HR, nothing at all for a user created in the block with no
 roles — which hold whatever the suite leaves behind.
+
+## D112 — Nobody reads a direct message but the two people in it — **Accepted**
+Put to the client as a question, because it is not a technical choice and it is
+the hardest thing here to change later: the answer lives in the policies, and
+policies are what the data was collected under.
+
+The answer was: only the participants. Not Management, not the account that
+installed the product, not a support screen. `messages_read` requires
+membership and nothing else, and there is no branch in it for a permission.
+
+It has a real cost, stated plainly: there is no in-app way to investigate
+harassment reported through another route. The alternative costs more. Staff
+who know their employer reads their messages either do not use the tool or use
+it carefully, and a messaging feature nobody trusts is the worst of both —
+it collects personal data and delivers nothing. Under the Nigeria Data
+Protection Act the same point has legal weight: people must be told what is
+collected and who can see it, and "your employer reads this" is a disclosure
+most employers would rather not make. A lawful order is answered by the
+database owner in the Supabase dashboard — deliberate, logged by the platform,
+outside the application. That is the right shape for something that should be
+rare and difficult.
+
+Both halves are asserted and mutation-tested: adding `audit.view` to
+`messages_read` fails "Management cannot read a direct message", and adding an
+update policy fails "The author cannot edit a message after sending it".
+
+No edit and no delete, for anyone including the author — the same rule as task
+comments and the audit log. A channel is discoverable by everyone and readable
+only once joined, which is what makes "discoverable" different from "public".
+
+`is_conversation_member()` is `security definer` for a reason worth recording:
+a policy on `messages` that joined `conversation_members` while a policy on
+that table referred back to `messages` recurses. One function, stepping outside
+RLS to answer one question, is the standard way out.
+
+Polling, not Realtime. Ten seconds on an open page is indistinguishable from
+live for an internal tool, it survives a driver's connection dropping and
+coming back, and it does not add a subscription whose authorisation has to be
+reasoned about separately from the policies that already say everything.

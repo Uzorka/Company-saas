@@ -284,6 +284,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0035_email_settings';
   end if;
 
+  if to_regclass('public.conversations') is not null then
+    insert into schema_migrations (version) values ('0036_messaging') on conflict do nothing;
+    raise notice 'present, recorded: %', '0036_messaging';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0036_messaging';
+  end if;
+
 end
 $adopt$;
 

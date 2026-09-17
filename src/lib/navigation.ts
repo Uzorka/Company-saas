@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { Permission } from "@/lib/auth/permissions";
 import {
+  MessageSquare,
   LayoutDashboard,
   Users,
   Building2,
@@ -68,6 +69,7 @@ const planned = (
 export const navByRole: Record<RoleSlug, NavItem[]> = {
   management: [
     item("Dashboard", "/dashboard", LayoutDashboard),
+    item("Messages", "/messages", MessageSquare),
     item("Employees", "/employees", Users, "employees.view_all"),
     item("Departments", "/departments", Building2, "departments.view"),
     item("Attendance", "/attendance", CalendarCheck, "attendance.view_all"),
@@ -81,6 +83,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
   ],
   hr: [
     item("Dashboard", "/dashboard", LayoutDashboard),
+    item("Messages", "/messages", MessageSquare),
     item("Employees", "/employees", Users, "employees.view_all"),
     item("Departments", "/departments", Building2, "departments.view"),
     item("Attendance", "/attendance", CalendarCheck, "attendance.view_all"),
@@ -92,6 +95,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
   ],
   accounts: [
     item("Dashboard", "/dashboard", LayoutDashboard),
+    item("Messages", "/messages", MessageSquare),
     item("Payroll", "/payroll", Wallet, "payroll.view_all"),
     item("Payslips", "/payslips", Receipt, "payroll.view_all"),
     item("Employees", "/employees", Users, "employees.view_all"),
@@ -100,6 +104,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
   ],
   hod: [
     item("Dashboard", "/dashboard", LayoutDashboard),
+    item("Messages", "/messages", MessageSquare),
     item("My department", "/departments", Users, "departments.view"),
     item("Attendance", "/attendance", CalendarCheck, "attendance.view_department"),
     item("Tasks", "/tasks", ClipboardList, "tasks.view_department"),
@@ -109,6 +114,7 @@ export const navByRole: Record<RoleSlug, NavItem[]> = {
   ],
   employee: [
     item("Dashboard", "/dashboard", LayoutDashboard),
+    item("Messages", "/messages", MessageSquare),
     item("Check in", "/attendance/check-in", CalendarCheck, "attendance.check_in"),
     item("My tasks", "/tasks", ClipboardList, "tasks.view_assigned"),
     item("Leave", "/leave", Plane, "leave.view_self"),
