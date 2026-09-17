@@ -270,6 +270,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0033_high_risk_grants';
   end if;
 
+  if to_regclass('public.if') is not null then
+    insert into schema_migrations (version) values ('0034_hiring_pipeline') on conflict do nothing;
+    raise notice 'present, recorded: %', '0034_hiring_pipeline';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0034_hiring_pipeline';
+  end if;
+
 end
 $adopt$;
 

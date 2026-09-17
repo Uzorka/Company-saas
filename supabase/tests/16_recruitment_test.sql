@@ -143,3 +143,204 @@ begin
   raise notice '--- recruitment assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- The hiring pipeline: hold, interview, offer, and the emails.
+--
+-- The board could display an applicant and do nothing to one. These assert
+-- what the new actions rest on — and that the email a candidate was sent is
+-- written by the same statement as the move, so the two cannot come apart.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  v_job uuid;
+  v_app uuid;
+  v_emp employees;
+  n integer;
+  failed boolean;
+begin
+  select * into f from fixture;
+
+  select id into v_job from jobs where organization_id = f.org_a limit 1;
+  perform assert(v_job is not null, 'There is a job to apply to');
+
+  insert into job_applications
+    (organization_id, job_id, first_name, last_name, email, phone, location)
+  values (f.org_a, v_job, 'Chiamaka', 'Nwosu', 'chiamaka.nwosu@example.com',
+          '+234 800 111 2222', 'Yaba, Lagos')
+  returning id into v_app;
+
+  -- === Holding is orthogonal to stage =====================================
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  perform hold_application(v_app, 'Waiting on the budget sign-off.');
+  reset role;
+
+  perform assert(
+    (select stage from job_applications where id = v_app) = 'applied',
+    'A hold leaves the candidate at the stage they were actually at'
+  );
+  perform assert(
+    (select on_hold_at is not null from job_applications where id = v_app),
+    'and marks them held'
+  );
+
+  -- === Shortlisting lifts the hold and writes one email ===================
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  perform move_application_stage(v_app, 'shortlisted', null);
+  reset role;
+
+  perform assert(
+    (select on_hold_at is null from job_applications where id = v_app),
+    'A decision lifts the hold'
+  );
+
+  select count(*) into n from outbound_emails
+   where application_id = v_app and template = 'shortlisted';
+  perform assert(n = 1, 'Shortlisting queues exactly one email');
+
+  perform assert(
+    (select to_email from outbound_emails
+      where application_id = v_app and template = 'shortlisted')
+      = 'chiamaka.nwosu@example.com',
+    'addressed to the applicant'
+  );
+  perform assert(
+    (select body like '%Chiamaka Nwosu%' from outbound_emails
+      where application_id = v_app and template = 'shortlisted'),
+    'and names them in full, which is the whole point of it'
+  );
+
+  -- === The audit entry records where they came FROM ========================
+  -- It recorded from = to until 0034: the update reassigned the row before
+  -- write_audit read the old stage off it.
+  perform assert(
+    (select metadata ->> 'from' from audit_logs
+      where entity_id = v_app::text and action = 'recruitment.stage'
+      order by id desc limit 1) = 'applied',
+    'A stage change is audited as coming from where it actually came from'
+  );
+
+  -- === Interviews ==========================================================
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  perform schedule_application_interview(
+    v_app, now() + interval '3 days', 'Head Office, Victoria Island', null);
+  reset role;
+
+  perform assert(
+    (select stage from job_applications where id = v_app) = 'interview',
+    'Scheduling moves them to interview'
+  );
+  perform assert(
+    (select count(*) from outbound_emails
+      where application_id = v_app and template = 'interview') = 1,
+    'and queues the invitation'
+  );
+
+  -- A time in the past is refused: the email would be nonsense.
+  failed := false;
+  begin
+    perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+    set local role authenticated;
+    perform schedule_application_interview(v_app, now() - interval '1 day', null, null);
+    reset role;
+  exception when others then
+    failed := true;
+    reset role;
+  end;
+  perform assert(failed, 'An interview cannot be scheduled in the past');
+
+  -- === Hiring ==============================================================
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  select * into v_emp from convert_applicant_to_employee(
+    v_app, 'CHF-9001', null, null, current_date, 'full_time');
+  reset role;
+
+  perform assert(v_emp.id is not null, 'Hiring creates the employee record');
+  perform assert(
+    (select stage from job_applications where id = v_app) = 'hired',
+    'and moves the application to hired'
+  );
+  perform assert(
+    (select count(*) from outbound_emails
+      where application_id = v_app and template = 'offer') = 1,
+    'and queues the offer'
+  );
+  perform assert(
+    (select body like '%CHF-9001%' from outbound_emails
+      where application_id = v_app and template = 'offer'),
+    'naming the employee number they will be known by'
+  );
+  -- The chosen behaviour: the offer carries no salary figure, so HR can send
+  -- it without holding payroll access.
+  perform assert(
+    (select body not ilike '%salary%' or body ilike '%follow in a separate%'
+       from outbound_emails where application_id = v_app and template = 'offer'),
+    'and no pay figure — terms follow separately'
+  );
+
+  -- Hiring the same person twice is impossible, not merely discouraged.
+  failed := false;
+  begin
+    perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+    set local role authenticated;
+    perform convert_applicant_to_employee(v_app, 'CHF-9002', null, null, current_date, 'full_time');
+    reset role;
+  exception when others then
+    failed := true;
+    reset role;
+  end;
+  perform assert(failed, 'The same applicant cannot be hired twice');
+
+  raise notice '--- hiring pipeline assertions passed ---';
+end
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- What the company told a candidate is not something it can quietly revise.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  v_email uuid;
+begin
+  select * into f from fixture;
+  select id into v_email from outbound_emails limit 1;
+  perform assert(v_email is not null, 'There is a queued email to try this on');
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format('update outbound_emails set body = ''Never mind.'' where id = %L', v_email)
+    ) = 0,
+    'Nobody can rewrite an email the pipeline sent'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, f.org_a),
+      format('delete from outbound_emails where id = %L', v_email)
+    ) = 0,
+    'and nobody can delete one, including Management'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_emp, f.org_a),
+      format($q$insert into outbound_emails
+                 (organization_id, template, to_email, to_name, subject, body)
+               values (%L, 'forged', 'someone@example.com', 'Someone', 'Hi', 'Hello')$q$,
+             f.org_a)
+    ) = 0,
+    'and no client can forge one'
+  );
+
+  raise notice '--- outbound email assertions passed ---';
+end
+$$;

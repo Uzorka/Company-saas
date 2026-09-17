@@ -1481,3 +1481,48 @@ listed `transform`, which v4 never sets, so the press had no transition at all
 and snapped back on release. `scale` for the button, `translate` for the card
 lift and the dashboard chevron. Three places, all of which looked right in the
 source and did nothing in the browser — the same shape as D80 and D91.
+
+## D103 — On hold is not a stage — **Accepted**
+It reads like one, and it is not. A candidate is held *at* screening or *at*
+interview; the hold is orthogonal to where they are, and making it a stage
+would throw away the position they were parked at — which is the only thing
+you need when you come back to them.
+
+There was also a hard reason not to. `install.sql` runs as one transaction, and
+Postgres refuses to use a new enum value in the same transaction that added it:
+"unsafe use of new value". Adding `on_hold` to `application_stage` would have
+broken the installer the moment any later statement named the value. Measured
+against a live database before designing around it, because the same installer
+has already failed for this user once.
+
+So a hold is `on_hold_at` plus a reason, lifted by any deliberate move, and
+recorded in the stage history against the stage they are actually at.
+
+## D104 — The email is written by the statement that moves the candidate — **Accepted**
+`outbound_emails` is composed inside the same database function as the stage
+change, before anything is sent. Delivery is a separate attempt against that
+row.
+
+The alternative — move the applicant, then send — has a failure mode that
+matters: a stage change that succeeds and an email that never got written, with
+nothing tying the two together. "What did we tell this person, and when" is the
+entire reason a hiring trail exists, and it cannot depend on an API being up.
+
+It also means the product is honest with no provider configured. Rows sit at
+`queued`, the screen says so plainly, and they send the moment a key is added.
+Nothing is silently dropped, and nothing is marked failed that was never
+attempted.
+
+No client may insert, update or delete a row: what a company told a candidate
+is not something it can quietly revise. Asserted three ways.
+
+## D105 — Every stage change was audited as coming from where it went — **Accepted**
+`move_application_stage` in 0026 wrote the history correctly and then did
+`update ... returning * into v_app` before calling `write_audit` with
+`v_app.stage` as the `from` value. By then `v_app` held the new row, so the
+audit log has been recording `from` and `to` as the same stage since Phase 6.
+
+The stage history was right, so nothing was lost — but the audit log is the
+thing Management reads, and it was quietly wrong. Found while replacing the
+function for the email, not by looking for it. The old stage is captured before
+the update now, and an assertion fails if that is ever undone.
