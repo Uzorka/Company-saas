@@ -44,7 +44,7 @@ export async function listAudit(
   let query = supabase
     .from("audit_logs")
     .select(
-      "id, action, entity_type, entity_id, metadata, created_at, actor_user_id, actor:profiles(full_name)",
+      "id, action, entity_type, entity_id, metadata, created_at, actor_user_id",
       { count: "exact" },
     )
     .order("created_at", { ascending: false })
@@ -62,12 +62,51 @@ export async function listAudit(
 
   const { data, count, error } = await query;
 
-  if (error) return { rows: [], total: 0, error: true };
-  return {
-    rows: (data ?? []) as unknown as AuditRow[],
-    total: count ?? 0,
-    error: false,
-  };
+  if (error) {
+    // Swallowing this is what made the screen say "the request failed" and
+    // nothing else for as long as the embed above was broken. The reader still
+    // gets a safe message; the server log gets something to act on.
+    console.error("audit: listAudit failed", error.message, error.code);
+    return { rows: [], total: 0, error: true };
+  }
+
+  const rows = (data ?? []) as unknown as AuditRow[];
+
+  // Actor names come from a second query, not an embed.
+  //
+  // `audit_logs.actor_user_id` references `auth.users`, and `profiles` is a
+  // separate table that also references `auth.users` — there is no foreign key
+  // between the two for PostgREST to follow, so `actor:profiles(full_name)`
+  // is not a join it can resolve. It failed the whole request, which is why
+  // the screen showed an error rather than a missing name.
+  const actorIds = [
+    ...new Set(
+      rows
+        .map((r) => r.actor_user_id)
+        .filter((id): id is string => typeof id === "string"),
+    ),
+  ];
+
+  if (actorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", actorIds);
+
+    const names = new Map(
+      (profiles ?? []).map((p) => [p.id as string, p.full_name as string | null]),
+    );
+
+    for (const row of rows) {
+      row.actor = row.actor_user_id
+        ? { full_name: names.get(row.actor_user_id) ?? null }
+        : null;
+    }
+  } else {
+    for (const row of rows) row.actor = null;
+  }
+
+  return { rows, total: count ?? 0, error: false };
 }
 
 /**
@@ -82,11 +121,13 @@ export async function auditFacets(): Promise<{
   entities: string[];
 }> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("audit_logs")
     .select("action, entity_type")
     .order("created_at", { ascending: false })
     .limit(1000);
+
+  if (error) console.error("audit: auditFacets failed", error.message, error.code);
 
   const rows = (data ?? []) as { action: string; entity_type: string }[];
 

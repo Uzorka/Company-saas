@@ -1414,3 +1414,25 @@ the second run being the one that failed for a real user.
 It also failed *silently* on first writing: `set -e` aborted with psql's exit
 code and no explanation. A gate that cannot say why it failed is the stale
 build again (D86), so it now prints the error and what to look at.
+
+## D99 — The audit log embedded a table it has no key to — **Accepted**
+Reported from the live app: "Couldn't load the audit log. The request failed."
+
+`listAudit` selected `actor:profiles(full_name)`. `audit_logs.actor_user_id`
+references `auth.users`; `profiles.id` references `auth.users` too. Two tables
+pointing at the same parent is not a relationship PostgREST can follow, so the
+embed did not return a null name — it failed the whole request. The one role
+allowed to read the audit log could never read it.
+
+Twice earlier the same day I wrote the workaround into new code, with a comment
+saying the foreign key points at `auth.users` and there is nothing to embed
+across. The audit page had shipped with the bug since Phase 9 and I did not go
+looking for other instances of what I had just learned.
+
+Names now come from a second select joined in a Map, and the gate refuses any
+`x:profiles(` embed, since there is no case in this schema where one resolves.
+
+The error was also swallowed: `listAudit` returned a boolean and discarded the
+message, so the screen said "the request failed" and the server logs said
+nothing. Both query failures now log the code and message. A safe message for
+the reader is right; an unlogged one is not.

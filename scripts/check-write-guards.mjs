@@ -33,9 +33,35 @@ function* files(dir) {
 
 const problems = [];
 
+/**
+ * A second rule, about reads.
+ *
+ * `profiles` has no foreign key from anything that names a user: every such
+ * column references `auth.users`, and `profiles` references `auth.users` too.
+ * Two tables pointing at the same parent is not a relationship PostgREST can
+ * follow, so `actor:profiles(full_name)` does not return a null name — it
+ * fails the entire request.
+ *
+ * The audit log shipped with exactly that embed and showed "Couldn't load the
+ * audit log" to the one role allowed to read it, until a user reported it.
+ * Resolve names with a second select and a Map instead.
+ */
+const PROFILE_EMBED = /\w+\s*:\s*profiles\s*\(/;
+
 for (const file of files(ROOT)) {
   if (file.includes("__tests__")) continue;
   const source = readFileSync(file, "utf8");
+
+  for (const [line, text] of source.split("\n").entries()) {
+    // A comment explaining why not to do this is not doing it.
+    const code = text.trim();
+    if (code.startsWith("//") || code.startsWith("*") || code.startsWith("/*")) continue;
+    if (PROFILE_EMBED.test(text)) {
+      problems.push(
+        `${file}:${line + 1}  embeds profiles() — no foreign key for PostgREST to follow`,
+      );
+    }
+  }
 
   for (const match of source.matchAll(/\.\s*(update|delete)\s*\(/g)) {
     const start = match.index;
@@ -55,13 +81,17 @@ for (const file of files(ROOT)) {
 }
 
 if (problems.length > 0) {
-  console.error("Writes that cannot tell a refusal from a success:\n");
+  console.error("Queries that cannot do what they look like they do:\n");
   for (const p of problems) console.error(`  ${p}`);
   console.error(
-    "\nAdd .select(...) to the chain and pass the rows through refusedIfEmpty()" +
-      " (src/lib/forms/result.ts). Zero rows is the refusal.",
+    "\nFor a write: add .select(...) and pass the rows through refusedIfEmpty()" +
+      " (src/lib/forms/result.ts) — zero rows is the refusal." +
+      "\nFor a profiles embed: select the ids, then read profiles separately" +
+      " and join them in a Map.",
   );
   process.exit(1);
 }
 
-console.log("Write guards: every update and delete checks what it changed.");
+console.log(
+  "Query guards: writes check what they changed, and nothing embeds profiles().",
+);
