@@ -10,6 +10,7 @@ import { listDepartments, listEmployees } from "@/lib/employees/queries";
 import { CreateTask } from "./create-task";
 import { buttonVariants } from "@/components/ui/button";
 import { TaskBoard } from "./board";
+import { ExportButton } from "@/components/export-button";
 
 export const metadata = { title: "Tasks" };
 
@@ -59,8 +60,10 @@ export default async function TasksPage({
 
   return (
     <div className="flex flex-col gap-4">
-      {can(session, "tasks.verify_visit") || mayCreate ? (
-        <div className="flex flex-wrap justify-end gap-2.5">
+      <div className="flex flex-wrap items-center justify-end gap-2.5">
+        <ExportButton org={org} dataset="tasks" />
+        {can(session, "tasks.verify_visit") || mayCreate ? (
+          <>
           {can(session, "tasks.verify_visit") ? (
             <Link
               href={`/${org}/tasks/visits`}
@@ -80,8 +83,9 @@ export default async function TasksPage({
               }))}
             />
           ) : null}
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </div>
       <TaskBoard rows={rows} org={org} />
     </div>
   );

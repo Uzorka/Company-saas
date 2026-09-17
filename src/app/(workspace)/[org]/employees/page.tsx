@@ -13,6 +13,7 @@ import { listUnlinkedEmployees } from "@/lib/people/queries";
 import { EmployeeDirectory } from "./directory";
 import { CreateEmployee } from "./create-employee";
 import { InviteUser } from "./invite-user";
+import { ExportButton } from "@/components/export-button";
 
 export const metadata = { title: "Employees" };
 
@@ -96,7 +97,9 @@ export default async function EmployeesPage({
       orgSlug={org}
       filters={{ q: q ?? "", department: department ?? "", status: status ?? "" }}
       createAction={
-        mayCreate ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportButton org={org} dataset="employees" />
+          {mayCreate ? (
           <div className="flex flex-wrap items-center gap-2">
             {mayInvite ? (
               <InviteUser
@@ -116,7 +119,8 @@ export default async function EmployeesPage({
               }))}
             />
           </div>
-        ) : null
+          ) : null}
+        </div>
       }
     />
   );

@@ -11,6 +11,7 @@ import { AuditFilters } from "./filters";
 import { auditActionLabel, auditTone, describeEntry } from "@/lib/audit/model";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Reveal } from "@/components/ui/reveal";
+import { ExportButton } from "@/components/export-button";
 
 export const metadata = { title: "Audit log" };
 
@@ -90,13 +91,16 @@ export default async function AuditPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="text-h1">Audit log</h1>
         <p className="mt-1 max-w-[70ch] text-body text-text-2">
           Every recorded action, oldest at the bottom. Entries cannot be edited
           or removed by anyone, including an administrator — the database
           refuses it.
         </p>
+        </div>
+        <ExportButton org={org} dataset="audit" />
       </div>
 
       <AuditFilters

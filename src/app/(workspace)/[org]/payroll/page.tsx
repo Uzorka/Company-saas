@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LinkPending } from "@/components/shell/nav-progress";
+import { ExportButton } from "@/components/export-button";
 import { CreatePeriod } from "./create-period";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -55,7 +56,10 @@ export default async function PayrollPage({
             approves it, and publishing cannot be undone.
           </p>
         </div>
-        {can(session, "payroll.create") ? <CreatePeriod org={org} /> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportButton org={org} dataset="payroll" />
+          {can(session, "payroll.create") ? <CreatePeriod org={org} /> : null}
+        </div>
       </div>
 
       {rows.length === 0 ? (

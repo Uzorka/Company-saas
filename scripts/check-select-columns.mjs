@@ -122,11 +122,19 @@ for (const file of files(ROOT)) {
   if (file.includes("__tests__")) continue;
   const source = readFileSync(file, "utf8");
 
-  // .from("table") ... .select(`cols`) — the chain may span lines.
-  const pattern =
-    /\.from\(\s*["'`](\w+)["'`]\s*\)[\s\S]{0,200}?\.select\(\s*([`"'])([\s\S]*?)\2/g;
+  // Two shapes carry a select in this codebase:
+  //   .from("table") … .select(`cols`)         — the chain may span lines
+  //   selectFrom("table", `cols`)              — the export helper
+  //
+  // The second was added and the gate did not see it, which left eight new
+  // selects unchecked and the count unchanged at 65. A gate that silently
+  // covers less than it did is worse than one that fails.
+  const patterns = [
+    /\.from\(\s*["'`](\w+)["'`]\s*\)[\s\S]{0,200}?\.select\(\s*([`"'])([\s\S]*?)\2/g,
+    /\bselectFrom\(\s*["'`](\w+)["'`]\s*,\s*([`"'])([\s\S]*?)\2/g,
+  ];
 
-  for (const match of source.matchAll(pattern)) {
+  for (const match of patterns.flatMap((p) => [...source.matchAll(p)])) {
     const [, table, , select] = match;
     // A select built from a variable is not checkable here.
     if (select.includes("${")) continue;

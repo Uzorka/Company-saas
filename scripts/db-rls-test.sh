@@ -44,8 +44,8 @@ count=$(echo "$output" | grep -c 'PASS' || true)
 
 # A suite that asserts nothing is not a passing suite. Guard against a silenced
 # log level or a skipped block reporting a false green.
-if [[ "$count" -lt 304 ]]; then
-  echo "RLS suite reported only $count assertions — expected at least 304. Treating as a failure."
+if [[ "$count" -lt 311 ]]; then
+  echo "RLS suite reported only $count assertions — expected at least 311. Treating as a failure."
   exit 1
 fi
 

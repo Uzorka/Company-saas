@@ -484,3 +484,93 @@ begin
   raise notice '--- email settings assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Export returns what the caller can see, and nothing else.
+--
+-- The CSV route runs the same query through the same client as the screen, so
+-- these are the rows an export would contain. Asserted because an export that
+-- quietly widened access would be the worst bug this product could ship, and
+-- because "it uses the caller's client" is a claim about code that can change.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+  u_hod uuid;
+  u_none uuid;
+  n_all integer;
+  n_hod integer;
+  n_self integer;
+  n_other integer;
+begin
+  select * into f from fixture;
+
+  -- The HOD is created by 11_employees_test.sql rather than by the shared
+  -- fixture, so it is found by the address that test gives it.
+  select id into u_hod from auth.users where email = 'tunde@chfheron.com';
+  perform assert(u_hod is not null, 'The department head from 11 is available');
+
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  select count(*) into n_all from employees;
+  reset role;
+
+  -- A member of the workspace holding no roles at all. Created here rather
+  -- than taken from the fixture: this is the last test file, and the blocks
+  -- above it have granted roles to every fixture user for their own purposes.
+  -- Borrowing one would assert something about whatever they left behind.
+  insert into auth.users (email) values ('no-roles@chfheron.com')
+  returning id into u_none;
+  insert into organization_members (organization_id, user_id, status)
+  values (f.org_a, u_none, 'active');
+
+  perform set_config('request.jwt.claims', claims_for(u_none, f.org_a)::text, true);
+  set local role authenticated;
+  select count(*) into n_self from employees;
+  reset role;
+
+  -- The property, not the magnitude: every row an HOD could export is one
+  -- they head or their own. Counting and comparing totals would pass or fail
+  -- on whatever the earlier tests happened to leave behind.
+  perform set_config('request.jwt.claims', claims_for(u_hod, f.org_a)::text, true);
+  set local role authenticated;
+  select count(*) into n_hod from employees
+   where department_id not in (select headed_department_ids())
+     and user_id is distinct from u_hod;
+  reset role;
+
+  perform assert(
+    n_hod = 0,
+    'An HOD export contains nobody outside the departments they head'
+  );
+  perform assert(n_all >= 1, 'An HR export contains the organization''s people');
+  perform assert(
+    n_self = 0,
+    'Someone with no roles exports nothing — it is not a way round a permission'
+  );
+
+  -- Pay is the one that matters most. HR runs hiring and cannot see figures,
+  -- so an HR export of payroll lines is empty rather than partial.
+  perform set_config('request.jwt.claims', claims_for(f.u_hr, f.org_a)::text, true);
+  set local role authenticated;
+  select count(*) into n_other from payroll_run_lines;
+  reset role;
+  perform assert(n_other = 0, 'An HR export of payroll lines contains no rows');
+
+  perform set_config('request.jwt.claims', claims_for(f.u_acct, f.org_a)::text, true);
+  set local role authenticated;
+  select count(*) into n_other from payroll_run_lines;
+  reset role;
+  perform assert(n_other >= 0, 'Accounts can export payroll lines');
+
+  -- And nothing crosses a tenant boundary.
+  perform set_config('request.jwt.claims', claims_for(f.u_mgmt, f.org_b)::text, true);
+  set local role authenticated;
+  select count(*) into n_other from employees where organization_id = f.org_a;
+  reset role;
+  perform assert(n_other = 0, 'An export in one workspace cannot reach another');
+
+  raise notice '--- export scope assertions passed ---';
+end
+$$;

@@ -7,6 +7,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { listDepartments, departmentHeadcounts } from "@/lib/employees/queries";
 import Link from "next/link";
+import { ExportButton } from "@/components/export-button";
 import { CreateDepartment, CreatePosition } from "./create-department";
 
 export const metadata = { title: "Departments" };
@@ -64,12 +65,15 @@ export default async function DepartmentsPage({
             {rows.length} {rows.length === 1 ? "department" : "departments"}
           </p>
         </div>
-        {canManage ? (
-          <div className="flex flex-wrap gap-2.5">
-            <CreatePosition org={org} departments={options} />
-            <CreateDepartment org={org} departments={options} />
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <ExportButton org={org} dataset="departments" />
+          {canManage ? (
+            <>
+              <CreatePosition org={org} departments={options} />
+              <CreateDepartment org={org} departments={options} />
+            </>
+          ) : null}
+        </div>
       </div>
 
       {rows.length === 0 ? (

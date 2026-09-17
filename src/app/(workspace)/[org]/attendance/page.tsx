@@ -10,6 +10,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { formatAccuracy, formatDistance, exceptionLabel, type ExceptionCode } from "@/lib/attendance/geofence";
 import { ReviewAttendance } from "./review";
+import { ExportButton } from "@/components/export-button";
 import { Reveal } from "@/components/ui/reveal";
 
 export const metadata = { title: "Attendance" };
@@ -128,11 +129,14 @@ export default async function AttendancePage({
             Most recent {rows.length} {rows.length === 1 ? "record" : "records"}
           </p>
         </div>
-        {can(session, "attendance.check_in") ? (
-          <Link href={`/${org}/attendance/check-in`} className={buttonVariants()}>
-            Check in
-          </Link>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportButton org={org} dataset="attendance" />
+          {can(session, "attendance.check_in") ? (
+            <Link href={`/${org}/attendance/check-in`} className={buttonVariants()}>
+              Check in
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       {rows.length > 0 ? (

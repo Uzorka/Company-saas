@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listDepartments, listPositions } from "@/lib/employees/queries";
 import { emailReadiness } from "@/lib/recruitment/pipeline";
 import { CreateJob } from "./create-job";
+import { ExportButton } from "@/components/export-button";
 import { PipelineBoard, type Applicant } from "./pipeline-board";
 
 export const metadata = { title: "Recruitment" };
@@ -98,12 +99,15 @@ export default async function RecruitmentPage({
             {rows.length === 1 ? "applicant" : "applicants"}
           </p>
         </div>
-        {mayPostJobs ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportButton org={org} dataset="applicants" />
+          {mayPostJobs ? (
           <CreateJob
             org={org}
             departments={departments.map((d) => ({ id: d.id, label: d.name }))}
           />
-        ) : null}
+          ) : null}
+        </div>
       </div>
 
       <PipelineBoard

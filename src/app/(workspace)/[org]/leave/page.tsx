@@ -11,6 +11,7 @@ import {
   listLeaveTypes,
 } from "@/lib/leave/queries";
 import { RequestLeave } from "./request-leave";
+import { ExportButton } from "@/components/export-button";
 import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
@@ -80,7 +81,8 @@ export default async function LeavePage({
             Your balance and requests
           </p>
         </div>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <ExportButton org={org} dataset="leave" />
           {canSeeBalances ? (
             <Link
               href={`/${org}/leave/balances`}
