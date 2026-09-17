@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { requireOrg, can } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
-import { PermissionState, ErrorState } from "@/components/states";
+import { PermissionState, ErrorState, EmptyState } from "@/components/states";
+import { buttonVariants } from "@/components/ui/button";
 import { getPeriodWithLines, sumLines } from "@/lib/payroll/queries";
 import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -40,6 +40,7 @@ export default async function PayrollRunPage({
   const { period, lines, error } = await getPeriodWithLines(periodId);
 
   if (error) {
+    console.error("payroll: period query failed", error);
     return (
       <ErrorState
         heading="Couldn't load this run"
@@ -47,7 +48,37 @@ export default async function PayrollRunPage({
       />
     );
   }
-  if (!period) notFound();
+
+  // Not notFound(). A run that does not come back is almost never a mistyped
+  // URL — it is a row RLS did not return — and the framework 404 drops the
+  // reader out of the workspace entirely, with no sidebar, no back link and
+  // nothing anyone can act on. Every other detail screen here says so in
+  // place; this one was the exception, and it was the exception that made a
+  // real report impossible to diagnose.
+  if (!period) {
+    console.error("payroll: no period visible for id", periodId);
+    return (
+      <div className="flex flex-col gap-4">
+        <Link href={`/${org}/payroll`} className="self-start">
+          <span className={buttonVariants({ variant: "ghost" })}>
+            ← All periods
+          </span>
+        </Link>
+        <EmptyState
+          heading="That payroll run isn't here"
+          body="It may have been removed, or it may not be part of what your role can see. Payroll runs are visible to Accounts and Management."
+          action={
+            <Link
+              href={`/${org}/payroll`}
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              Back to payroll
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   const totals = sumLines(lines);
   const currency = period.currency_code;

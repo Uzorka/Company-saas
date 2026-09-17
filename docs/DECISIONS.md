@@ -1581,3 +1581,28 @@ repository; it cannot stop a Vercel deploy landing before someone pastes
 install.sql. The honest answer is that this product's release step is two
 actions in a fixed order, and saying so in DEPLOYMENT.md is worth more than
 pretending otherwise.
+
+## D108 — A framework 404 is the worst place to land — **Accepted**
+Reported: clicking a payroll run gives a 404.
+
+Checked, against a database built to the reported migration level rather than
+assumed: the route builds, the link and the segment match, every column in both
+selects exists, and `payroll_periods_select` requires exactly the permission
+the page checks before it. The period is visible by id as Management. None of
+the obvious causes hold, which means the row is not coming back for a reason
+specific to that deployment.
+
+What is wrong regardless is the response. `notFound()` renders the app's
+global 404: no sidebar, no workspace, no back link, no reason — and nothing in
+any log. Every other detail screen in this product handles a missing record in
+place (`employees/[id]`, `tasks/[id]`, the catch-all), and payroll was the
+exception. It was also the one report that could not be diagnosed from what the
+user could see, which is not a coincidence.
+
+So a run that does not come back now says so inside the workspace, names the
+likeliest reason — Accounts and Management see payroll runs, other roles do
+not — offers a way back, and logs the id it could not resolve.
+
+`notFound()` is still right on `/careers/[slug]`: a public URL for a job that
+does not exist is genuinely a 404, and the visitor is not inside an
+application to be kept in.
