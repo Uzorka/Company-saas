@@ -1606,3 +1606,40 @@ not — offers a way back, and logs the id it could not resolve.
 `notFound()` is still right on `/careers/[slug]`: a public URL for a job that
 does not exist is genuinely a 404, and the visitor is not inside an
 application to be kept in.
+
+## D109 — A function cannot cross the server/client boundary — **Accepted**
+"A server error occurred. ERROR 1238498950."
+
+The payroll run screen is a Server Component. `DataTable` is a client
+component, and its columns each carry a `cell` render function. React has
+nothing to serialise a function into, so the request failed at render — with an
+error id and nothing else.
+
+It typechecked, linted and built, because none of those render a page, and a
+dynamic route is never prerendered. It was also the only place in the app that
+did it: every other `DataTable` sits in a file that is already "use client".
+The columns now live with the table, in `lines-table.tsx`.
+
+The gate is `npm run test:boundary`: for every file without "use client", it
+finds components imported from files with it, and flags any prop whose value is
+a function.
+
+Worth recording how the gate was got wrong first. Version one matched the JSX
+opening tag with a non-greedy regex, and `getRowKey={(row) => row.id}` contains
+a `>` — so the match ended inside the arrow and the props string was truncated
+before the thing being looked for. It passed the exact bug it was written for.
+Counting brace depth instead fixes it. A gate that has not been run against the
+failure it exists to catch is not yet a gate.
+
+## D110 — What this screen cost, and why
+Reported first as a 404 and diagnosed as a missing row, which it was not. Every
+cheap hypothesis was checked against a database built to the reported migration
+level — route, link shape, column existence, RLS policy against the page's own
+permission check — and all of them held, which should have been the signal that
+the failure was in rendering rather than in reading.
+
+The 404 hid it. `notFound()` produced the app's global error page: no sidebar,
+no reason, nothing logged. Replacing it (D108) is what let the next attempt
+surface the real exception. The lesson is not about payroll — it is that an
+error state which discards its cause converts a five-minute bug into three
+rounds of guessing.

@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { getPeriodWithLines, sumLines } from "@/lib/payroll/queries";
 import { Card, CardBody } from "@/components/ui/card";
 import { StatusPill } from "@/components/ui/status-pill";
-import { DataTable, type Column } from "@/components/ui/data-table";
 import { Timeline } from "@/components/ui/timeline";
 import {
   formatMoney,
@@ -18,8 +17,8 @@ import {
   payrollStatusTone,
 } from "@/lib/payroll/model";
 import { formatDate } from "@/lib/employees/display";
-import type { RunLineRow } from "@/lib/payroll/queries";
 import { PipelineActions } from "./actions-panel";
+import { PayrollLinesTable } from "./lines-table";
 
 export const metadata = { title: "Payroll run" };
 
@@ -82,44 +81,6 @@ export default async function PayrollRunPage({
 
   const totals = sumLines(lines);
   const currency = period.currency_code;
-
-  const columns: Column<RunLineRow>[] = [
-    {
-      key: "employee",
-      header: "Employee",
-      primary: true,
-      cell: (row) => (
-        <span className="min-w-0">
-          <span className="block truncate font-medium">{row.employee_name}</span>
-          <span className="block font-mono text-[11px] text-text-3">
-            {row.employee_no}
-          </span>
-        </span>
-      ),
-    },
-    { key: "dept", header: "Department", cell: (row) => row.department_name ?? "—" },
-    {
-      key: "gross",
-      header: "Gross",
-      align: "right",
-      essential: true,
-      cell: (row) => <Money value={row.gross_pay} currency={currency} />,
-    },
-    { key: "paye", header: "PAYE", align: "right", cell: (row) => <Money value={row.paye} currency={currency} /> },
-    { key: "pension", header: "Pension", align: "right", cell: (row) => <Money value={row.pension_employee} currency={currency} /> },
-    { key: "nhf", header: "NHF", align: "right", cell: (row) => <Money value={row.nhf} currency={currency} /> },
-    {
-      key: "net",
-      header: "Net",
-      align: "right",
-      essential: true,
-      cell: (row) => (
-        <span className="font-mono font-medium" data-numeric>
-          {formatMoney(row.net_pay, currency)}
-        </span>
-      ),
-    },
-  ];
 
   // The pipeline, rendered from the status rather than tracked separately.
   const currentIndex = PAYROLL_STATUSES.indexOf(period.status);
@@ -190,12 +151,10 @@ export default async function PayrollRunPage({
           />
 
           {lines.length > 0 ? (
-            <DataTable
-              rows={lines}
-              columns={columns}
-              getRowKey={(row) => row.id}
+            <PayrollLinesTable
+              lines={lines}
+              currency={currency}
               caption={`Payroll lines for ${period.label}`}
-              density="compact"
             />
           ) : (
             <Card>
@@ -208,14 +167,6 @@ export default async function PayrollRunPage({
         </div>
       </div>
     </div>
-  );
-}
-
-function Money({ value, currency }: { value: string; currency: string }) {
-  return (
-    <span className="font-mono" data-numeric>
-      {formatMoney(value, currency)}
-    </span>
   );
 }
 
