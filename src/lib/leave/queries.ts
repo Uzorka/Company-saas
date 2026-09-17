@@ -154,7 +154,10 @@ export async function listBalances(year: number): Promise<{
         .eq("leave_year", year),
     ]);
 
-  if (empError) return { rows: [], error: true };
+  if (empError) {
+    console.error("leave: listBalances failed", empError.message, empError.code);
+    return { rows: [], error: true };
+  }
 
   const byEmployee = new Map<string, EmployeeBalances["byType"]>();
   for (const b of balances ?? []) {

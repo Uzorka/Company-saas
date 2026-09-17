@@ -72,6 +72,11 @@ export default async function RecruitmentPage({
   ]);
 
   if (error) {
+    // The screen keeps a safe message; the server log gets something to act
+    // on. This exact query failed in production because the code was one
+    // migration ahead of the database, and the only evidence anywhere was
+    // "the request failed".
+    console.error("recruitment: applications query failed", error.message, error.code);
     return (
       <ErrorState
         heading="Couldn't load recruitment"

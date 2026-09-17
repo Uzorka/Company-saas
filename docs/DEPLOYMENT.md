@@ -1,5 +1,20 @@
 # Deployment
 
+**Release order: database first, then code.**
+
+A deploy that lands before its migration takes the affected screen down —
+"Couldn't load recruitment" with no further explanation. It has happened once.
+So when a change ships with a migration:
+
+1. Paste `supabase/setup/install.sql` into the Supabase SQL editor. It is
+   re-runnable and skips what is already applied.
+2. Run `supabase/setup/verify.sql` and confirm **Database is at the latest
+   migration** reads PASS.
+3. Then let Vercel deploy, or redeploy if it already has.
+
+`npm run test:selects` proves the code matches the migrations in this
+repository. Nothing can prove it matches *your* database except verify.sql.
+
 **Live.** `https://company-saas-nine.vercel.app/`, Supabase project
 `xhnvlydfdocybzhhqkxa`. The runbook below is what was actually done, kept
 current rather than aspirational.

@@ -150,7 +150,10 @@ export async function getTask(
     .eq("id", id)
     .maybeSingle();
 
-  if (error) return { row: null, error: true };
+  if (error) {
+    console.error("tasks: getTask failed", error.message, error.code);
+    return { row: null, error: true };
+  }
   if (!data) return { row: null, error: false };
 
   const row = data as unknown as TaskDetail;

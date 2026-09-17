@@ -35,7 +35,10 @@ export async function listUnlinkedEmployees(): Promise<{
     .neq("employment_status", "exited")
     .order("last_name", { ascending: true });
 
-  if (error) return { rows: [], error: true };
+  if (error) {
+    console.error("people: query failed", error.message, error.code);
+    return { rows: [], error: true };
+  }
   return { rows: (data ?? []) as UnlinkedEmployee[], error: false };
 }
 

@@ -1552,3 +1552,32 @@ Readiness is now two states rather than one. No provider key is a deployment
 matter; no sending address is a settings matter someone can fix from the
 screen they are looking at. Telling them apart is the difference between a
 useful warning and a shrug.
+
+## D107 — A select is a string, so nothing was checking it — **Accepted**
+Recruitment went down in production with "Couldn't load recruitment". The
+deployed code selected `on_hold_at`; the database was one migration behind and
+had no such column. PostgREST returned an error, the page turned it into a
+generic sentence, and the reason reached nobody.
+
+Three failures in one, and each has its own fix.
+
+**The code moved ahead of the schema.** A PostgREST select is a string:
+TypeScript sees nothing, the build sees nothing, and the first thing that
+notices is a user. `npm run test:selects` now reads every
+`.from(table).select(...)` in the source and checks the names against the
+database the migrations build — 65 of them. Renaming `on_hold_at` fails it, and
+so does the `profiles` embed from D99.
+
+It cannot know what a *deployed* database has. That is what verify.sql is for,
+and why it now pins the ledger at a version rather than reporting one.
+
+**The failure was invisible.** The query returned a boolean and the page
+rendered a safe sentence, which is right for the reader and useless for
+everyone else. The same shape as D99, in four more places. Each of those now
+logs the provider's code and message before returning the safe message.
+
+**A deploy can outrun a migration.** The gate catches the mismatch inside the
+repository; it cannot stop a Vercel deploy landing before someone pastes
+install.sql. The honest answer is that this product's release step is two
+actions in a fixed order, and saying so in DEPLOYMENT.md is worth more than
+pretending otherwise.

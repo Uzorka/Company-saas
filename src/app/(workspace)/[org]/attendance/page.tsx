@@ -80,6 +80,7 @@ export default async function AttendancePage({
     .limit(50);
 
   if (error) {
+    console.error("attendance: records query failed", error.message, error.code);
     return (
       <ErrorState
         heading="Couldn't load attendance"

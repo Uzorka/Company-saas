@@ -185,7 +185,10 @@ export async function getEmployee(
     .eq("id", id)
     .maybeSingle();
 
-  if (error) return { row: null, error: true };
+  if (error) {
+    console.error("employees: getEmployee failed", error.message, error.code);
+    return { row: null, error: true };
+  }
   return { row: (data as unknown as EmployeeDetail | null) ?? null, error: false };
 }
 
