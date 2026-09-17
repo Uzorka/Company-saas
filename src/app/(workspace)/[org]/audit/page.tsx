@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { AuditFilters } from "./filters";
 import { auditActionLabel, auditTone, describeEntry } from "@/lib/audit/model";
 import { StatusPill } from "@/components/ui/status-pill";
+import { Reveal } from "@/components/ui/reveal";
 
 export const metadata = { title: "Audit log" };
 
@@ -133,9 +134,10 @@ export default async function AuditPage({
           </p>
 
           <ol className="flex flex-col gap-2">
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <li key={row.id}>
-                <Card>
+                <Reveal index={index}>
+                <Card interactive>
                   <CardBody className="flex flex-wrap items-start gap-x-4 gap-y-2 py-3">
                     <StatusPill tone={auditTone(row.action)}>
                       {auditActionLabel(row.action)}
@@ -167,6 +169,7 @@ export default async function AuditPage({
                     </div>
                   </CardBody>
                 </Card>
+                </Reveal>
               </li>
             ))}
           </ol>

@@ -1436,3 +1436,48 @@ The error was also swallowed: `listAudit` returned a boolean and discarded the
 message, so the screen said "the request failed" and the server logs said
 nothing. Both query failures now log the code and message. A safe message for
 the reader is right; an unlogged one is not.
+
+## D100 — Springs, because a duration cannot be interrupted — **Accepted**
+The handoff specified five durations and three cubic-béziers, and those are
+still what every colour and shadow transition uses. Interactive surfaces are
+now springs.
+
+The difference is not aesthetic. A fixed curve has no memory: interrupt it
+mid-flight and the next animation restarts from wherever the element happens
+to be, at zero velocity. Open a slide-over, close it immediately, open it
+again — with durations that stutters. A spring carries velocity across the
+interruption, which is most of why iOS feels the way it does. The presets
+mirror SwiftUI's own (`smooth`, `snappy`, `bouncy`), expressed as Motion's
+`duration` + `bounce`, where bounce = 1 − dampingFraction.
+
+`pageTransition` had been defined since Phase 1 and wired to nothing, so every
+navigation landed as a hard cut. It is wired now, keyed on the pathname.
+
+Reduced motion is handled once, by `MotionConfig reducedMotion="user"` in the
+app shell, rather than checked per component — a component that forgets is a
+component that ignores the setting.
+
+## D101 — A 0.0001px transform breaks every panel in the app — **Accepted**
+Wrapping each route in an animated element makes that element the containing
+block for `position: fixed` descendants. `SlideOver` is `fixed inset-0` and is
+rendered inline in the page, not portalled — so a residual transform on the
+wrapper would move every panel and scrim off the viewport.
+
+Motion does clean up to `transform: none` once a spring settles, so this is
+safe. That was worth *measuring* rather than reasoning about, and the
+measurement is now a gate: `npm run test:motion` loads a harness with exactly
+that structure and asks the browser where the fixed child is. Animating to
+`y: 0.0001` instead of `y: 0` moves it to top 40, left 40 and shrinks it from
+800px to 22px. Four failures, instantly.
+
+## D102 — Tailwind v4 does not put scale in `transform` — **Accepted**
+The press feedback measured as doing nothing: `getComputedStyle(el).transform`
+stayed `none` through mouse-down. The code was right and the test was wrong —
+v4's `scale-*` sets the standalone `scale` property, and reading `scale` shows
+`none → 0.98 → none` exactly as intended.
+
+But the wrong reading exposed a real bug next to it. The button's transition
+listed `transform`, which v4 never sets, so the press had no transition at all
+and snapped back on release. `scale` for the button, `translate` for the card
+lift and the dashboard chevron. Three places, all of which looked right in the
+source and did nothing in the browser — the same shape as D80 and D91.

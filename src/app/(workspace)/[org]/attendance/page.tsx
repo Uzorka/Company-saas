@@ -10,6 +10,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { formatAccuracy, formatDistance, exceptionLabel, type ExceptionCode } from "@/lib/attendance/geofence";
 import { ReviewAttendance } from "./review";
+import { Reveal } from "@/components/ui/reveal";
 
 export const metadata = { title: "Attendance" };
 
@@ -149,9 +150,10 @@ export default async function AttendancePage({
         />
       ) : (
         <ul className="flex flex-col gap-2">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <li key={row.id}>
-              <Card>
+              <Reveal index={index}>
+              <Card interactive>
                 <CardBody className="flex flex-wrap items-start gap-3">
                   <div className="min-w-[160px] flex-1">
                     <p className="text-body font-medium">
@@ -245,6 +247,7 @@ export default async function AttendancePage({
                   ) : null}
                 </CardBody>
               </Card>
+              </Reveal>
             </li>
           ))}
         </ul>

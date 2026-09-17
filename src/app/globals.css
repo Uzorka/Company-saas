@@ -162,6 +162,26 @@
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Punctuation and quotes hang into the margin rather than indenting the
+       text beside them. Free, and it is most of why set text looks set. */
+    hanging-punctuation: first last;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Anchored jumps and "back to top" glide instead of teleporting. Inside
+     motion-safe, because the reduced-motion block below cannot reach a
+     scroll-behavior set on :root in every engine. */
+  @media (prefers-reduced-motion: no-preference) {
+    :root {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Selection in the brand, not the browser's default blue. */
+  ::selection {
+    background: var(--color-brand-100);
+    color: var(--color-brand-800);
   }
 
   /* Every comparable figure is tabular. */
@@ -177,10 +197,23 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Focus is never removed, only restyled. */
+  /* Focus is never removed, only restyled.
+     The white ring underneath keeps the outline legible where a control sits
+     directly on a brand-coloured surface and the blue would otherwise
+     disappear into it. */
   :focus-visible {
     outline: 2px solid var(--color-brand-600);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--color-bg);
+  }
+
+  /* Scrollbars, on the platforms that let us. Thin and quiet: a data screen
+     has a lot of them and the default width is a visible gutter. */
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border-hi) transparent;
+    }
   }
 
   /* Under prefers-reduced-motion transforms drop; opacity and colour stay.

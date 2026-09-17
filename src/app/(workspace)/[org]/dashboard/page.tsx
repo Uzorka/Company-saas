@@ -4,7 +4,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupRequired } from "@/components/states/setup-required";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
 import { navByRole, pickPrimaryRole } from "@/lib/navigation";
+import { ChevronRight } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { Reveal } from "@/components/ui/reveal";
 import { LinkPending } from "@/components/shell/nav-progress";
 
 export const metadata = { title: "Dashboard" };
@@ -63,24 +65,33 @@ export default async function DashboardPage({
 
       {open.length > 0 ? (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {open.map((item) => {
+          {open.map((item, index) => {
             const Icon = item.icon;
             return (
               <li key={item.label}>
-                <Link
-                  href={`/${org}${item.href}`}
-                  className="block rounded-xl transition-colors duration-(--duration-fast) hover:bg-surface"
-                >
-                  <Card>
-                    <CardBody className="flex items-center gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
-                        <Icon className="size-[18px]" aria-hidden />
-                      </span>
-                      <span className="text-h3">{item.label}</span>
-                      <LinkPending />
-                    </CardBody>
-                  </Card>
-                </Link>
+                <Reveal index={index}>
+                  <Link href={`/${org}${item.href}`} className="group block rounded-xl">
+                    <Card interactive className="h-full">
+                      <CardBody className="flex items-center gap-3">
+                        <span
+                          className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700
+                                     transition-colors duration-(--duration-fast) ease-(--ease-standard)
+                                     group-hover:bg-brand-100"
+                        >
+                          <Icon className="size-[18px]" aria-hidden />
+                        </span>
+                        <span className="text-h3">{item.label}</span>
+                        <ChevronRight
+                          aria-hidden
+                          className="ml-auto size-4 text-text-3 transition-[translate]
+                                     duration-(--duration-fast) ease-(--ease-standard)
+                                     motion-safe:group-hover:translate-x-0.5"
+                        />
+                        <LinkPending />
+                      </CardBody>
+                    </Card>
+                  </Link>
+                </Reveal>
               </li>
             );
           })}

@@ -15,7 +15,18 @@ import { createServerClient } from "@supabase/ssr";
  * *a* session exists — never what that session may do. Permission checks
  * happen in the page or action, and again in RLS.
  */
-const PUBLIC_PATHS = ["/", "/about", "/services", "/careers", "/contact"];
+const PUBLIC_PATHS = [
+  "/",
+  "/about",
+  "/services",
+  "/careers",
+  "/contact",
+  // A harness, not a screen. It renders one empty div so a browser test can
+  // measure whether the page-transition wrapper leaves a transform behind —
+  // which would silently move every slide-over in the app off the viewport.
+  // It reads nothing and shows nothing; see scripts/motion-test.mjs.
+  "/motioncheck",
+];
 const AUTH_PREFIX = "/auth";
 
 export async function middleware(request: NextRequest) {

@@ -14,8 +14,15 @@ export function Card({
     <div
       className={cn(
         "rounded-xl border border-border bg-bg shadow-e1",
-        interactive &&
-          "transition-shadow duration-(--duration-fast) ease-(--ease-standard) hover:shadow-e2",
+        interactive && [
+          "transition-[box-shadow,translate,border-color]",
+          "duration-(--duration-fast) ease-(--ease-standard)",
+          "hover:shadow-e2 hover:border-border-hi",
+          // A pixel. Enough to read as lifting toward you rather than merely
+          // gaining a shadow, and small enough that a grid of them does not
+          // shimmer as the pointer crosses it.
+          "motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0",
+        ],
         className,
       )}
       {...props}

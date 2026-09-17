@@ -13,8 +13,17 @@ import { cn } from "@/lib/utils";
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap " +
-    "transition-[background-color,border-color,color,box-shadow] duration-(--duration-instant) ease-(--ease-standard) " +
+    // `scale`, not `transform`: Tailwind v4's scale-* sets the standalone
+    // `scale` property, so a transition naming `transform` animates nothing
+    // and the press snaps back instead of easing.
+    "transition-[background-color,border-color,color,box-shadow,scale] " +
+    "duration-(--duration-instant) ease-(--ease-standard) " +
+    // The press. Small enough to feel rather than watch — under a pixel of
+    // travel on a 38px control — and it lands before the network has an
+    // opinion, which is the only reason it is here.
+    "motion-safe:active:scale-[0.98] " +
     "disabled:pointer-events-none disabled:bg-disabled-bg disabled:text-disabled-fg disabled:border-border " +
+    "disabled:motion-safe:active:scale-100 " +
     "[&_svg]:shrink-0 [&_svg]:size-[18px]",
   {
     variants: {
