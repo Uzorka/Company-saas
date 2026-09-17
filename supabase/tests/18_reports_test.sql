@@ -419,3 +419,68 @@ begin
   raise notice '--- bootstrap assertions passed ---';
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Who the hiring emails come from.
+--
+-- The address is tenant configuration, not a server secret, so it lives in
+-- settings and an administrator changes it without a deploy. That puts it
+-- behind `org_settings_update`, which since 0030 means `settings.manage` and
+-- nothing weaker — HR runs hiring but does not get to decide what address the
+-- company's mail appears to come from.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f record;
+begin
+  select * into f from fixture;
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, f.org_a),
+      format('update organization_settings set email_from_address = %L where organization_id = %L',
+             'recruitment@example.com', f.org_a)
+    ) = 1,
+    'Management can set the sending address'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_hr, f.org_a),
+      format('update organization_settings set email_from_address = %L where organization_id = %L',
+             'hr-pretending@example.com', f.org_a)
+    ) = 0,
+    'HR runs hiring but does not choose what address it comes from'
+  );
+
+  perform assert(
+    (select email_from_address from organization_settings where organization_id = f.org_a)
+      = 'recruitment@example.com',
+    'and the address is unchanged afterwards'
+  );
+
+  -- A blank string is not an address. The column refuses it, so a cleared form
+  -- field has to arrive as null rather than as empty text the provider would
+  -- reject at send time.
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, f.org_a),
+      format('update organization_settings set email_from_address = %L where organization_id = %L',
+             '', f.org_a)
+    ) = 0,
+    'An empty string is refused as a sending address'
+  );
+
+  perform assert(
+    rows_changed_by(
+      claims_for(f.u_mgmt, f.org_a),
+      format('update organization_settings set email_from_address = null where organization_id = %L',
+             f.org_a)
+    ) = 1,
+    'but clearing it to null is allowed — that is how sending is turned off'
+  );
+
+  raise notice '--- email settings assertions passed ---';
+end
+$$;

@@ -157,6 +157,39 @@ export function SettingsForm({
         </Field>
       </Section>
 
+      <Section
+        title="Hiring emails"
+        note="Who shortlist, interview and offer messages come from. The address must be on a domain verified with your email provider — anything else is rejected by them, not by us, and the reason is recorded against the message that failed."
+      >
+        <Field
+          label="Sender name"
+          htmlFor="emailFromName"
+          hint="Shown beside the address. A candidate reads this first."
+        >
+          <Input id="emailFromName" name="emailFromName" maxLength={80}
+            placeholder="CHF Heron Recruitment"
+            defaultValue={settings.email_from_name ?? ""} disabled={!canEdit} />
+        </Field>
+        <Field
+          label="Sender address"
+          htmlFor="emailFromAddress"
+          hint="Leave blank and nothing is sent — messages are still written and kept."
+        >
+          <Input id="emailFromAddress" name="emailFromAddress" type="email"
+            placeholder="recruitment@yourdomain.com"
+            defaultValue={settings.email_from_address ?? ""} disabled={!canEdit} />
+        </Field>
+        <Field
+          label="Replies go to"
+          htmlFor="emailReplyTo"
+          hint="Optional. Where a candidate's reply lands, if not the sender address."
+        >
+          <Input id="emailReplyTo" name="emailReplyTo" type="email"
+            placeholder="hr@yourdomain.com"
+            defaultValue={settings.email_reply_to ?? ""} disabled={!canEdit} />
+        </Field>
+      </Section>
+
       {canEdit ? (
         <div>
           <Button type="submit" loading={pending}>

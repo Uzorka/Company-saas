@@ -94,7 +94,7 @@ export function PipelineBoard({
   positions: Option[];
   canMove: boolean;
   canHire: boolean;
-  emailReady: boolean;
+  emailReady: "ready" | "provider" | "address";
 }) {
   const [selected, setSelected] = useState<Applicant | null>(null);
   const [action, setAction] = useState<Action | null>(null);
@@ -129,14 +129,24 @@ export function PipelineBoard({
 
   return (
     <>
-      {!emailReady ? (
+      {emailReady !== "ready" ? (
         <p className="flex items-start gap-2 rounded-lg border border-warn-border bg-warn-bg p-3 text-small text-warn-fg">
           <MailWarning className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
-            <strong>No email provider is configured.</strong> Shortlist,
-            interview and offer messages are still written and kept, and they
-            will send the moment a key is added — nothing is lost. See
-            docs/DEPLOYMENT.md.
+            {emailReady === "address" ? (
+              <>
+                <strong>No sending address is set.</strong> Settings &rarr;
+                Hiring emails, and it has to be on a domain verified with your
+                email provider.
+              </>
+            ) : (
+              <>
+                <strong>No email provider is connected.</strong> That is a
+                deployment setting, not one on this screen.
+              </>
+            )}{" "}
+            Shortlist, interview and offer messages are still written and kept,
+            and they send the moment it is fixed — nothing is lost.
           </span>
         </p>
       ) : null}
@@ -520,8 +530,10 @@ function MailResult({ mail }: { mail?: PipelineState["mail"] }) {
     return (
       <p className="flex items-start gap-2 rounded-lg border border-warn-border bg-warn-surface p-3 text-small text-text-2">
         <MailWarning className="mt-0.5 size-4 shrink-0" aria-hidden />
-        Done, and the message is written and waiting — no email provider is
-        configured yet, so nothing has been delivered.
+        Done, and the message is written and waiting —{" "}
+        {mail.missing === "address"
+          ? "no sending address is set in Settings, so nothing has been delivered."
+          : "no email provider is connected, so nothing has been delivered."}
       </p>
     );
   }

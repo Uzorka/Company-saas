@@ -1526,3 +1526,29 @@ The stage history was right, so nothing was lost — but the audit log is the
 thing Management reads, and it was quietly wrong. Found while replacing the
 function for the email, not by looking for it. The old stage is captured before
 the update now, and an assertion fails if that is ever undone.
+
+## D106 — The key is a secret, the address is configuration — **Accepted**
+Asked to move the sending identity onto the settings screen, which was right,
+and the split is worth stating because it is not arbitrary.
+
+`RESEND_API_KEY` stays an environment variable. It is a credential: it must
+never reach a browser, a database row, or a screen, and changing it is a
+deployment act.
+
+The from-address and reply-to move to `organization_settings`, next to the
+timezone the same emails are rendered in. They are ordinary tenant
+configuration — an administrator should be able to read them, change them
+without a deploy, and have a different one per company, which a single
+environment variable cannot express.
+
+That puts them behind `org_settings_update`, so `settings.manage` and nothing
+weaker. HR runs hiring and does not get to decide what address the company's
+mail appears to come from; asserted, along with the shape constraint that
+refuses an empty string — a cleared form field has to arrive as null, or the
+provider would reject a `from` of nothing at send time and the failure would
+surface a long way from the blank box that caused it.
+
+Readiness is now two states rather than one. No provider key is a deployment
+matter; no sending address is a settings matter someone can fix from the
+screen they are looking at. Telling them apart is the difference between a
+useful warning and a shrug.

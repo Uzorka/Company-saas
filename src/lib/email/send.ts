@@ -26,12 +26,43 @@ export type SendOutcome = {
   attempted: number;
   sent: number;
   failed: number;
-  /** True when no provider is configured — nothing was attempted. */
+  /** Nothing was attempted, because something is not set up. */
   unconfigured: boolean;
+  /** Which half is missing, so the screen can say something useful. */
+  missing?: "provider" | "address";
 };
 
-export function isEmailConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+/**
+ * The API key is a server secret and never leaves the server. The sending
+ * address is the company's own configuration and lives in settings, where an
+ * administrator can change it without a deploy.
+ */
+export function hasEmailProvider(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+export type EmailSender = {
+  /** Formatted for the provider: `Name <address>` or just the address. */
+  from: string;
+  replyTo: string | null;
+};
+
+/** The organization's sending identity, or null if it has not been set. */
+export async function getEmailSender(): Promise<EmailSender | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("organization_settings")
+    .select("email_from_name, email_from_address, email_reply_to")
+    .maybeSingle();
+
+  const address = data?.email_from_address as string | null | undefined;
+  if (!address) return null;
+
+  const name = (data?.email_from_name as string | null) ?? null;
+  return {
+    from: name ? `${name} <${address}>` : address,
+    replyTo: (data?.email_reply_to as string | null) ?? null,
+  };
 }
 
 type QueuedEmail = {
@@ -72,20 +103,20 @@ export async function sendQueuedEmails(limit = 10): Promise<SendOutcome> {
   }
 
   const queued = (data ?? []) as QueuedEmail[];
-  if (queued.length === 0) {
-    return { attempted: 0, sent: 0, failed: 0, unconfigured: !isEmailConfigured() };
+  const sender = await getEmailSender();
+
+  // Deliberately not marked failed, in either case. Nothing was wrong with the
+  // message and nothing was attempted — they send the moment the missing piece
+  // arrives, which is what someone setting this up expects to happen.
+  if (!hasEmailProvider()) {
+    return { attempted: 0, sent: 0, failed: 0, unconfigured: true, missing: "provider" };
+  }
+  if (!sender) {
+    return { attempted: 0, sent: 0, failed: 0, unconfigured: true, missing: "address" };
   }
 
-  if (!isEmailConfigured()) {
-    // Deliberately not marked failed. Nothing was wrong with the message and
-    // nothing was attempted — they send the moment a key is added, which is
-    // what someone setting this up expects to happen.
-    return {
-      attempted: 0,
-      sent: 0,
-      failed: 0,
-      unconfigured: true,
-    };
+  if (queued.length === 0) {
+    return { attempted: 0, sent: 0, failed: 0, unconfigured: false };
   }
 
   let sent = 0;
@@ -100,13 +131,11 @@ export async function sendQueuedEmails(limit = 10): Promise<SendOutcome> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: process.env.EMAIL_FROM,
+          from: sender.from,
           to: [email.to_email],
           subject: email.subject,
           text: email.body,
-          ...(process.env.EMAIL_REPLY_TO
-            ? { reply_to: process.env.EMAIL_REPLY_TO }
-            : {}),
+          ...(sender.replyTo ? { reply_to: sender.replyTo } : {}),
         }),
       });
 

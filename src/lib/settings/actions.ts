@@ -20,6 +20,14 @@ import { type FormState, describeWriteError, refusedIfEmpty } from "@/lib/forms/
  * database has to raise one.
  */
 
+/** Blank means "not set". Stored as null so the column's check sees nothing. */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => (v ? v : null));
+
 const settingsSchema = z.object({
   timezone: z.string().trim().min(1, "Choose a timezone").max(64),
   currencyCode: z
@@ -43,6 +51,29 @@ const settingsSchema = z.object({
   selfieRetentionMonths: z.coerce.number().int().min(1).max(120),
   coordinateRetentionMonths: z.coerce.number().int().min(1).max(120),
   auditRetentionYears: z.coerce.number().int().min(1).max(25),
+
+  // Optional, and blank means "not set" rather than an empty address. A empty
+  // string would reach the provider as a `from` of nothing and be rejected
+  // there, which is a confusing place to learn about a blank form field.
+  emailFromName: optionalText(80),
+  emailFromAddress: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(255)
+    .refine((v) => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), {
+      message: "That is not an email address",
+    })
+    .transform((v) => (v ? v : null)),
+  emailReplyTo: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(255)
+    .refine((v) => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), {
+      message: "That reply address is not an email address",
+    })
+    .transform((v) => (v ? v : null)),
 });
 
 export async function updateSettings(
@@ -58,6 +89,9 @@ export async function updateSettings(
     failedLoginLimit: formData.get("failedLoginLimit"),
     lockoutMinutes: formData.get("lockoutMinutes"),
     passwordMinLength: formData.get("passwordMinLength"),
+    emailFromName: formData.get("emailFromName") ?? "",
+    emailFromAddress: formData.get("emailFromAddress") ?? "",
+    emailReplyTo: formData.get("emailReplyTo") ?? "",
     selfieRetentionMonths: formData.get("selfieRetentionMonths"),
     coordinateRetentionMonths: formData.get("coordinateRetentionMonths"),
     auditRetentionYears: formData.get("auditRetentionYears"),
@@ -83,6 +117,9 @@ export async function updateSettings(
       selfie_retention_months: parsed.data.selfieRetentionMonths,
       coordinate_retention_months: parsed.data.coordinateRetentionMonths,
       audit_retention_years: parsed.data.auditRetentionYears,
+      email_from_name: parsed.data.emailFromName,
+      email_from_address: parsed.data.emailFromAddress,
+      email_reply_to: parsed.data.emailReplyTo,
     })
     .eq("organization_id", session.organizationId)
     .select("organization_id");

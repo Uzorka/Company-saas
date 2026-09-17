@@ -277,6 +277,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0034_hiring_pipeline';
   end if;
 
+  if  then
+    insert into schema_migrations (version) values ('0035_email_settings') on conflict do nothing;
+    raise notice 'present, recorded: %', '0035_email_settings';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0035_email_settings';
+  end if;
+
 end
 $adopt$;
 

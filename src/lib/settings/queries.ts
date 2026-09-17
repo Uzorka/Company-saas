@@ -13,6 +13,9 @@ export type OrgSettings = {
   selfie_retention_months: number;
   coordinate_retention_months: number;
   audit_retention_years: number;
+  email_from_name: string | null;
+  email_from_address: string | null;
+  email_reply_to: string | null;
 };
 
 export type OfficeRow = {

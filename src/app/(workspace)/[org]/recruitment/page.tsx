@@ -5,7 +5,7 @@ import { PermissionState, ErrorState } from "@/components/states";
 import { MODULE_ROLES, ROLE_LABELS } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { listDepartments, listPositions } from "@/lib/employees/queries";
-import { emailConfigured } from "@/lib/recruitment/pipeline";
+import { emailReadiness } from "@/lib/recruitment/pipeline";
 import { CreateJob } from "./create-job";
 import { PipelineBoard, type Applicant } from "./pipeline-board";
 
@@ -49,7 +49,7 @@ export default async function RecruitmentPage({
     { data: jobs },
     { rows: departments },
     { rows: positions },
-    emailReady,
+    emailState,
   ] = await Promise.all([
     supabase
       .from("job_applications")
@@ -68,7 +68,7 @@ export default async function RecruitmentPage({
       ? listDepartments()
       : Promise.resolve({ rows: [], error: false }),
     mayHire ? listPositions() : Promise.resolve({ rows: [], error: false }),
-    emailConfigured(),
+    emailReadiness(),
   ]);
 
   if (error) {
@@ -111,7 +111,7 @@ export default async function RecruitmentPage({
         }))}
         canMove={mayMove}
         canHire={mayHire}
-        emailReady={emailReady}
+        emailReady={emailState}
       />
 
     </div>

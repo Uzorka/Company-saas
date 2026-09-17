@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg, can } from "@/lib/auth/session";
 import { type FormState, humanise } from "@/lib/forms/result";
-import { sendQueuedEmails, isEmailConfigured } from "@/lib/email/send";
+import { sendQueuedEmails, hasEmailProvider, getEmailSender } from "@/lib/email/send";
 
 /**
  * Moving people through hiring.
@@ -26,8 +26,10 @@ export type PipelineState = FormState & {
   mail?: {
     sent: number;
     failed: number;
-    /** No provider configured: the message is written and waiting. */
+    /** Nothing was sent: the message is written and waiting. */
     queued: boolean;
+    /** Which piece is missing, so the screen can point at the fix. */
+    missing?: "provider" | "address";
   };
 };
 
@@ -44,6 +46,7 @@ async function flushMail(): Promise<PipelineState["mail"]> {
     sent: outcome.sent,
     failed: outcome.failed,
     queued: outcome.unconfigured,
+    missing: outcome.missing,
   };
 }
 
@@ -247,7 +250,16 @@ export async function hireApplicant(
   return { done: true, mail };
 }
 
-/** Whether the screen should warn that nothing will actually be delivered. */
-export async function emailConfigured(): Promise<boolean> {
-  return isEmailConfigured();
+/**
+ * What the screen should warn about, if anything.
+ *
+ * Two different problems with two different fixes: no provider key is a
+ * deployment matter, and no sending address is a settings matter someone with
+ * `settings.manage` can solve right now. Telling them apart is the difference
+ * between a useful warning and a shrug.
+ */
+export async function emailReadiness(): Promise<"ready" | "provider" | "address"> {
+  if (!hasEmailProvider()) return "provider";
+  const sender = await getEmailSender();
+  return sender ? "ready" : "address";
 }
