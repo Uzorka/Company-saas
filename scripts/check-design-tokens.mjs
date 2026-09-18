@@ -78,7 +78,10 @@ for (const file of files(ROOT)) {
         const declared = NAMESPACE[prefix];
         if (!declared || rest.length === 0) continue;
 
-        const name = rest.join("-");
+        // `bg-brand-600/40` is the same token at 40% alpha. The modifier is
+        // not part of the name, and treating it as one reported `black/10` as
+        // an undeclared colour.
+        const name = rest.join("-").split("/")[0];
         if (BUILT_IN.has(name)) continue;
         if (prefix === "text" && TYPE_SCALE.has(name)) continue;
         // Numeric scales (border-2, text-[11px], from-0%) are not colours.

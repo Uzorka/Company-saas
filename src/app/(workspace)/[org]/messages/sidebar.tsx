@@ -27,6 +27,7 @@ export function ConversationList({
   const router = useRouter();
   const [panel, setPanel] = useState<"channel" | "direct" | null>(null);
   const [state, setState] = useState<FormState>({});
+  const [chosen, setChosen] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
 
   function run(
@@ -40,6 +41,7 @@ export function ConversationList({
       setState(result);
       if (result.done) {
         setPanel(null);
+        setChosen([]);
         router.push(`/${org}/messages${result.id ? `?c=${result.id}` : ""}`);
         router.refresh();
       }
@@ -109,6 +111,49 @@ export function ConversationList({
           <Field label="What it is for" htmlFor="topic">
             <Textarea id="topic" name="topic" rows={2} placeholder="Depot coordination" />
           </Field>
+
+          {/* Everyone ticked is added when the channel is made. Anyone in the
+              workspace can find and join it afterwards regardless — this saves
+              six people a search, rather than granting reach they lacked. */}
+          <fieldset>
+            <legend className="text-small font-medium">
+              Add people
+              <span className="ml-2 font-normal text-text-3">
+                {chosen.length > 0 ? `${chosen.length} selected` : "optional"}
+              </span>
+            </legend>
+
+            {colleagues.length === 0 ? (
+              <p className="mt-2 text-small text-text-2">
+                Nobody else has a sign-in account yet.
+              </p>
+            ) : (
+              <ul className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+                {colleagues.map((person) => (
+                  <li key={person.id}>
+                    <label className="flex cursor-pointer items-center gap-2.5 rounded-md p-1.5 text-small hover:bg-surface">
+                      <input
+                        type="checkbox"
+                        name="participants"
+                        value={person.id}
+                        checked={chosen.includes(person.id)}
+                        onChange={(event) =>
+                          setChosen((current) =>
+                            event.target.checked
+                              ? [...current, person.id]
+                              : current.filter((id) => id !== person.id),
+                          )
+                        }
+                        className="size-4 accent-brand-600"
+                      />
+                      {person.name}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </fieldset>
+
           {state.error ? <Problem>{state.error}</Problem> : null}
           <Button type="submit" loading={pending}>
             Create channel

@@ -26,6 +26,8 @@ const PUBLIC_PATHS = [
   // which would silently move every slide-over in the app off the viewport.
   // It reads nothing and shows nothing; see scripts/motion-test.mjs.
   "/motioncheck",
+  // Same again for the chat bubble layout: presentation only, no data.
+  "/chatcheck",
 ];
 const AUTH_PREFIX = "/auth";
 

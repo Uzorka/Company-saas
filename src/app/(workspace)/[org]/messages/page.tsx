@@ -95,6 +95,7 @@ export default async function MessagesPage({
             conversation={active}
             messages={messages}
             me={session.userId}
+            colleagues={colleagues}
           />
         ) : (
           <EmptyState

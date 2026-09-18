@@ -19,16 +19,26 @@ export type ConversationRow = {
   /** Filled in for direct messages, where the other person is the name. */
   title: string;
   memberIds: string[];
+  memberNames: string[];
   unread: number;
   joined: boolean;
+  /** This person's own view of the room. Nobody else's changes with it. */
+  theme: string;
+  layout: string;
 };
 
 export type MessageRow = {
   id: string;
-  body: string;
+  body: string | null;
   created_at: string;
   author_id: string;
   authorName: string;
+  attachment_path: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
+  attachment_size: number | null;
+  /** Signed, short-lived, and only issued to someone who may read it. */
+  attachmentUrl: string | null;
 };
 
 async function namesFor(
@@ -67,7 +77,7 @@ export async function listConversations(
         .limit(200),
       supabase
         .from("conversation_members")
-        .select("conversation_id, user_id, last_read_at"),
+        .select("conversation_id, user_id, last_read_at, theme, layout"),
     ]);
 
   if (error) {
@@ -77,13 +87,27 @@ export async function listConversations(
 
   const byConversation = new Map<
     string,
-    { members: string[]; myLastRead: string | null }
+    {
+      members: string[];
+      myLastRead: string | null;
+      theme: string;
+      layout: string;
+    }
   >();
   for (const m of memberships ?? []) {
     const key = m.conversation_id as string;
-    const entry = byConversation.get(key) ?? { members: [], myLastRead: null };
+    const entry = byConversation.get(key) ?? {
+      members: [],
+      myLastRead: null,
+      theme: "default",
+      layout: "comfortable",
+    };
     entry.members.push(m.user_id as string);
-    if (m.user_id === me) entry.myLastRead = m.last_read_at as string;
+    if (m.user_id === me) {
+      entry.myLastRead = m.last_read_at as string;
+      entry.theme = (m.theme as string) ?? "default";
+      entry.layout = (m.layout as string) ?? "comfortable";
+    }
     byConversation.set(key, entry);
   }
 
@@ -103,7 +127,12 @@ export async function listConversations(
 
   const rows: ConversationRow[] = (conversations ?? []).map((c) => {
     const id = c.id as string;
-    const entry = byConversation.get(id) ?? { members: [], myLastRead: null };
+    const entry = byConversation.get(id) ?? {
+      members: [],
+      myLastRead: null,
+      theme: "default",
+      layout: "comfortable",
+    };
     const joined = entry.members.includes(me);
 
     const unread = joined
@@ -131,8 +160,11 @@ export async function listConversations(
       last_message_at: c.last_message_at as string,
       title,
       memberIds: entry.members,
+      memberNames: entry.members.map((u) => names.get(u) ?? "Unknown"),
       unread,
       joined,
+      theme: entry.theme,
+      layout: entry.layout,
     };
   });
 
@@ -147,7 +179,10 @@ export async function listMessages(
 
   const { data, error } = await supabase
     .from("messages")
-    .select("id, body, created_at, author_id")
+    .select(
+      `id, body, created_at, author_id, attachment_path, attachment_name,
+       attachment_type, attachment_size`,
+    )
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true })
     .limit(500);
@@ -163,8 +198,31 @@ export async function listMessages(
     [...new Set(rows.map((r) => r.author_id))],
   );
 
+  // One signed URL per attachment, issued together rather than per render.
+  // The bucket policy requires membership of the conversation in the path, so
+  // a URL is only produced for a file this caller may actually read.
+  const signed = new Map<string, string>();
+  const paths = rows
+    .map((r) => r.attachment_path)
+    .filter((p): p is string => typeof p === "string");
+
+  if (paths.length > 0) {
+    const { data: urls } = await supabase.storage
+      .from("message-attachments")
+      .createSignedUrls(paths, 60 * 10);
+    for (const entry of urls ?? []) {
+      if (entry.path && entry.signedUrl) signed.set(entry.path, entry.signedUrl);
+    }
+  }
+
   return {
-    rows: rows.map((r) => ({ ...r, authorName: names.get(r.author_id) ?? "Unknown" })),
+    rows: rows.map((r) => ({
+      ...r,
+      authorName: names.get(r.author_id) ?? "Unknown",
+      attachmentUrl: r.attachment_path
+        ? (signed.get(r.attachment_path) ?? null)
+        : null,
+    })),
     error: false,
   };
 }

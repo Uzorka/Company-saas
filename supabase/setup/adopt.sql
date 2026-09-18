@@ -291,6 +291,13 @@ begin
     raise notice 'NOT present, left for install.sql: %', '0036_messaging';
   end if;
 
+  if to_regclass('public.if') is not null then
+    insert into schema_migrations (version) values ('0037_messaging_rich') on conflict do nothing;
+    raise notice 'present, recorded: %', '0037_messaging_rich';
+  else
+    raise notice 'NOT present, left for install.sql: %', '0037_messaging_rich';
+  end if;
+
 end
 $adopt$;
 

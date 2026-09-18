@@ -1718,3 +1718,56 @@ Polling, not Realtime. Ten seconds on an open page is indistinguishable from
 live for an internal tool, it survives a driver's connection dropping and
 coming back, and it does not add a subscription whose authorisation has to be
 reasoned about separately from the policies that already say everything.
+
+## D113 — WhatsApp's layout, because people already know it — **Accepted**
+Own words right in a solid colour, everyone else's left in a light one. That
+is not decoration: it is how a person finds their own last message in a scroll
+without reading any of it, and it is the arrangement every messaging app they
+already use has taught them.
+
+Six themes and two densities, stored per membership rather than per
+conversation — WhatsApp works this way and it is right. Two colleagues should
+not have to agree on a colour before either can read comfortably, and someone
+who needs a denser layout should not need anyone's permission.
+
+Which makes contrast a correctness problem, not a taste one. Twelve colour
+pairs are chosen by the reader, and a theme that renders white on pale sand is
+a screen somebody cannot use on a depot forecourt. The accessibility gate
+cannot see any of it — the conversation needs a session it has no way to get —
+so the presentation is rendered alone at `/chatcheck` and the browser is asked
+what each bubble actually computed to. All twelve are above 4.5:1, the lowest
+at 5.34:1. Changing `sand`'s outgoing bubble to its own tint fails the gate at
+1.11:1.
+
+## D114 — Everything added sits under the privacy rule, including the flicker
+Attachments, typing and a room's colour are each a way to leak who is talking
+to whom, so each got the same treatment as the messages.
+
+An attachment's path is `<org>/<conversation>/<uuid>-<name>`, chosen by the
+server and checked again by `send_message`: a path naming another conversation
+is refused, or a file from a room the sender is not in could be attached to a
+message in one they are. The bucket is private and requires membership of the
+conversation named in segment two, so a signed URL is only ever issued for a
+file the caller may read. The browser uploads straight to storage — a 25 MB
+video through a serverless function meets a body limit and a timeout for no
+benefit.
+
+Typing is one row per person, overwritten rather than appended: a state, not a
+history, and nobody wants a permanent record of when they started and stopped.
+Readable only by the other members, because an indicator visible to an
+outsider announces that a private conversation is happening.
+
+One thing genuinely did change. A channel's creator can now add people, which
+is what a group chat is — but only to a channel, never to a direct message.
+`add_to_channel` refuses a direct conversation outright, and that refusal is
+asserted from both sides: a participant cannot add a third person, and an
+outsider cannot add themselves.
+
+The arrival tone is off until switched on, and synthesised rather than shipped.
+A workplace tool that starts beeping in an open-plan office on first load has
+made a decision that was not its to make.
+
+Two build-time findings worth keeping: a `"use server"` file may only export
+async functions, so the 25 MB limit had to move to its own module; and reading
+a browser preference in an effect and calling setState is what
+`useSyncExternalStore` exists to replace — the lint rule was right.
