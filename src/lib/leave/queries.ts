@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { requireSession } from "@/lib/auth/session";
 import type { ApprovalRecord, LeaveStatus } from "./model";
 
 export type LeaveRequestRow = {
@@ -27,9 +28,16 @@ export async function listMyLeave(): Promise<{
   error: string | null;
 }> {
   const supabase = await createClient();
+  const session = await requireSession();
+
+  // Filtered by the caller, not left to RLS to narrow. For an employee RLS
+  // returns exactly their own row and this looked correct; for HR it returns
+  // every employee in the company, and `maybeSingle()` treats more than one
+  // row as an error — so an HR user's own leave screen came back empty.
   const { data: employee } = await supabase
     .from("employees")
     .select("id")
+    .eq("user_id", session.userId)
     .maybeSingle();
 
   let query = supabase
@@ -72,9 +80,12 @@ export type BalanceRow = {
 
 export async function listMyBalances(): Promise<BalanceRow[]> {
   const supabase = await createClient();
+  const session = await requireSession();
+
   const { data: employee } = await supabase
     .from("employees")
     .select("id")
+    .eq("user_id", session.userId)
     .maybeSingle();
   if (!employee?.id) return [];
 

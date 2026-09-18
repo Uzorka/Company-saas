@@ -232,10 +232,18 @@ export async function createUploadTicket(
 
   // Membership, asked of the database rather than assumed. A ticket for a
   // conversation you are not in would write a file into someone else's room.
+  //
+  // Scoped to the caller's own row, and that is the whole bug this once had:
+  // a member may read every membership row for a conversation they are in, so
+  // without `user_id` this returned two rows for a direct message and more for
+  // a channel. `maybeSingle()` treats anything past one row as an error, so
+  // the data came back null and every attachment was refused with "You are not
+  // in that conversation" — the policy working correctly is what broke it.
   const { data: member } = await supabase
     .from("conversation_members")
     .select("conversation_id")
     .eq("conversation_id", conversationId)
+    .eq("user_id", session.userId)
     .maybeSingle();
 
   if (!member) return { ok: false, error: "You are not in that conversation." };

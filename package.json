@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run test:tokens && npm run test:guards && npm run test:boundary && npm run test:selects && npm run test:db && npm run test:seed && npm run test:parity && npm run build && npm run test:motion && npm run test:chat && npm run test:a11y && npm run test:e2e",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run test:tokens && npm run test:guards && npm run test:boundary && npm run test:selects && npm run test:single && npm run test:db && npm run test:seed && npm run test:parity && npm run build && npm run test:motion && npm run test:chat && npm run test:a11y && npm run test:e2e",
     "db:start": "scripts/db-start.sh",
     "db:reset": "scripts/db-test.sh --seed",
     "test:db": "scripts/db-rls-test.sh",
@@ -23,7 +23,8 @@
     "test:motion": "scripts/motion-test.sh",
     "test:selects": "scripts/check-selects.sh",
     "test:boundary": "node scripts/check-server-boundary.mjs",
-    "test:chat": "scripts/chat-test.sh"
+    "test:chat": "scripts/chat-test.sh",
+    "test:single": "scripts/check-single-row.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

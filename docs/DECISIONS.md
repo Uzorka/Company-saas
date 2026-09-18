@@ -1771,3 +1771,42 @@ Two build-time findings worth keeping: a `"use server"` file may only export
 async functions, so the 25 MB limit had to move to its own module; and reading
 a browser preference in an effect and calling setState is what
 `useSyncExternalStore` exists to replace — the lint rule was right.
+
+## D115 — maybeSingle() treats two rows as an error, not as "the first one" — **Accepted**
+Reported: every file upload refused with "You are not in that conversation."
+
+The membership check selected `conversation_members` filtered only by
+`conversation_id`. A member may read every membership row of a conversation
+they are in — that is what makes a channel's member list visible — so the
+query returned two rows for a direct message and more for a channel.
+PostgREST rejects that, the data came back null, and the code read null as
+"not a member". **The policy working exactly as designed is what broke it.**
+
+Auditing every other `maybeSingle()` found two more of the same shape, and the
+gate written afterwards found a third I had missed. Both leave queries looked
+up the caller's employee row with no filter at all, relying on RLS to narrow
+it: for an employee that returns one row and looks right, and for HR it
+returns every employee in the company — so an HR user's own leave screen was
+silently empty.
+
+`npm run test:single` reads the primary keys and unique indexes out of the
+database the migrations build, and requires the `.eq()` columns of every
+`maybeSingle()` to cover one of them. `organization_id` counts as present
+throughout, because every table here is org-scoped by RLS and a per-tenant
+unique constraint really is unique to the caller. An explicit `.limit(1)` is
+accepted as saying "first of several, deliberately".
+
+Two things about the gate itself are worth keeping, because both are mistakes
+I have now made more than once:
+
+It matched forward from `.from()` and ran past the end of one statement into
+the next, blaming the check-in screen's `offices` query — which has no
+`maybeSingle()` at all — for the `organization_settings` call beside it in the
+same `Promise.all`. Pairing each call with the nearest `.from()` before it is
+correct and simpler.
+
+And it crashed in its own reporting path, on a variable left behind by that
+rewrite. It still exited non-zero, so a careless reading would have called it
+working. Only the mutation test reached that branch. A gate is not finished
+when it passes; it is finished when it has failed on the thing it exists to
+catch.
