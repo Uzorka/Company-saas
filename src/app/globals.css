@@ -54,9 +54,14 @@
   --color-warn-border: #f6e3bf;
   /* Tenant accent — see src/content/brand.ts for why two oranges exist.
      --color-accent is theirs exactly and never sits behind text;
-     --color-accent-ink is the same hue at 4.69:1 for white labels. */
+     --color-accent-ink is the same hue, dark enough to carry text and to
+     carry white text, on every surface in this palette: 5.51:1 on white,
+     5.23:1 on --color-surface, 4.99:1 on --color-canvas. It was #b8590f,
+     which cleared white by a hair and failed on the surface tint at 4.46:1 —
+     found by the accessibility gate the first time an eyebrow was set in it
+     on a tinted section. */
   --color-accent: #e87722;
-  --color-accent-ink: #b8590f;
+  --color-accent-ink: #a94f0d;
   --color-accent-soft: #fdf0e6;
   --color-brand-ink: #0f2747;
 

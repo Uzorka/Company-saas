@@ -1810,3 +1810,42 @@ rewrite. It still exited non-zero, so a careless reading would have called it
 working. Only the mutation test reached that branch. A gate is not finished
 when it passes; it is finished when it has failed on the thing it exists to
 catch.
+
+## D116 — The landing page was thin because it was not using what we had — **Accepted**
+A headline, two buttons and four cards on white, with the right half of the
+hero empty. Everything on it was true, which was the point when it was built —
+but a distributor trading since 1989 across ten product categories read as a
+startup with nothing to say.
+
+The fix was not to invent anything. The brand extract had been sitting in
+`docs/reference/` with material this site never used: the company's ten
+categories, the brands it names publicly, and its own stated values. The page
+is longer because there was more that was true.
+
+Values are quoted rather than rewritten. "Sincerity" and "fair business
+conduct" are the words a 1989 Lagos distributor chose; smoothing them into
+"integrity" and "partnership" would have made the page sound like every other
+one. The states figure is labelled as the company's own claim, because we
+cannot verify national coverage and should not assert it in our voice.
+
+Still absent, and staying absent: no photographs of a business we have never
+visited, no partner logos, no leadership, no testimonials, no product count —
+their own pages disagree with each other about that one. The weight comes from
+typography, the brand palette and layout, which is the honest way to make a
+page substantial when you have facts and no pictures.
+
+## D117 — The accent that carried text failed on a tinted background
+The new eyebrows set in `accent-ink` failed the accessibility gate at 4.46:1 on
+`--color-surface`. The token was chosen at 4.69:1 against white and had only
+ever sat on white, so the shortfall had nowhere to show until a tinted section
+existed.
+
+It is now `#a94f0d`: 5.51:1 on white, 5.23:1 on surface, 4.99:1 on canvas, and
+white on it is 5.51:1 — the same hue, with headroom on every surface in the
+palette rather than a pass on one of them. A token that only works where it
+happens to be used is a bug waiting for a new section.
+
+The same run caught `text-text-3` at 3.47:1 for small text on surface, and a
+`<p>` inside a `<div>` inside a `<dl>`, which axe rejects because a div in a
+definition list may contain only `<dt>` and `<dd>`. Four violations, all real,
+none visible by looking.

@@ -45,6 +45,7 @@
  */
 
 export type Leader = { name: string; role: string; bio?: string };
+export type Category = { title: string; blurb: string };
 export type Service = { title: string; summary: string };
 export type Office = { name: string; address: string };
 
@@ -119,6 +120,88 @@ export const company = {
   ] as Service[],
 
   /**
+   * What the company sells, from its own category navigation.
+   *
+   * Their directory lists ten. Four are named in the source extract and four
+   * are what appear here — the other six are not invented to round the grid
+   * out, and the heading says "among them" rather than implying this is all of
+   * it. A category list that looks complete and is not is a small lie that
+   * costs nothing to avoid.
+   */
+  categories: [
+    {
+      title: "Kitchen & dining",
+      blurb: "Cookware, storage and tableware from brands like Brabantia.",
+    },
+    {
+      title: "Food & grocery",
+      blurb: "Seasonings, sauces and store-cupboard staples, including Badia and Kikkoman.",
+    },
+    {
+      title: "Beauty & personal care",
+      blurb: "Skincare and haircare, among them Sebamed and Creme of Nature.",
+    },
+    {
+      title: "Home cleaning",
+      blurb: "Cleaning and laundry, including Vileda.",
+    },
+  ] as Category[],
+
+  /**
+   * Brands the company distributes, by name only.
+   *
+   * Names are fine: CHF Heron lists these publicly itself. Logos are not — a
+   * mark belongs to its owner, and appearing on CHF Heron's site is not a
+   * licence for ours. See docs/reference/chfheron-brand.md.
+   *
+   * The source says eighteen brands and names seven. Seven is what is here.
+   */
+  brands: [
+    "Badia",
+    "Brabantia",
+    "Sebamed",
+    "Vileda",
+    "Kikkoman",
+    "Creme of Nature",
+    "Nadir",
+  ] as string[],
+
+  /**
+   * The company's own stated values, in their own terms.
+   *
+   * Taken verbatim from what the extract recorded rather than rewritten into
+   * marketing copy — "sincerity" and "fair business conduct" are the words a
+   * 1989 Lagos distributor chose, and smoothing them into "integrity" and
+   * "partnership" would make this page sound like every other one.
+   */
+  values: [
+    "Transparent dealings",
+    "Dependability",
+    "Sincerity",
+    "Fair business conduct",
+    "Quality of product and service",
+    "Adapting to what customers need",
+    "Continual improvement",
+  ] as string[],
+
+  /**
+   * Figures for the hero strip.
+   *
+   * `statesClaim` is the company's claim about itself, and is labelled as
+   * theirs on the page. We have no way to verify national coverage and should
+   * not assert it in our own voice.
+   */
+  facts: {
+    foundedLabel: "Distributing since",
+    foundedValue: "1989",
+    statesLabel: "States covered",
+    statesValue: "36",
+    statesNote: "the company's own figure",
+    brandsLabel: "International brands",
+    brandsValue: "18",
+  },
+
+  /**
    * Empty on purpose, and it should stay empty until CHF Heron says otherwise.
    *
    * Real names and job titles for their executives are findable online, but
@@ -158,6 +241,15 @@ export const company = {
       "This is a demonstration, so no enquiry form here reaches CHF Heron Nigeria. Their own website is the way to contact them.",
   },
 
+  /**
+   * The home page's careers band.
+   *
+   * Its own line, because `careersIntro` says "listed below" — true on the
+   * careers page and false on a banner whose roles are behind a link.
+   */
+  careersTeaser:
+    "Roles are posted here as they open. Applying takes a few minutes and you do not need an account.",
+
   /** Careers page intro. About this site, not a claim about the business. */
   careersIntro:
     "Open roles are listed below. Applying takes a few minutes and you do not need an account.",
@@ -169,6 +261,9 @@ export const company = {
 /** True when a section has content worth rendering. */
 export const hasContent = {
   services: company.services.length > 0,
+  categories: company.categories.length > 0,
+  brands: company.brands.length > 0,
+  values: company.values.length > 0,
   leadership: company.leadership.length > 0,
   offices: company.offices.length > 0,
   contactDetails: Boolean(company.contact.email || company.contact.phone),
